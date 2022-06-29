@@ -1,0 +1,158 @@
+\chapter{Proposed Methods}\label{proposed-methods}
+
+\section{Robbins Munro Simulated Inversion Estimator}
+
+\textcolor{red}{TBD}
+
+\section{Monte Carlo Approximation Measurement Error Estimator}
+
+\textcolor{red}{[Name TBD]}. In this section we propose an estimator for the lower bound of uniformly distributed data. Our ultimate goal is to find a quantile estimator for this parameter where our observations are obscured by measurement error.
+
+For simplicity, let us first consider the setting where we have \textbf{no measurement error}:
+
+\[
+X_1, \dots, X_n \overset{i.i.d}{\sim} \mathcal{U}[\theta, K]
+\]
+
+where $K$ is a known constant, and $\theta$ is our parameter of interest.
+
+As already established in the previous chapter, the maximum likelihood estimator (MLE) of $\theta$ is the minimum:
+
+\[
+    M = \min{(X_1, \dots, X_n)}
+\]
+
+Let $m$ be the observed minimum in our data. Then:
+
+\begin{align*}
+    \PP_\theta (M \geq m) &= \PP_\theta(X_1 \geq m, \dots, X_n \geq m) \\
+        &= \prod_{i=1}^n \PP_\theta (X_i \geq m) \\
+        &= \left( \frac{K - m}{K - \theta} \right)^n
+\end{align*}
+
+Let $\hat{\theta}_q$ be our estimator for quantile $q$ which satisfies
+
+\begin{align*}
+    \left( \frac{K - m}{K - \hat{\theta}_q} \right)^n &= q \\
+    (K - \hat{\theta}_q) &= q^{-1/n} (K - m) \\
+    \hat{\theta}_q &= K - q^{-1/n} (K-m)
+\end{align*}
+
+Having established a quantile estimator in a fanciful no measurement error setting, we will build upon this to come up with an estimator in a setting \textbf{with} measurement error.
+
+\
+
+Suppose that we now have \textbf{unobserved} data $X_1, \dots, X_n$, and instead observe only the measurement error modified data:
+
+\[
+W_i = X_i + \epsilon_i, \quad i = 1, 2, \dots, n
+\]
+
+where $\undertilde{\epsilon} = (\epsilon_1, \dots, \epsilon_n)$ come from a \textbf{known} distribution $f_{\undertilde{\epsilon}}$ independent to $X_i$.
+
+\
+
+Now let $M = \min{\{W_1, \dots, W_n\}}$, and we will use this as a naive statistic.
+
+\
+
+We will integrate out the errors $\undertilde{\epsilon}$ and use a Monte Carlo approach to approximate this integral:
+
+\begin{align*}
+    \PP_\theta (M \geq m) &= \prod_{i=1}^n \PP(W_i \geq m) \\
+    &= \int \left[ \prod_{i=1}^n \PP(X_i \geq m - e_{i}) \right] f_{\undertilde{\epsilon}}(\undertilde{e}) d\undertilde{e} \\
+    &\approx \frac{1}{B} \sum_{b=1}^B \prod_{i=1}^n \PP(X_i \geq m - e_{ib}) \quad \text{for $\undertilde{e}_{ib} \sim f_{\undertilde{\epsilon}}(\undertilde{e})$}\\
+    &= \sum_{b=1}^B \prod_{i=1}^n \left( \frac{K - m + e_{ib}}{K - \theta} \right) \\
+    &= \frac{1}{(K - \theta)^n}\frac{1}{B} \sum_{b=1}^B \prod_{i=1}^n \left( K - m + e_{ib} \right) \\
+    \therefore \PP_\theta (M \geq m) &\approx \left(\frac{K - m}{K - \theta} \right)^n \frac{1}{B} \sum_{b=1}^B \prod_{i=1}^n \left( 1 + \frac{e_{ib}}{K - m} \right)
+\end{align*}
+
+% We note that $\PP_\theta (M \geq m)$ is stochastically increasing in $\theta$ (this will be useful later).
+
+So, $\hat{\theta}_q$ and $q$ satisfy:
+
+\begin{align*}
+    q &\approx \left(\frac{K - m}{K - \hat{\theta}_q} \right)^n \frac{1}{B} \sum_{b=1}^B \prod_{i=1}^n \left( 1 + \frac{e_{ib}}{K - m} \right) \\ 
+    \hat{\theta}_q &\approx K - q^{-1/n} (K - m) \left[ \frac{1}{B} \sum_{b=1}^B \prod_{i=1}^n \left( 1 + \frac{e_{ib}}{K - m} \right) \right]^{1/n} \\
+    \therefore \hat{\theta}_q &\approx K - q^{-1/n} (K - m) \left[ \frac{1}{B} \sum_{b=1}^B Y_b \right]^{1/n} \quad \text{where $Y_b = \prod_{i=1}^n \left( 1 + \frac{e_{ib}}{K - m} \right) $}\\ 
+\end{align*}
+
+\newpage
+
+\section{Monte Carlo Error of our Approximation}
+
+\textcolor{red}{This needs a tonne of work}
+
+We now have an expression for our estimate of the $q^{th}$ quantile of $\theta$:
+
+\[
+    \hat{\theta}_q \approx K - q^{-\frac{1}{n}} \left[\frac{1}{B}\sum_{b=1}^B Y_b \right]^\frac{1}{n}, \quad \text{where $Y_b = \prod_{i=1}^n \left( K - m + e_{ib} \right)$}
+\]
+
+How do we pick a value of $B$ that ensures an estimate with low variance?
+
+\textbf{Answer}: We can find an expression/approximation of $\Var\hat{\theta}_q$ in terms of $B$ and other constants, set it to be less than or equal to some arbitrary variance, and then solve for $B$.
+
+\
+
+We can do this with the Delta Method, which states that if a sequence of random variables $X_n$ satisfies
+
+\[
+\sqrt{n} [X_n - \theta] \xrightarrow{D} \mathcal{N}(0, \sigma^2),
+\]
+
+where $\theta$ and $\sigma$ are finite valued constants, then for any function $h(\theta)$ with $h'(\theta)$ existing we have: 
+
+\[
+\sqrt{n} [h(X_n) - h(\theta)] \xrightarrow{D} \mathcal{N}(0, \sigma^2 \cdot [h'(\theta)]^2 )
+\]
+
+Consider $Y_b = \prod_{i=1}^n (K - m + e_{ib})$ where $e_{ib} \sim \mathcal{N}(0, \sigma^2)$ and $Y_b$ are i.i.d $\forall b$. Then:
+
+\begin{align*}
+    \bar{Y_B} &= \frac{1}{B} \sum_{b=1}^B Y_b \\
+    \E{\bar{Y_B}} &= \E \left\{\frac{1}{B} \sum_{b=1}^B Y_b \right\} = \E Y_b = (K - m)^n
+\end{align*}
+
+So, applying the CLT we have $\bar{Y_B}$ converging in distribution to:
+
+\[
+\sqrt{B} \left( \bar{Y_B} - (K - m)^n \right)  \xrightarrow{D} \mathcal{N}(0, \Var{\bar{Y_B}})
+\]
+
+Let $h(\theta) = \theta^\frac{1}{n} \implies h'(\theta) = \frac{1}{n}\theta^{\frac{1}{n} - 1}$. Then, applying the Delta Method:
+
+\[
+\sqrt{B} \left( \bar{Y_B}^\frac{1}{n} - \left[(K - m)^n \right]^{\frac{1}{n}} \right)  \xrightarrow{D} \mathcal{N} \left(0, \left( \frac{1}{n} \left[(K - m)^n \right]^{\frac{1}{n} - 1} \right)^2 \Var{\bar{Y_B}} \right)
+\]
+
+\begin{align*}
+    \implies \Var \left\{\bar{Y_B}^\frac{1}{n} \right\} &= \left( \frac{1}{n} \left[(K - m)^n \right]^{\frac{1}{n} - 1} \right)^2 \Var{\bar{Y_B}}  \\
+        &= \left[ \frac{1}{n} (K - m)^{1-n} \right]^2 \Var \left\{ \frac{1}{B} \sum_{b=1}^B Y_b \right\}  \\
+        &= \left[ \frac{1}{n} (K - m)^{1-n} \right]^2 \left(\frac{1}{B} \right)^2 \left( \sum_{b=1}^B \Var Y_b \right)  \\
+        &= \left[ \frac{1}{n} (K - m)^{1-n} \right]^2 \left(\frac{1}{B} \right)^2 \left( B \Var Y_B \right) \\
+        &= \left[ \frac{1}{n} (K - m)^{1-n} \right]^2 \left(\frac{1}{B} \right) \Var Y_B \\
+        &= \frac{1}{B} \left[ \frac{1}{n} (K - m)^{1-n} \right]^2 \Var Y_B \\
+        \therefore \Var \left\{\bar{Y_B}^\frac{1}{n} \right\} &\approx B^{-1} \left[ n^{-1} (K - m)^{1 - n} \right]^2 \phi_{B_0}
+\end{align*}
+
+where $\phi_{B_0}$ is an estimate of $\Var{Y_B}$ using some starting value $B_0$.
+
+\
+
+Now, we can approximate $\Var\hat{\theta}_q$:
+
+\begin{align*}
+    \hat{\theta}_q &\approx K - q^{-\frac{1}{n}} \left[\frac{1}{B}\sum_{b=1}^B Y_b \right]^\frac{1}{n} \\
+    \Var\hat{\theta}_q &\approx q^{-\frac{2}{n}} \Var \left\{ \left[\frac{1}{B}\sum_{b=1}^B Y_b \right]^\frac{1}{n} \right\} \\
+    &\approx q^{-\frac{2}{n}} \left(B^{-1} \left[ n^{-1} (K - m)^{1 - n} \right]^2 \phi_{B_0} \right) \\
+    \therefore \Var\hat{\theta}_q &\approx q^{-\frac{2}{n}} B^{-1} \left[ n^{-1} (K - m)^{1 - n} \right]^2 \phi_{B_0}
+\end{align*}
+
+We can now use this to find a value of $B$ (call this $\tilde{B}$) that will give us variance below a target (call this target $\psi$)
+
+\begin{align*}
+    \Var\hat{\theta}_q &\leq \psi \\
+    q^{-\frac{2}{n}} \tilde{B}^{-1} \left[ n^{-1} (K - m)^{1 - n} \right]^2 \phi_{B_0} &\leq \psi \\
+    \tilde{B} &\geq \psi^{-1}q^{-\frac{2}{n}} \left[ n^{-1} (K - m)^{1 - n} \right]^2 \phi_{B_0} \\
+\end{align*}
