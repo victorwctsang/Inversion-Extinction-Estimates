@@ -22,7 +22,8 @@ pre.numberSource code
 knitr::opts_chunk$set(
   echo = TRUE,
   attr.source='.numberLines',
-  class.source = "numberLines lineAnchors"
+  class.source = "numberLines lineAnchors",
+  root.dir='C:/Users/victo/Documents/c-git-repos/HonoursThesis2022'
 )
 ```
 
@@ -178,7 +179,7 @@ library(readxl)
 
 # Import mammoth data from fossildata.xlsx
 fossil_dataframe = read_excel(
-  path='fossildata.xlsx', 
+  path='../data/fossildata.xlsx', 
   sheet="MammothPrimEBer", 
   range="M3:N36", 
   col_names=c("age", "sd"), 
@@ -197,7 +198,7 @@ mean(simCI.with_error$containsTheta)
 
 We have coverage probability around 50%...
 
-And our average MCE is not that small? maybe i calculated wrong lol
+Our average MCE is not that big, about 100 years for both CI bounds?
 
 ```{r}
 c(mean(simCI.with_error$MCE.L), mean(simCI.with_error$MCE.U))
