@@ -1,0 +1,209 @@
+---
+title: "Monte Carlo Estimation Simulation Tests"
+author: "Victor Tsang"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    highlight: pygments
+header_includes:
+  - \newcommand{\Var}{\mathrm{Var}}
+  - \newcommand{\E}{\mathbb{E}}
+---
+
+<style>
+body
+  { counter-reset: source-line 0; }
+pre.numberSource code
+  { counter-reset: none; }
+</style>
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  attr.source='.numberLines',
+  class.source = "numberLines lineAnchors"
+)
+```
+
+## Some Theory
+
+In the no measurement error scenario, we have:
+
+$$
+X_1, \dots, X_n \sim_{i.i.d} \mathcal{U}(\theta, K)\quad \text{for some known $K$}
+$$
+Our MLE is $M = \min(X_1, \dots, X_n)$. Let the observed minimum be $m$.
+
+In the measurement error scenario, we have:
+
+$$
+W_i = X_i + \varepsilon_i, \quad \varepsilon_{i} \sim_{i.i.d} \mathcal{N}(0, \sigma^2)
+$$
+
+\[
+\hat{\theta}_q =
+\begin{cases}
+      K - q^{-\frac{1}{n}}(K-m), \quad \text{No measurement error} \\
+      K - q^{-\frac{1}{n}}(K-m) \left[\frac{1}{B}\sum_{b=1}^B Y_b \right]^\frac{1}{n}, \quad \text{With Measurement error} \\
+\end{cases}
+\]
+
+where $Y_b = \prod_{i=1}^n \left(1 + \frac{e_{ib}}{K-m} \right)$ where $e_{ib}$ are measurement errors, assumed to be normally distributed with zero-mean and constant variance $\sigma^2$.
+
+### Code setup
+
+Function for simulating fossils with and without measurement error assumption.
+
+We assume that the measurement error is normally distributed (may not be generally true)
+
+```{r}
+simulateFossils = function (n, theta, K, eps.mean=0, eps.sigma=0) {
+  X = runif(n, min=theta, max=K)
+  eps = rnorm(n, mean=eps.mean, sd=eps.sigma)
+  W = X + eps
+  return(list(X=X, W=W, eps=eps))
+}
+```
+
+Function for estimating the $\hat{\theta}_q$
+
+```{r}
+getThetaQuantile = function (q, K, W, B=0, eps.mean=0, eps.sigma=0) {
+  n = length(W)
+  m = min(W)
+  mce=NA
+  theta_q.hat = NA
+  if (eps.mean == 0 && eps.sigma == 0 && B == 0) {
+    # no measurement error
+    theta_q.hat = K - q^(-1/n) * (K-m)
+  }
+  else {
+    # measurement error
+    e = matrix(rnorm(B*n), ncol=B) * eps.sigma + eps.mean # generate errors
+    Y_b = apply(1 + e/(K-m), 1, prod) # product term
+    theta_q.hat = K - q^(-1/n) * (K-m) * (mean(Y_b))^(1/n) # get estimate
+    
+    # MCE
+    mce = sqrt(q^(-2/n) * (K-m)^2 * n^(-2) * mean(Y_b)^(1/n - 2) * var(Y_b)) # TODO OOP FIX E AND VAR
+  }
+  return(list(estimate=theta_q.hat, mce=mce))
+}
+```
+
+Function for performing `nSim` simulations of a $100(1-\alpha)\%$ confidence interval.  
+
+```{r}
+simulateConfidenceIntervals = function (nSim, alpha, n, theta, K, B=0, eps.mean=0, eps.sigma=0) {
+  L = rep(NA, nSim)
+  U = rep(NA, nSim)
+  MCE.L = rep(NA, nSim)
+  MCE.U = rep(NA, nSim)
+  for (i in 1:nSim) {
+    sim.data = simulateFossils(n, theta, K, eps.mean, eps.sigma)
+    est.L = getThetaQuantile(
+      q=alpha/2,
+      K=K,
+      W=sim.data$W,
+      B=B,
+      eps.mean=eps.mean,
+      eps.sigma=eps.sigma
+    )
+    est.U = getThetaQuantile(
+      q=1-alpha/2,
+      K=K,
+      W=sim.data$W,
+      B=B,
+      eps.mean=eps.mean,
+      eps.sigma=eps.sigma
+    )
+    
+    L[i] = est.L$estimate
+    U[i] = est.U$estimate
+    MCE.L[i] = est.L$mce
+    MCE.U[i] = est.U$mce
+  }
+  CI.df = data.frame(i=1:nSim, L=L, U=U, MCE.L=MCE.L, MCE.U=MCE.U)
+  CI.df$mean = rowMeans(CI.df[,2:3])
+  CI.df$containsTheta = (CI.df$L <= theta) & (theta <= CI.df$U)
+  return(CI.df)
+}
+```
+
+Function for plotting our simulated confidence intervals
+
+```{r}
+library(ggplot2)
+
+plot.simCIs = function(df, theta) {
+  ggplot(data=df, aes(x=i, y=mean)) +
+    geom_errorbar(aes(ymax = U, ymin = L, colour=containsTheta)) +
+    geom_hline(yintercept=theta) +
+    ggtitle(paste("Confidence interval;", "theta", "=", theta))
+}
+```
+
+
+### No measurement error example
+
+We want to see that for a 95% confidence interval ($\alpha = 0.05$), our coverage probability should be approximately 95%
+
+
+```{r}
+nSim = 1000
+alpha = 0.05
+n = 30
+theta = 12500
+K = 18000
+
+simCI = simulateConfidenceIntervals(nSim, alpha, n, theta, K)
+mean(simCI$containsTheta)
+```
+
+```{r}
+plot.simCIs(simCI[1:100, ], theta)
+```
+
+
+### Measurement error example
+
+We will keep the same parameters as above, but now we introduce measurement error.
+
+Let's assume our measurement errors are normally distributed with zero-mean, and set the standard deviation to the **average standard deviation from some real data**
+
+We will use $B = 100$ for our monte carlo step.
+
+```{r}
+library(readxl)
+
+# Import mammoth data from fossildata.xlsx
+fossil_dataframe = read_excel(
+  path='fossildata.xlsx', 
+  sheet="MammothPrimEBer", 
+  range="M3:N36", 
+  col_names=c("age", "sd"), 
+  col_types=c('numeric', 'numeric')
+)
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+
+B = 100
+eps.mean = 0
+eps.sigma = mean(fossil_dataframe$sd)
+
+simCI.with_error = simulateConfidenceIntervals(nSim, alpha, n, theta, K, B, eps.mean, eps.sigma)
+
+mean(simCI.with_error$containsTheta)
+```
+
+We have coverage probability around 50%...
+
+And our average MCE is not that small? maybe i calculated wrong lol
+
+```{r}
+c(mean(simCI.with_error$MCE.L), mean(simCI.with_error$MCE.U))
+```
+
+
+```{r}
+plot.simCIs(simCI.with_error[1:100, ], theta)
+```
