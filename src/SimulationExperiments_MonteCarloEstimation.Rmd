@@ -5,25 +5,32 @@ date: "`r format(Sys.Date(), '%d %B %Y')`"
 output:
   html_document:
     highlight: pygments
+    toc: true
+    toc_float: true
+    toc_collapsed: false
+    toc_smooth_scroll: false
+    toc_depth: 5
 header_includes:
   - \newcommand{\Var}{\mathrm{Var}}
   - \newcommand{\E}{\mathbb{E}}
 ---
 
+```{=html}
 <style>
 body
   { counter-reset: source-line 0; }
 pre.numberSource code
   { counter-reset: none; }
 </style>
-
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   echo = TRUE,
   attr.source='.numberLines',
   class.source = "numberLines lineAnchors",
-  root.dir='C:/Users/victo/Documents/c-git-repos/HonoursThesis2022'
+  root.dir='C:/Users/victo/Documents/c-git-repos/HonoursThesis2022',
+  error=TRUE
 )
 ```
 
@@ -34,121 +41,59 @@ In the no measurement error scenario, we have:
 $$
 X_1, \dots, X_n \sim_{i.i.d} \mathcal{U}(\theta, K)\quad \text{for some known $K$}
 $$
+
 Our MLE is $M = \min(X_1, \dots, X_n)$. Let the observed minimum be $m$.
 
-In the measurement error scenario, we have:
+In the measurement error scenario, we now assume:
 
 $$
-W_i = X_i + \varepsilon_i, \quad \varepsilon_{i} \sim_{i.i.d} \mathcal{N}(0, \sigma^2)
+W_i = X_i + \varepsilon_i, \quad \forall i=1, 2, \dots, n \\
+\varepsilon_{i} \sim_{i.i.d} f_\varepsilon(e), \quad \text{which is some known function for } e \in \mathbb{R} \\
+X_i | \varepsilon = e \sim_{i.i.d} \mathcal{U}(\theta, K - e) \implies f_{X | \epsilon} (x | e) = \frac{1}{K - \theta - e}
 $$
 
-\[
+$$
 \hat{\theta}_q =
 \begin{cases}
       K - q^{-\frac{1}{n}}(K-m), \quad \text{No measurement error} \\
-      K - q^{-\frac{1}{n}}(K-m) \left[\frac{1}{B}\sum_{b=1}^B Y_b \right]^\frac{1}{n}, \quad \text{With Measurement error} \\
+      K - q^{-\frac{1}{n}}(K-m) \exp{ \left\{ \overline{\log\left[a_i(\hat{\theta}_q)\right]} \right\}} , \quad \text{With Measurement error} \\
 \end{cases}
-\]
+$$
 
-where $Y_b = \prod_{i=1}^n \left(1 + \frac{e_{ib}}{K-m} \right)$ where $e_{ib}$ are measurement errors, assumed to be normally distributed with zero-mean and constant variance $\sigma^2$.
+where:
 
-### Code setup
+$$
+\overline{\log(a_i(\theta))} = \frac{1}{n}\sum_{i=1}^n\log\left\{a_i(\theta) \right\} \\
+a_i(\theta) = \frac{K-\theta}{K - m}\left[ 1 - \frac{F_\varepsilon(m-\theta)}{F_\varepsilon(K-\theta)} \right] + \frac{F_\varepsilon(m-\theta)}{F_\varepsilon(K-\theta)} + F^{-1}_\varepsilon(K-\theta) \underbrace{\int_{-\infty}^{m-\theta} \frac{e_i}{K - \theta - e_i} f_\varepsilon(e_i)de_i}_{\phi_i(\theta)}
+$$ 
 
-Function for simulating fossils with and without measurement error assumption.
+Note that $\phi_i(\theta)$ is not known in closed form for all $f_\varepsilon(e_i)$, and so we need to estimate this using a Monte Carlo integral:
 
-We assume that the measurement error is normally distributed (may not be generally true)
+$$
+\hat{\phi}_i(\theta) = \frac{1}{B} \sum_{b=1}^B \frac{e_{ib}}{K - \theta - e_{ib}}
+$$
 
-```{r}
-simulateFossils = function (n, theta, K, eps.mean=0, eps.sigma=0) {
-  X = runif(n, min=theta, max=K)
-  eps = rnorm(n, mean=eps.mean, sd=eps.sigma)
-  W = X + eps
-  return(list(X=X, W=W, eps=eps))
-}
-```
+where:
 
-Function for estimating the $\hat{\theta}_q$
+* $B$ is some predetermined number of generated samples
+* $e_{i1}, e_{i2}, \dots, e_{iN}$ are generated from $f_\varepsilon$ and are in the interval $(-\infty, m-\theta]$
 
-```{r}
-getThetaQuantile = function (q, K, W, B=0, eps.mean=0, eps.sigma=0) {
-  n = length(W)
-  m = min(W)
-  mce=NA
-  theta_q.hat = NA
-  if (eps.mean == 0 && eps.sigma == 0 && B == 0) {
-    # no measurement error
-    theta_q.hat = K - q^(-1/n) * (K-m)
-  }
-  else {
-    # measurement error
-    e = matrix(rnorm(B*n), ncol=B) * eps.sigma + eps.mean # generate errors
-    Y_b = apply(1 + e/(K-m), 1, prod) # product term
-    theta_q.hat = K - q^(-1/n) * (K-m) * (mean(Y_b))^(1/n) # get estimate
-    
-    # MCE
-    mce = sqrt(q^(-2/n) * (K-m)^2 * n^(-2) * mean(Y_b)^(1/n - 2) * var(Y_b)) # TODO OOP FIX E AND VAR
-  }
-  return(list(estimate=theta_q.hat, mce=mce))
-}
-```
+For these experiments, we assume that the measurement errors are independent and zero-mean Gaussian distributed:
 
-Function for performing `nSim` simulations of a $100(1-\alpha)\%$ confidence interval.  
+$$
+\varepsilon_{i} \sim_{i.i.d} \mathcal{N}(0, \sigma^2) \quad \text{for some constant variance } \sigma^2
+$$
+
+## Functions
 
 ```{r}
-simulateConfidenceIntervals = function (nSim, alpha, n, theta, K, B=0, eps.mean=0, eps.sigma=0) {
-  L = rep(NA, nSim)
-  U = rep(NA, nSim)
-  MCE.L = rep(NA, nSim)
-  MCE.U = rep(NA, nSim)
-  for (i in 1:nSim) {
-    sim.data = simulateFossils(n, theta, K, eps.mean, eps.sigma)
-    est.L = getThetaQuantile(
-      q=alpha/2,
-      K=K,
-      W=sim.data$W,
-      B=B,
-      eps.mean=eps.mean,
-      eps.sigma=eps.sigma
-    )
-    est.U = getThetaQuantile(
-      q=1-alpha/2,
-      K=K,
-      W=sim.data$W,
-      B=B,
-      eps.mean=eps.mean,
-      eps.sigma=eps.sigma
-    )
-    
-    L[i] = est.L$estimate
-    U[i] = est.U$estimate
-    MCE.L[i] = est.L$mce
-    MCE.U[i] = est.U$mce
-  }
-  CI.df = data.frame(i=1:nSim, L=L, U=U, MCE.L=MCE.L, MCE.U=MCE.U)
-  CI.df$mean = rowMeans(CI.df[,2:3])
-  CI.df$containsTheta = (CI.df$L <= theta) & (theta <= CI.df$U)
-  return(CI.df)
-}
-```
-
-Function for plotting our simulated confidence intervals
-
-```{r}
-library(ggplot2)
-
-plot.simCIs = function(df, theta) {
-  ggplot(data=df, aes(x=i, y=mean)) +
-    geom_errorbar(aes(ymax = U, ymin = L, colour=containsTheta)) +
-    geom_hline(yintercept=theta) +
-    ggtitle(paste("Confidence interval;", "theta", "=", theta))
-}
+source("helpers.R")
 ```
 
 
-### No measurement error example
+## Example: No measurement error
 
 We want to see that for a 95% confidence interval ($\alpha = 0.05$), our coverage probability should be approximately 95%
-
 
 ```{r}
 nSim = 1000
@@ -157,16 +102,18 @@ n = 30
 theta = 12500
 K = 18000
 
-simCI = simulateConfidenceIntervals(nSim, alpha, n, theta, K)
-mean(simCI$containsTheta)
+sim.no_error = simulateConfidenceIntervals(nSim, alpha, n, theta, K)
+
+mean(sim.no_error$containsTheta)
 ```
 
-```{r}
-plot.simCIs(simCI[1:100, ], theta)
+```{r example1_plot}
+plot.simCIs(sim.no_error[1:100, ], theta)
 ```
 
+Our coverage is decent, although it does look like our intervals tend to underestimate $\theta$ fairly often.
 
-### Measurement error example
+## Example: Measurement error
 
 We will keep the same parameters as above, but now we introduce measurement error.
 
@@ -174,7 +121,7 @@ Let's assume our measurement errors are normally distributed with zero-mean, and
 
 We will use $B = 100$ for our monte carlo step.
 
-```{r}
+```{r example2_setup}
 library(readxl)
 
 # Import mammoth data from fossildata.xlsx
@@ -190,21 +137,13 @@ fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 B = 100
 eps.mean = 0
 eps.sigma = mean(fossil_dataframe$sd)
+uniroot.interval=c(10000, 14000)
 
-simCI.with_error = simulateConfidenceIntervals(nSim, alpha, n, theta, K, B, eps.mean, eps.sigma)
+sim.error = simulateConfidenceIntervals(nSim, alpha, n, theta, K, B, eps.mean, eps.sigma, uniroot.interval)
 
-mean(simCI.with_error$containsTheta)
+mean(sim.error$containsTheta)
 ```
 
-We have coverage probability around 50%...
-
-Our average MCE is not that big, about 100 years for both CI bounds?
-
-```{r}
-c(mean(simCI.with_error$MCE.L), mean(simCI.with_error$MCE.U))
-```
-
-
-```{r}
-plot.simCIs(simCI.with_error[1:100, ], theta)
+```{r example2_plot}
+plot.simCIs(sim.error[1:100, ], theta)
 ```

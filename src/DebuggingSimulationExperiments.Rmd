@@ -1,0 +1,192 @@
+---
+title: "Monte Carlo Estimation Simulation Tests"
+author: "Victor Tsang"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    highlight: pygments
+    toc: true
+    toc_float: true
+    toc_collapsed: false
+    toc_smooth_scroll: false
+    toc_depth: 5
+header_includes:
+  - \newcommand{\Var}{\mathrm{Var}}
+  - \newcommand{\E}{\mathbb{E}}
+---
+
+```{=html}
+<style>
+body
+  { counter-reset: source-line 0; }
+pre.numberSource code
+  { counter-reset: none; }
+</style>
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  attr.source='.numberLines',
+  class.source = "numberLines lineAnchors",
+  root.dir='C:/Users/victo/Documents/c-git-repos/HonoursThesis2022',
+  error=TRUE
+)
+```
+
+```{r}
+source("helpers.R")
+```
+
+
+## Check $P_\theta (X + \varepsilon > m)$ is stochastically increasing in $\theta$
+
+```{r}
+library(readxl)
+
+# Import mammoth data from fossildata.xlsx
+fossil_dataframe = read_excel(
+  path='../data/fossildata.xlsx', 
+  sheet="MammothPrimEBer", 
+  range="M3:N36", 
+  col_names=c("age", "sd"), 
+  col_types=c('numeric', 'numeric')
+)
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+```
+
+```{r}
+B = 1000
+n=30
+
+K = 18000
+theta.range = seq(10000, 18000, by=50)
+
+eps.mean = 0
+eps.sigma = mean(fossil_dataframe$sd)
+
+m = rep(NA, length(theta.range))
+P = rep(NA, length(theta.range))
+```
+
+
+
+```{r}
+for (i in 1:length(theta.range)) {
+  m[i] = min(simulateFossils(n=n, theta=theta.range[i], K=K, eps.mean=eps.mean, eps.sigma=eps.sigma)$W)
+  P[i] = getP(theta=theta.range[i], K=K, B=B, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
+}
+
+res.df = data.frame(theta=theta.range, m = m, P = P)
+res.df
+```
+
+```{r}
+ggplot(res.df, aes(x=theta, y=P)) +
+  geom_line() +
+  geom_smooth()
+```
+
+
+
+## Plot the function that we want to solve to determine a suitable search interval.
+
+$$
+\hat{\theta_q} - K + q^{-\frac{1}{n}}(K-m) \exp{ \left\{ \overline{\log\left[a_i(\hat{\theta}_q)\right]} \right\}} = 0 \quad\quad (1)
+$$
+
+$$
+\overline{\log(a_i(\widehat \theta_q))} = \frac{1}{n}\sum_{i=1}^n\log\left\{a_i(\widehat \theta_q) \right\} \\
+a_i(\widehat \theta_q) = \frac{K-\widehat \theta_q}{K - m}\left[ 1 - \frac{F_\varepsilon(m-\widehat \theta_q)}{F_\varepsilon(K-\widehat \theta_q)} \right] + \frac{F_\varepsilon(m-\widehat \theta_q)}{F_\varepsilon(K-\widehat \theta_q)} + F^{-1}_\varepsilon(K-\widehat \theta_q) \widehat \phi_i(\widehat \theta_q)
+$$ 
+
+```{r}
+n.trials = 100
+theta.roots = seq(from=10000, to=15000, length.out=50)
+
+n.theta.roots = length(theta.roots)
+m = rep(NA, n.trials)
+x = rep(theta.roots, n.trials)
+trial = rep(1:n.trials, each=n.theta.roots)
+
+target_f.lower_q = rep(NA, n.trials * n.theta.roots)
+target_f.upper_q = rep(NA, n.trials * n.theta.roots)
+target_f.lower_q.vals = rep(NA, n.theta.roots)
+target_f.upper_q.vals = rep(NA, n.theta.roots)
+
+for (i in 1:n.trials) {
+  m[i] = min(simulateFossils(n, theta, K, eps.mean, eps.sigma)$W)
+  start_idx = (i-1) * n.theta.roots + 1
+  end_idx = i * n.theta.roots
+  target_f.lower_q.vals = sapply(
+    X=theta.roots,
+    FUN=solve.for.theta_q.hat,
+    K = K,
+    n = n,
+    B = B,
+    q = 0.025,
+    m = m[i],
+    eps.mean = eps.mean,
+    eps.sigma = eps.sigma
+  )
+  target_f.upper_q.vals = sapply(
+    X=theta.roots,
+    FUN=solve.for.theta_q.hat,
+    K = K,
+    n = n,
+    B = B,
+    q = 0.975,
+    m = m[i],
+    eps.mean = eps.mean,
+    eps.sigma = eps.sigma
+  )
+  target_f.lower_q[ start_idx: end_idx] = target_f.lower_q.vals
+  target_f.upper_q[ start_idx: end_idx] = target_f.upper_q.vals
+}
+
+target.trials.df = data.frame(
+  x=x,
+  trial=trial,
+  m=rep(m, each=n.theta.roots),
+  q_lower=target_f.lower_q,
+  q_upper=target_f.upper_q
+)
+
+colours = c("q_lower" = '#F8766D', "q_upper"='#619CFF')
+
+ggplot(target.trials.df) +
+  geom_line(aes(x=x, y=q_lower, group=trial, colour="q_lower"), alpha=0.4) +
+  geom_line(aes(x=x, y=q_upper, group=trial, colour="q_upper"), alpha=0.4) +
+  geom_hline(yintercept=0, lty=1) +
+  # geom_vline(xintercept=c(theta, K), lty=2) +
+  ggtitle("Equation (1) values for different thetas") +
+  labs(x = "Theta",
+       y = "Equation Value",
+       color = "Legend") +
+  scale_color_manual(values = colours)
+```
+
+What's equation 1? 
+
+$$
+\text{Equation (1):} \quad \hat{\theta_q} - K + q^{-\frac{1}{n}}(K-m) \exp{ \left\{ \overline{\log\left[a(\hat{\theta}_q)\right]} \right\}}
+$$
+
+The above graph plots the value of Equation 1 for different values of $\theta_q$ (red is $q = 0.025$, blue is $q = 0.075$). The root of this function is the quantile estimate $\hat \theta_q$
+
+### Check $P_\theta (X + \varepsilon > m) \in [0, 1]$
+
+$$
+P_\theta (X + \varepsilon > m) = \left( \frac{K - m}{K - \theta} \right) a(\theta)
+$$
+
+For different values of $\theta$, calculate monte carlo estimate of $\phi$ and calculate $P(X + \varepsilon > m)$. Check they are all between 0 and 1.
+
+### Check probability behaviour of double integrals
+
+TODO
+
+
+### Check $a(\theta)$
+
+TODO
