@@ -56,11 +56,11 @@ fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 ```
 
 ```{r}
-B = 1000
+B = 10000
 n=30
 
 K = 18000
-theta.range = seq(10000, 18000, by=50)
+theta.range = seq(10000, 17500, by=50)
 
 eps.mean = 0
 eps.sigma = mean(fossil_dataframe$sd)
@@ -72,21 +72,23 @@ P = rep(NA, length(theta.range))
 
 
 ```{r}
+u = matrix(runif(1*B, 0, 1), ncol=B)
 for (i in 1:length(theta.range)) {
   m[i] = min(simulateFossils(n=n, theta=theta.range[i], K=K, eps.mean=eps.mean, eps.sigma=eps.sigma)$W)
-  P[i] = getP(theta=theta.range[i], K=K, B=B, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
+  P[i] = getP(theta=theta.range[i], K=K, u=u, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
 }
 
 res.df = data.frame(theta=theta.range, m = m, P = P)
-res.df
+head(res.df)
 ```
+
 
 ```{r}
 ggplot(res.df, aes(x=theta, y=P)) +
   geom_line() +
-  geom_smooth()
+  geom_smooth() +
+  ggtitle("P for increasing theta")
 ```
-
 
 
 ## Plot the function that we want to solve to determine a suitable search interval.
@@ -123,7 +125,7 @@ for (i in 1:n.trials) {
     FUN=solve.for.theta_q.hat,
     K = K,
     n = n,
-    B = B,
+    u = u,
     q = 0.025,
     m = m[i],
     eps.mean = eps.mean,
@@ -134,7 +136,7 @@ for (i in 1:n.trials) {
     FUN=solve.for.theta_q.hat,
     K = K,
     n = n,
-    B = B,
+    u = u,
     q = 0.975,
     m = m[i],
     eps.mean = eps.mean,
@@ -173,6 +175,15 @@ $$
 $$
 
 The above graph plots the value of Equation 1 for different values of $\theta_q$ (red is $q = 0.025$, blue is $q = 0.075$). The root of this function is the quantile estimate $\hat \theta_q$
+
+```{r}
+library(dplyr)
+
+target.trials.df %>%
+  group_by(trial) %>%
+  summarise(min(q_upper), max(q_upper))
+```
+
 
 ### Check $P_\theta (X + \varepsilon > m) \in [0, 1]$
 
