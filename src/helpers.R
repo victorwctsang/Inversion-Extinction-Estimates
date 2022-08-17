@@ -24,21 +24,16 @@ simulateFossils = function (
 .calcPhiHat = function (u, mean, sd, a, b, K, m, theta) {
   # Monte Carlo integral
   e = .generateMCSamples(u, mean, sd, a, b)
-  norm.constant  = .F.eps(b, mean=mean, sd=sd)
+  norm.constant = pnorm(b, mean=mean, sd=sd)
   phi.hat.theta = apply((K-m)/(K-e-theta), 1, mean) * norm.constant
   return(phi.hat.theta)
-}
-
-.F.eps = function (q, mean, sd) {
-  # wrapper of CDF of normal dist
-  pnorm(q, mean, sd)
 }
 
 .calcA1 = function (
     theta, K, m, eps.mean, eps.sigma
 ) {
-  F.eps.m = .F.eps(m-theta, mean=eps.mean, sd=eps.sigma)
-  F.eps.K = .F.eps(K-theta, mean=eps.mean, sd=eps.sigma)
+  F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
+  F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   return(1 - F.eps.m/F.eps.K)
 }
 
@@ -49,7 +44,7 @@ simulateFossils = function (
   phi.hat.theta = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma, 
                               a=-Inf, b=m-theta, K=K, m=m, 
                               theta=theta)
-  F.eps.K = .F.eps(K-theta, mean=eps.mean, sd=eps.sigma)
+  F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   return(phi.hat.theta/F.eps.K)
 }
 
