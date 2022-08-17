@@ -35,14 +35,15 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
+library(readxl)
+library(tidyverse)
+library(latex2exp)
 source("helpers.R")
 ```
 
 
 
 ```{r}
-library(readxl)
-
 # Import mammoth data from fossildata.xlsx
 fossil_dataframe = read_excel(
   path='../data/fossildata.xlsx', 
@@ -51,43 +52,96 @@ fossil_dataframe = read_excel(
   col_names=c("age", "sd"), 
   col_types=c('numeric', 'numeric')
 )
-K = 18000
-fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 ```
 
 ## Check $P_\theta (X + \varepsilon > m)$ is stochastically increasing in $\theta$
 
 ```{r}
-B = 10000
-n=30
+
+K = 18000
 theta.range = seq(10000, 17500, by=50)
+nThetas = length(theta.range)
+
+B=10000
+n=30
 
 eps.mean = 0
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 eps.sigma = mean(fossil_dataframe$sd)
 
-m = rep(NA, length(theta.range))
-P = rep(NA, length(theta.range))
-```
+m = rep(NA, nThetas)
+P = rep(NA, nThetas)
+A1 = rep(NA, nThetas)
+phi.hat = rep(NA, nThetas)
+A2 = rep(NA, nThetas)
 
+set.seed(2022)
 
-
-```{r}
 u = matrix(runif(1*B, 0, 1), ncol=B)
-for (i in 1:length(theta.range)) {
+
+for (i in 1:nThetas) {
   m[i] = min(simulateFossils(n=n, theta=theta.range[i], K=K, eps.mean=eps.mean, eps.sigma=eps.sigma)$W)
+  A1[i] = .calcA1(theta=theta.range[i], K=K, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
+  phi.hat[i] = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma,
+                           a=-Inf, b=m[i]-theta.range[i], K=K, m=m[i],
+                           theta=theta.range[i])
+  A2[i] = .calcA2(theta=theta.range[i], K=K, u=u, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
   P[i] = getP(theta=theta.range[i], K=K, u=u, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
 }
 
-res.df = data.frame(theta=theta.range, m = m, P = P)
+res.df = data.frame(theta=theta.range,
+                    m = m,
+                    A1 = A1,
+                    A2 = A2,
+                    phi.hat = phi.hat,
+                    P = P)
 head(res.df)
 ```
 
 
 ```{r}
-ggplot(res.df, aes(x=theta, y=P)) +
+res.df %>%
+  ggplot(aes(x=theta, y=P)) +
+  geom_line() +
+  labs(title=TeX("$P_\\theta (X + \\epsilon > m)$ for increasing theta"),
+       x=TeX("\\theta"),
+       y=TeX("P"))
+```
+
+
+## Check if components behave like probabilities
+
+#### A1
+
+```{r}
+res.df %>%
+  group_by() %>%
+  summarise(min(A1), max(A1), min(A2), max(A2))
+```
+
+```{r}
+res.df %>%
+  select(theta, A1) %>%
+  ggplot(aes(x=theta, y=A1)) +
+  geom_line() +
+  ggtitle("A1 for increasing Theta")
+```
+
+```{r}
+res.df %>%
+  select(theta, A2) %>%
+  ggplot(aes(x=theta, y=A2)) +
+  geom_line() +
+  ggtitle("A2 for increasing Theta")
+```
+
+```{r}
+res.df %>%
+  select(theta, phi.hat) %>%
+  ggplot(aes(x=theta, y=phi.hat)) +
   geom_line() +
   geom_smooth() +
-  ggtitle("P for increasing theta")
+  labs(title=TeX("\\hat{\\phi} for increasing \\theta"))
 ```
 
 
@@ -103,6 +157,7 @@ a_i(\widehat \theta_q) = \frac{K-\widehat \theta_q}{K - m}\left[ 1 - \frac{F_\va
 $$ 
 
 ```{r}
+theta = 12500
 n.trials = 100
 theta.roots = seq(from=10000, to=15000, length.out=50)
 
