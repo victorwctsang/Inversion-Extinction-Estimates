@@ -21,11 +21,11 @@ simulateFossils = function (
   return(mc.samples)
 }
 
-.calcPhiHat = function (u, mean, sd, a, b, K, theta) {
+.calcPhiHat = function (u, mean, sd, a, b, K, m, theta) {
   # Monte Carlo integral
-  # Phi = $\int_{-\infty}^{m-\theta} \frac{e}{(K-\theta - e} f_\varepsilon (e) de$
   e = .generateMCSamples(u, mean, sd, a, b)
-  phi.hat.theta = apply(e/(K-theta-e), 1, mean)
+  norm.constant  = .F.eps(b, mean=mean, sd=sd)
+  phi.hat.theta = apply((K-m)/(K-e-theta), 1, mean) * norm.constant
   return(phi.hat.theta)
 }
 
@@ -34,34 +34,38 @@ simulateFossils = function (
   pnorm(q, mean, sd)
 }
 
-.a.theta = function (theta, K, m, mean, sd, phi) {
-  # a(theta) in the expression for P_\theta
-  F.eps.m = .F.eps(m-theta, mean, sd)
-  F.eps.K = .F.eps(K-theta, mean, sd)
-  
-  a = (K-theta)/(K-m) * (1 - F.eps.m/F.eps.K) +
-    F.eps.m/F.eps.K +
-    F.eps.m/F.eps.K * phi
-  return(a)
+.calcA1 = function (
+    theta, K, m, eps.mean, eps.sigma
+) {
+  F.eps.m = .F.eps(m-theta, mean=eps.mean, sd=eps.sigma)
+  F.eps.K = .F.eps(K-theta, mean=eps.mean, sd=eps.sigma)
+  return(1 - F.eps.m/F.eps.K)
 }
 
-solve.for.theta_q.hat = function (
-  theta.root, K, n, u, q, m, eps.mean, eps.sigma
+.calcA2 = function (
+  theta, K, u, m, eps.mean, eps.sigma
 ) {
-  # Function to solve for \hat{\theta}_q
-  phi.hat.theta = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta.root, K=K, theta=theta.root)
-  a.theta = .a.theta(theta.root, K, m, eps.mean, eps.sigma, phi.hat.theta)
-  return(theta.root - K + q^(-1/n) * (K-m) * exp(mean(log(a.theta))))
+  # Monte Carlo Integration to find phi.hat.theta
+  phi.hat.theta = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma, 
+                              a=-Inf, b=m-theta, K=K, m=m, 
+                              theta=theta)
+  F.eps.K = .F.eps(K-theta, mean=eps.mean, sd=eps.sigma)
+  return(phi.hat.theta/F.eps.K)
 }
 
 getP = function (
   theta, K, u, m, eps.mean, eps.sigma
 ) {
-  # Monte Carlo Integration to find phi.hat.theta
-  phi.hat.theta = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, theta=theta)
-  a.theta = .a.theta(theta, K, m, eps.mean, eps.sigma, phi.hat.theta)
-  P = (K-m)/(K-theta) * a.theta
-  return(P)
+  A1 = .calcA1(theta, K, m, eps.mean, eps.sigma)
+  A2 = .calcA2(theta, K, u, m, eps.mean, eps.sigma)
+  return(A1 + A2)
+}
+
+solve.for.theta_q.hat = function (
+    theta.root, K, u, m, eps.mean, eps.sigma, n, q
+) {
+  # Function to solve for \hat{\theta}_q
+  return(getP(theta.root, K, u, m, eps.mean, eps.sigma) - q^(1/n))
 }
 
 getThetaQuantile = function (
@@ -80,12 +84,12 @@ getThetaQuantile = function (
       solve.for.theta_q.hat,
       interval=uniroot.interval,
       K = K,
-      n = n,
       u = u,
-      q = q,
       m = m,
       eps.mean = eps.mean,
-      eps.sigma = eps.sigma
+      eps.sigma = eps.sigma,
+      n = n,
+      q = q
     )
     theta_q.hat = res$root
   }
