@@ -39,7 +39,6 @@ source("helpers.R")
 ```
 
 
-## Check $P_\theta (X + \varepsilon > m)$ is stochastically increasing in $\theta$
 
 ```{r}
 library(readxl)
@@ -52,14 +51,15 @@ fossil_dataframe = read_excel(
   col_names=c("age", "sd"), 
   col_types=c('numeric', 'numeric')
 )
+K = 18000
 fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 ```
+
+## Check $P_\theta (X + \varepsilon > m)$ is stochastically increasing in $\theta$
 
 ```{r}
 B = 10000
 n=30
-
-K = 18000
 theta.range = seq(10000, 17500, by=50)
 
 eps.mean = 0
