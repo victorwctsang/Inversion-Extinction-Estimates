@@ -4,6 +4,9 @@ library(ggplot2)
 simulateFossils = function (
   n, theta, K, eps.mean=0, eps.sigma=0
 ) {
+  # Simulate fossils assuming:
+  # - Uniform deposition from theta to K
+  # - Gaussian measurement error
   X = runif(n, min=theta, max=K)
   eps = rnorm(n, mean=eps.mean, sd=eps.sigma)
   W = X + eps
@@ -11,6 +14,7 @@ simulateFossils = function (
 }
 
 .generateMCSamples = function (u, mean, sd, a, b) {
+  # Transforms uniform mc samples to truncated normal
   n = nrow(u)
   B = ncol(u)
   mc.samples = matrix(qtnorm(p=u, mean=mean, sd=sd, a=a, b=b), ncol=B)
@@ -18,16 +22,20 @@ simulateFossils = function (
 }
 
 .calcPhiHat = function (u, mean, sd, a, b, K, theta) {
+  # Monte Carlo integral
+  # Phi = $\int_{-\infty}^{m-\theta} \frac{e}{(K-\theta - e} f_\varepsilon (e) de$
   e = .generateMCSamples(u, mean, sd, a, b)
   phi.hat.theta = apply(e/(K-theta-e), 1, mean)
   return(phi.hat.theta)
 }
 
 .F.eps = function (q, mean, sd) {
+  # wrapper of CDF of normal dist
   pnorm(q, mean, sd)
 }
 
 .a.theta = function (theta, K, m, mean, sd, phi) {
+  # a(theta) in the expression for P_\theta
   F.eps.m = .F.eps(m-theta, mean, sd)
   F.eps.K = .F.eps(K-theta, mean, sd)
   
@@ -40,9 +48,9 @@ simulateFossils = function (
 solve.for.theta_q.hat = function (
   theta.root, K, n, u, q, m, eps.mean, eps.sigma
 ) {
+  # Function to solve for \hat{\theta}_q
   phi.hat.theta = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta.root, K=K, theta=theta.root)
   a.theta = .a.theta(theta.root, K, m, eps.mean, eps.sigma, phi.hat.theta)
-  # Return the equation we're trying to solve
   return(theta.root - K + q^(-1/n) * (K-m) * exp(mean(log(a.theta))))
 }
 
