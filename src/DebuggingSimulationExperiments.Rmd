@@ -163,6 +163,17 @@ res.df %>%
 ```
 
 
+```{r}
+res.df %>%
+  mutate(above=m>theta) %>%
+  ggplot(aes(theta, m, colour=above)) +
+  geom_point() + 
+  geom_abline(slope=1, intercept=0) +
+  labs(title=TeX('Simulated m against true \\theta < K'),
+       x=TeX("\\theta")) +
+  theme(legend.position='none')
+```
+
 
 
 
