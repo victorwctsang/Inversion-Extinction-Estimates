@@ -69,24 +69,44 @@ eps.mean = 0
 fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 eps.sigma = mean(fossil_dataframe$sd)
 
-m = rep(NA, nThetas)
-P = rep(NA, nThetas)
-A1 = rep(NA, nThetas)
-phi.hat = rep(NA, nThetas)
-A2 = rep(NA, nThetas)
+m = P = A1 = A2 = phi.hat = equation1 = rep(NA, nThetas)
 
 set.seed(2022)
 
 u = matrix(runif(1*B, 0, 1), ncol=B)
 
 for (i in 1:nThetas) {
-  m[i] = min(simulateFossils(n=n, theta=theta.range[i], K=K, eps.mean=eps.mean, eps.sigma=eps.sigma)$W)
-  A1[i] = .calcA1(theta=theta.range[i], K=K, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
-  phi.hat[i] = .calcPhiHat(u=u, mean=eps.mean, sd=eps.sigma,
-                           a=-Inf, b=m[i]-theta.range[i], K=K, m=m[i],
+  W = simulateFossils(n=n,
+                      theta=theta.range[i],
+                      K=K,
+                      eps.mean=eps.mean,
+                      eps.sigma=eps.sigma)$W
+  m[i] = min(W)
+  A1[i] = .calcA1(theta=theta.range[i],
+                  K=K,
+                  m=m[i],
+                  eps.mean=eps.mean,
+                  eps.sigma=eps.sigma)
+  phi.hat[i] = .calcPhiHat(u=u,
+                           mean=eps.mean,
+                           sd=eps.sigma,
+                           a=-Inf,
+                           b=m[i]-theta.range[i],
+                           K=K,
+                           m=m[i],
                            theta=theta.range[i])
-  A2[i] = .calcA2(theta=theta.range[i], K=K, u=u, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
-  P[i] = getP(theta=theta.range[i], K=K, u=u, m=m[i], eps.mean=eps.mean, eps.sigma=eps.sigma)
+  A2[i] = .calcA2(theta=theta.range[i],
+                  K=K,
+                  u=u,
+                  m=m[i],
+                  eps.mean=eps.mean,
+                  eps.sigma=eps.sigma)
+  P[i] = getP(theta=theta.range[i],
+              K=K,
+              u=u,
+              m=m[i],
+              eps.mean=eps.mean,
+              eps.sigma=eps.sigma)
 }
 
 res.df = data.frame(theta=theta.range,
@@ -98,6 +118,11 @@ res.df = data.frame(theta=theta.range,
 head(res.df)
 ```
 
+```{r}
+res.df %>%
+  group_by() %>%
+  summarise(min(A1), max(A1), min(A2), max(A2), min(phi.hat), max(phi.hat))
+```
 
 ```{r}
 res.df %>%
@@ -108,23 +133,13 @@ res.df %>%
        y=TeX("P"))
 ```
 
-
-## Check if components behave like probabilities
-
-#### A1
-
-```{r}
-res.df %>%
-  group_by() %>%
-  summarise(min(A1), max(A1), min(A2), max(A2))
-```
-
 ```{r}
 res.df %>%
   select(theta, A1) %>%
   ggplot(aes(x=theta, y=A1)) +
   geom_line() +
-  ggtitle("A1 for increasing Theta")
+  labs(title=TeX("A1 for increasing \\theta"),
+       x=TeX("\\theta"))
 ```
 
 ```{r}
@@ -132,7 +147,8 @@ res.df %>%
   select(theta, A2) %>%
   ggplot(aes(x=theta, y=A2)) +
   geom_line() +
-  ggtitle("A2 for increasing Theta")
+  labs(title=TeX("A2 for increasing \\theta"),
+       x=TeX("\\theta"))
 ```
 
 ```{r}
@@ -141,20 +157,16 @@ res.df %>%
   ggplot(aes(x=theta, y=phi.hat)) +
   geom_line() +
   geom_smooth() +
-  labs(title=TeX("\\hat{\\phi} for increasing \\theta"))
+  labs(title=TeX("\\widehat{\\phi(\\theta)} for increasing \\theta"),
+       x=TeX("\\theta"),
+       y=TeX("\\widehat{\\phi(\\theta)}"))
 ```
 
 
+
+
+
 ## Plot the function that we want to solve to determine a suitable search interval.
-
-$$
-\hat{\theta_q} - K + q^{-\frac{1}{n}}(K-m) \exp{ \left\{ \overline{\log\left[a_i(\hat{\theta}_q)\right]} \right\}} = 0 \quad\quad (1)
-$$
-
-$$
-\overline{\log(a_i(\widehat \theta_q))} = \frac{1}{n}\sum_{i=1}^n\log\left\{a_i(\widehat \theta_q) \right\} \\
-a_i(\widehat \theta_q) = \frac{K-\widehat \theta_q}{K - m}\left[ 1 - \frac{F_\varepsilon(m-\widehat \theta_q)}{F_\varepsilon(K-\widehat \theta_q)} \right] + \frac{F_\varepsilon(m-\widehat \theta_q)}{F_\varepsilon(K-\widehat \theta_q)} + F^{-1}_\varepsilon(K-\widehat \theta_q) \widehat \phi_i(\widehat \theta_q)
-$$ 
 
 ```{r}
 theta = 12500
@@ -212,9 +224,9 @@ target.trials.df = data.frame(
 colours = c("q_lower" = '#F8766D', "q_upper"='#619CFF')
 
 ggplot(target.trials.df) +
-  geom_line(aes(x=x, y=q_lower, group=trial, colour="q_lower"), alpha=0.4) +
-  geom_line(aes(x=x, y=q_upper, group=trial, colour="q_upper"), alpha=0.4) +
-  geom_hline(yintercept=0, lty=1) +
+  geom_line(aes(x=x, y=q_lower, group=trial, colour="q_lower")) +
+  geom_line(aes(x=x, y=q_upper, group=trial, colour="q_upper")) +
+  geom_hline(yintercept=0, lty=1, alpha=0.4) +
   # geom_vline(xintercept=c(theta, K), lty=2) +
   ggtitle("Equation (1) values for different thetas") +
   labs(x = "Theta",
@@ -222,37 +234,3 @@ ggplot(target.trials.df) +
        color = "Legend") +
   scale_color_manual(values = colours)
 ```
-
-What's equation 1? 
-
-$$
-\text{Equation (1):} \quad \hat{\theta_q} - K + q^{-\frac{1}{n}}(K-m) \exp{ \left\{ \overline{\log\left[a(\hat{\theta}_q)\right]} \right\}}
-$$
-
-The above graph plots the value of Equation 1 for different values of $\theta_q$ (red is $q = 0.025$, blue is $q = 0.075$). The root of this function is the quantile estimate $\hat \theta_q$
-
-```{r}
-library(dplyr)
-
-target.trials.df %>%
-  group_by(trial) %>%
-  summarise(min(q_upper), max(q_upper))
-```
-
-
-### Check $P_\theta (X + \varepsilon > m) \in [0, 1]$
-
-$$
-P_\theta (X + \varepsilon > m) = \left( \frac{K - m}{K - \theta} \right) a(\theta)
-$$
-
-For different values of $\theta$, calculate monte carlo estimate of $\phi$ and calculate $P(X + \varepsilon > m)$. Check they are all between 0 and 1.
-
-### Check probability behaviour of double integrals
-
-TODO
-
-
-### Check $a(\theta)$
-
-TODO
