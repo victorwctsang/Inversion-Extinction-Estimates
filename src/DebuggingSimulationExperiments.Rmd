@@ -69,48 +69,43 @@ eps.mean = 0
 fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 eps.sigma = mean(fossil_dataframe$sd)
 
-m = P = A1 = A2 = phi.hat = equation1 = rep(NA, nThetas)
+P = A1 = A2 = phi.hat = equation1 = rep(NA, nThetas)
 
 set.seed(2022)
 
 u = matrix(runif(1*B, 0, 1), ncol=B)
 
+m = min(fossil_dataframe$age)
+
 for (i in 1:nThetas) {
-  W = simulateFossils(n=n,
-                      theta=theta.range[i],
-                      K=K,
-                      eps.mean=eps.mean,
-                      eps.sigma=eps.sigma)$W
-  m[i] = min(W)
   A1[i] = .calcA1(theta=theta.range[i],
                   K=K,
-                  m=m[i],
+                  m=m,
                   eps.mean=eps.mean,
                   eps.sigma=eps.sigma)
   phi.hat[i] = .calcPhiHat(u=u,
                            mean=eps.mean,
                            sd=eps.sigma,
                            a=-Inf,
-                           b=m[i]-theta.range[i],
+                           b=m-theta.range[i],
                            K=K,
-                           m=m[i],
+                           m=m,
                            theta=theta.range[i])
   A2[i] = .calcA2(theta=theta.range[i],
                   K=K,
                   u=u,
-                  m=m[i],
+                  m=m,
                   eps.mean=eps.mean,
                   eps.sigma=eps.sigma)
   P[i] = getP(theta=theta.range[i],
               K=K,
               u=u,
-              m=m[i],
+              m=m,
               eps.mean=eps.mean,
               eps.sigma=eps.sigma)
 }
 
 res.df = data.frame(theta=theta.range,
-                    m = m,
                     A1 = A1,
                     A2 = A2,
                     phi.hat = phi.hat,
@@ -135,6 +130,17 @@ res.df %>%
 
 ```{r}
 res.df %>%
+  mutate(Pn = P**n) %>% 
+  ggplot(aes(x=theta, y=Pn)) +
+  geom_line() +
+  labs(title=TeX("$P_\\theta (X + \\epsilon > m)^n$ for increasing theta"),
+       x=TeX("\\theta"),
+       y=TeX("P^n"))
+```
+
+
+```{r}
+res.df %>%
   select(theta, A1) %>%
   ggplot(aes(x=theta, y=A1)) +
   geom_line() +
@@ -156,22 +162,13 @@ res.df %>%
   select(theta, phi.hat) %>%
   ggplot(aes(x=theta, y=phi.hat)) +
   geom_line() +
-  geom_smooth() +
   labs(title=TeX("\\widehat{\\phi(\\theta)} for increasing \\theta"),
        x=TeX("\\theta"),
        y=TeX("\\widehat{\\phi(\\theta)}"))
 ```
 
-
 ```{r}
-res.df %>%
-  mutate(above=m>theta) %>%
-  ggplot(aes(theta, m, colour=above)) +
-  geom_point() + 
-  geom_abline(slope=1, intercept=0) +
-  labs(title=TeX('Simulated m against true \\theta < K'),
-       x=TeX("\\theta")) +
-  theme(legend.position='none')
+
 ```
 
 
@@ -245,3 +242,14 @@ ggplot(target.trials.df) +
        color = "Legend") +
   scale_color_manual(values = colours)
 ```
+
+```{r}
+target.trials.df %>%
+  summarise(min(q_lower), max(q_lower), min(q_upper), max(q_upper))
+```
+
+```{r}
+target.trials.df %>%
+  filter(abs(q_upper) < 1e-3)
+```
+

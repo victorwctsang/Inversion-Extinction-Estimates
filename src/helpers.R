@@ -1,5 +1,6 @@
 library(extraDistr)
 library(ggplot2)
+library(latex2exp)
 
 simulateFossils = function (
   n, theta, K, eps.mean=0, eps.sigma=0
@@ -60,7 +61,9 @@ solve.for.theta_q.hat = function (
     theta.root, K, u, m, eps.mean, eps.sigma, n, q
 ) {
   # Function to solve for \hat{\theta}_q
-  return(getP(theta.root, K, u, m, eps.mean, eps.sigma) - q^(1/n))
+  P = getP(theta.root, K, u, m, eps.mean, eps.sigma)
+  val = prod(P) - q
+  return(val)
 }
 
 getThetaQuantile = function (
@@ -69,7 +72,7 @@ getThetaQuantile = function (
   n = length(W)
   m = min(W)
   theta_q.hat = NA
-  if (eps.mean == 0 && eps.sigma == 0 && is.na(u)) {
+  if (eps.mean == 0 && eps.sigma == 0) {
     # no measurement error
     theta_q.hat = K - q^(-1/n) * (K-m)
   }
@@ -79,12 +82,12 @@ getThetaQuantile = function (
       solve.for.theta_q.hat,
       interval=uniroot.interval,
       K = K,
+      n = n,
       u = u,
+      q = q,
       m = m,
       eps.mean = eps.mean,
-      eps.sigma = eps.sigma,
-      n = n,
-      q = q
+      eps.sigma = eps.sigma
     )
     theta_q.hat = res$root
   }
@@ -115,7 +118,7 @@ simulateConfidenceIntervals = function (
                                eps.sigma=eps.sigma,
                                uniroot.interval=uniroot.interval)
   }
-  CI.df = data.frame(i=1:nSim, L=L, U=U)
+  CI.df = data.frame(i=1:nSim, L=CI.L, U=CI.U)
   CI.df$mean = rowMeans(CI.df[,2:3])
   CI.df$containsTheta = (CI.df$L < theta) & (theta < CI.df$U)
   return(CI.df)
@@ -125,7 +128,7 @@ plot.simCIs = function(df, theta) {
   ggplot(data=df, aes(x=i, y=mean)) +
     geom_errorbar(aes(ymax = U, ymin = L, colour=containsTheta)) +
     geom_hline(yintercept=theta) +
-    ggtitle(paste("Confidence interval;", "theta", "=", theta)) +
-    ylab("Theta")
+    labs(title=paste("Confidence interval;", TeX("\\theta"), "=", theta),
+         y=TeX("\\theta"))
 }
 

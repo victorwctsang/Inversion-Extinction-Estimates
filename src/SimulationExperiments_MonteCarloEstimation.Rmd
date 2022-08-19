@@ -34,58 +34,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Some Theory
-
-In the no measurement error scenario, we have:
-
-$$
-X_1, \dots, X_n \sim_{i.i.d} \mathcal{U}(\theta, K)\quad \text{for some known $K$}
-$$
-
-Our MLE is $M = \min(X_1, \dots, X_n)$. Let the observed minimum be $m$.
-
-In the measurement error scenario, we now assume:
-
-$$
-W_i = X_i + \varepsilon_i, \quad \forall i=1, 2, \dots, n \\
-\varepsilon_{i} \sim_{i.i.d} f_\varepsilon(e), \quad \text{which is some known function for } e \in \mathbb{R} \\
-X_i | \varepsilon = e \sim_{i.i.d} \mathcal{U}(\theta, K - e) \implies f_{X | \epsilon} (x | e) = \frac{1}{K - \theta - e}
-$$
-
-$$
-\hat{\theta}_q =
-\begin{cases}
-      K - q^{-\frac{1}{n}}(K-m), \quad \text{No measurement error} \\
-      K - q^{-\frac{1}{n}}(K-m) \exp{ \left\{ \overline{\log\left[a_i(\hat{\theta}_q)\right]} \right\}} , \quad \text{With Measurement error} \\
-\end{cases}
-$$
-
-where:
-
-$$
-\overline{\log(a_i(\theta))} = \frac{1}{n}\sum_{i=1}^n\log\left\{a_i(\theta) \right\} \\
-a_i(\theta) = \frac{K-\theta}{K - m}\left[ 1 - \frac{F_\varepsilon(m-\theta)}{F_\varepsilon(K-\theta)} \right] + \frac{F_\varepsilon(m-\theta)}{F_\varepsilon(K-\theta)} + F^{-1}_\varepsilon(K-\theta) \underbrace{\int_{-\infty}^{m-\theta} \frac{e_i}{K - \theta - e_i} f_\varepsilon(e_i)de_i}_{\phi_i(\theta)}
-$$ 
-
-Note that $\phi_i(\theta)$ is not known in closed form for all $f_\varepsilon(e_i)$, and so we need to estimate this using a Monte Carlo integral:
-
-$$
-\hat{\phi}_i(\theta) = \frac{1}{B} \sum_{b=1}^B \frac{e_{ib}}{K - \theta - e_{ib}}
-$$
-
-where:
-
-* $B$ is some predetermined number of generated samples
-* $e_{i1}, e_{i2}, \dots, e_{iN}$ are generated from $f_\varepsilon$ and are in the interval $(-\infty, m-\theta]$
-
-For these experiments, we assume that the measurement errors are independent and zero-mean Gaussian distributed:
-
-$$
-\varepsilon_{i} \sim_{i.i.d} \mathcal{N}(0, \sigma^2) \quad \text{for some constant variance } \sigma^2
-$$
-
-## Functions
-
 ```{r}
 source("helpers.R")
 ```
@@ -96,6 +44,8 @@ source("helpers.R")
 We want to see that for a 95% confidence interval ($\alpha = 0.05$), our coverage probability should be approximately 95%
 
 ```{r}
+set.seed(2022)
+
 nSim = 1000
 alpha = 0.05
 n = 30
@@ -119,9 +69,9 @@ We will keep the same parameters as above, but now we introduce measurement erro
 
 Let's assume our measurement errors are normally distributed with zero-mean, and set the standard deviation to the **average standard deviation from some real data**
 
-We will use $B = 100$ for our monte carlo step.
+We will use $B = 10000$ for our monte carlo step.
 
-```{r example2_setup}
+```{r}
 library(readxl)
 
 # Import mammoth data from fossildata.xlsx
@@ -133,17 +83,23 @@ fossil_dataframe = read_excel(
   col_types=c('numeric', 'numeric')
 )
 fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+```
 
-B = 100
+
+```{r example2_setup}
+set.seed(2022)
+
+B = 10000
 eps.mean = 0
 eps.sigma = mean(fossil_dataframe$sd)
-uniroot.interval=c(10000, 14000)
+uniroot.interval=c(10000, 16000)
 
 sim.error = simulateConfidenceIntervals(nSim, alpha, n, theta, K, B, eps.mean, eps.sigma, uniroot.interval)
+plot.simCIs(sim.error[1:100, ], theta)
+```
 
+```{r}
 mean(sim.error$containsTheta)
 ```
 
-```{r example2_plot}
-plot.simCIs(sim.error[1:100, ], theta)
-```
+
