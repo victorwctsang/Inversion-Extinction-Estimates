@@ -89,7 +89,7 @@ fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 ```{r example2_setup}
 set.seed(2022)
 
-B = 10000
+B = 1000
 eps.mean = 0
 eps.sigma = mean(fossil_dataframe$sd)
 uniroot.interval=c(10000, 16000)
