@@ -1,6 +1,21 @@
 library(extraDistr)
 library(ggplot2)
 library(latex2exp)
+library(readxl)
+
+getFossilData = function (path, sheet, range, col_names, col_types) {
+  read_excel(path, sheet, range, col_names, col_types)
+}
+
+boundFossilData = function (fossil.df, K) {
+  return(fossil.df[fossil.df$age < K, ])
+}
+
+getStdDevFromFossilData = function (path, K, ...) {
+  df = getFossilData(path, ...)
+  df = boundFossilData(df, K)
+  return(mean(df$sd))
+}
 
 simulateFossils = function (
   n, theta, K, eps.mean=0, eps.sigma=0
@@ -94,33 +109,30 @@ getThetaQuantile = function (
   return(theta_q.hat)
 }
 
+getConfidenceInterval = function (alpha, n, K, W, u, eps.sigma, eps.mean, uniroot.interval) {
+  CI.L = getThetaQuantile(q=alpha/2, K, W, u, eps.mean, eps.sigma, uniroot.interval)
+  CI.U = if (alpha == 0.5) CI.L else getThetaQuantile(q=1-alpha/2, K, W, u, eps.mean, eps.sigma, uniroot.interval)
+  CI.mean = mean(c(CI.L, CI.U))
+  CI = list(CI.L = CI.L, CI.U = CI.U, CI.mean = CI.mean, CI.width = CI.U - CI.L)
+  return(CI)
+}
+
 simulateConfidenceIntervals = function (
   nSim, alpha, n, theta, K, B=0, eps.mean=0, eps.sigma=0, uniroot.interval=NA
 ) {
-  CI.L = rep(NA, nSim)
-  CI.U = rep(NA, nSim)
+  CI.df = data.frame(i=1:nSim,
+                     L=rep(NA, nSim),
+                     U=rep(NA, nSim),
+                     mean=rep(NA, nSim),
+                     width=rep(NA, nSim),
+                     containsTheta=FALSE)
   u = matrix(runif(n*B, min=0, max=1), ncol=B)
-  
+
   for (i in 1:nSim) {
     sim.data = simulateFossils(n, theta, K, eps.mean, eps.sigma)
-    CI.L[i] = getThetaQuantile(q=alpha/2,
-                               K=K,
-                               W=sim.data$W,
-                               u=u,
-                               eps.mean=eps.mean,
-                               eps.sigma=eps.sigma,
-                               uniroot.interval=uniroot.interval)
-    CI.U[i] = getThetaQuantile(q=1-alpha/2,
-                               K=K,
-                               W=sim.data$W,
-                               u=u,
-                               eps.mean=eps.mean,
-                               eps.sigma=eps.sigma,
-                               uniroot.interval=uniroot.interval)
+    CI.df[i, 2:5] = getConfidenceInterval(alpha, n, K, sim.data$W, u, eps.sigma, eps.mean, uniroot.interval)
+    CI.df[i, 6] = (CI.df[i, 2] < theta) & (theta < CI.df[i, 3])
   }
-  CI.df = data.frame(i=1:nSim, L=CI.L, U=CI.U)
-  CI.df$mean = rowMeans(CI.df[,2:3])
-  CI.df$containsTheta = (CI.df$L < theta) & (theta < CI.df$U)
   return(CI.df)
 }
 
