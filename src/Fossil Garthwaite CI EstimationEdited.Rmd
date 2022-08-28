@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Assumptions
 
 * Uniform Fossil Recovery: fossil ages are uniformly distributed
+* Have an initial point estimate (observed minimum)
+
 
 ### Set parameters
 
@@ -27,86 +29,57 @@ b = 18000 # upper bound for dates we can get fossils in
 library(readxl)
 # Import mammoth data from fossildata.xlsx
 fossil_dataframe = read_excel(
-  path='fossildata.xlsx', 
+  path='../data/fossildata.xlsx', 
   sheet="MammothPrimEBer", 
   range="M3:N36", 
   col_names=c("age", "sd"), 
   col_types=c('numeric', 'numeric')
 )
-fossil_dataframe = fossil_dataframe[fossil_dataframe$age<b,] # suggest not forcing ages to be integers
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<b,]
 
 n_fossils = length(fossil_dataframe$age)
 ```
 
-### Get point estimate of extinction date
 
-This is just the MLE (the age of the last recorded fossil)
-
-```{r}
-obs_stat = min(fossil_dataframe$age)
-obs_stat_ub = obs_stat-(b-obs_stat)/(n_fossils+1) #bias-corrected MLE for lower bound
-```
-
-
-### Calculate step length proportionality constant $k's$
-
-We will set $k = 2/\{ z_\alpha (t\pi)^{-1/2}\exp{(-z_\alpha^2/2)}$ where $z_\alpha$ is the upper 100 $\alpha$ % point of the standard normal distribution.
+### Functions
 
 ```{r}
-k = 2 / (qnorm(1-alpha) * (2*pi)^(-0.5) * exp(- (qnorm(1-alpha)^2)/2))
-```
+calc_k = function (alpha) {
+  # K := Step length proportionality constant
+  # Normal distribution heuristic
+  2 / (qnorm(1-alpha) * (2*pi)^(-0.5) * exp(- (qnorm(1-alpha)^2)/2))
+}
 
+calc_unbiased_estimator = function (X, b, n) {
+  min(X) - (b - min(X))/(n-1)
+}
 
-### Select stopping criteria
+generate_starting_estimates.percentile = function (alpha, theta, n, b) {
+  # Implements percentile method (Buckland, 1980; Efron, 1981)
+  n.resamples = (2-alpha)/alpha
+  fossil.resamples = matrix(runif(n * n.resamples, min=theta, max=b),
+                            ncol=n.resamples)
+  theta.resamples = apply(fossil.resamples,
+                          2,
+                          FUN=min)#function (x) calc_unbiased_estimator(x, b, n))
+  theta.resamples.sorted = sort(theta.resamples)
+  return(list(L=theta.resamples.sorted[2],
+              U=theta.resamples.sorted[n.resamples-1],
+              m=ceiling(min(50, 0.3 * n.resamples))))
+}
 
-Some dodgy stuff going on here
-
-```{r}
-max_iter = 1600
-```
-
-
-### Select starting values
-
-Generate $(2 - \alpha) / \alpha$ resamples:
-
-```{r}
-n_init_resamples = ceiling((2-alpha)/alpha)
-resamples = runif(n=n_init_resamples*n_fossils, min=obs_stat_ub, max=b)
-init_fossils = matrix(resamples, ncol=n_init_resamples)
-init_resamples = apply(init_fossils,2,min)
-init_resamples_sorted = sort(init_resamples)
-init_resamples_sorted
-```
-
-We start at the $m$th iteration and set the values to the second largest and second smallest resample:
-
-```{r}
-m = ceiling(min(50, 0.3*n_init_resamples))
-
-bound_upper = rep(NA,max_iter)
-bound_lower = rep(NA,max_iter)
-
-bound_upper[m] = min(init_resamples_sorted[n_init_resamples-1], obs_stat) #TODO
-bound_lower[m] = init_resamples_sorted[2]
-
-bound_upper[m]
-bound_lower[m]
-```
-
-### RM Process for both upper and lower CI bounds
-
-```{r}
-rm_process = function (bound_vec, obs_stat_ub, n, alpha, b, m, max_iter, k) {
+rm_process = function (
+  bound_vec, theta.hat, n, alpha, b, m, max_iter, k
+) {
   for (i in m:max_iter) {
     # Generate resamples
     resamples = runif(n=n, min=bound_vec[i], max=b)
     
     # calculate step length
-    c = max(2*k*abs(bound_vec[m] - obs_stat_ub), 1000) # TODO
+    c = min(2*k*abs(bound_vec[i] - theta.hat), 1000) # TODO
     
     # Update upper bound
-    if (min(resamples) <= obs_stat_ub) {
+    if (min(resamples) <= theta.hat) {
       bound_vec[i+1] = (bound_vec[i] + c*(1-alpha)/ i)
     } 
     else {
@@ -116,48 +89,120 @@ rm_process = function (bound_vec, obs_stat_ub, n, alpha, b, m, max_iter, k) {
   return(bound_vec[m:max_iter])
 }
 
+getConfidenceInterval.rm_process = function (
+  theta.hat, n, alpha, b, m, max_iter, k
+) {
+  # Starting values
+  starting_est = generate_starting_estimates.percentile(alpha, theta.hat, n, b)
+  
+  bound_lower = bound_upper = rep(NA, max_iter)
+  m = starting_est$m
+  bound_lower[m] = starting_est$L
+  bound_upper[m] = starting_est$U
+
+  # Step length constant k
+  lower = rm_process(bound_vec = bound_lower,
+                         theta.hat = theta.hat,
+                         n = n,
+                         alpha = (1-alpha),
+                         b = b,
+                         m = m,
+                         max_iter = max_iter,
+                         k = k)
+  upper = rm_process(bound_vec = bound_upper,
+                         theta.hat = theta.hat,
+                         n = n,
+                         alpha = alpha,
+                         b = b,
+                         m = m,
+                         max_iter = max_iter,
+                         k = k)
+  CI.iters = cbind(lower, upper)
+  return(list(L=lower[length(lower)],
+              U=upper[length(upper)],
+              CI.iters=CI.iters))
+}
 ```
+
+
+### Get point estimate of extinction date
+
+This is just the MLE (the age of the last recorded fossil)
 
 ```{r}
-res_upper = rm_process(
-  bound_vec = bound_upper,
-  obs_stat_ub = obs_stat_ub,
-  n = n_fossils,
-  alpha = alpha,
-  b = b,
-  m = m,
-  max_iter = max_iter,
-  k = k
-)
-
-res_lower = rm_process(
-  bound_vec = bound_lower,
-  obs_stat_ub = obs_stat_ub,
-  n = n_fossils,
-  alpha = (1-alpha),
-  b = b,
-  m = m,
-  max_iter = max_iter,
-  k = k
-)
-
-res_upper[length(res_upper)]
-res_lower[length(res_lower)]
+obs_stat = min(fossil_dataframe$age)
+obs_stat_ub = calc_unbiased_estimator(fossil_dataframe$age, b, n_fossils)
 ```
+
+
+### Calculate step length proportionality constant $k's$
+
+We will set $k = 2/\{ z_\alpha (t\pi)^{-1/2}\exp{(-z_\alpha^2/2)}$ where $z_\alpha$ is the upper 100 $\alpha$ % point of the standard normal distribution.
+
+```{r}
+k = calc_k(alpha)
+k
+```
+
+
+### Select stopping criteria
+
+Some dodgy stuff going on here
+
+```{r}
+max_iter = 2000
+```
+
+
+### Select starting values
+
+Generate $(2 - \alpha) / \alpha$ resamples:
+
+```{r}
+starting_estimates = generate_starting_estimates.percentile(alpha, obs_stat_ub, n_fossils, b)
+starting_estimates
+```
+
+We start at the $m$th iteration and set the values to the second largest and second smallest resample:
+
+```{r}
+bound_upper = bound_lower = rep(NA,max_iter)
+
+m = starting_estimates$m
+bound_lower[m] = starting_estimates$L
+bound_upper[m] = starting_estimates$U
+
+bound_lower[m]
+bound_upper[m]
+```
+
+### RM Process for both upper and lower CI bounds
+
+
+```{r}
+res = getConfidenceInterval.rm_process(obs_stat_ub, n_fossils, alpha, b, m, max_iter, k)
+res$U
+res$L
+```
+
 
 ### Plot iterations
 
 ```{r}
-plot(res_upper,
+plot(res$CI.iters$U,
      pch=4,
      type="l",
      xlab="i",
      col='red',
      ylab=NA,
      main="CI Convergence",
-     ylim=c(min(res_lower), max(res_upper)))
-lines(res_lower, pch=4, col='blue')
+     ylim=c(min(res$CI.iters$L), max(res$CI.iters$U)))
+lines(res$CI.iters$L, pch=4, col='blue')
 abline(h=obs_stat_ub, col="black")
 
 legend("topright", legend=c("U_i", "L_i", "obs_stat_ub"), col=c("red", "blue", "black"), lty=c(1,1,1))
 ```
+
+
+
+
