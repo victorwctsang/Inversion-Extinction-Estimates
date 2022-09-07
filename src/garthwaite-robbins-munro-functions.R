@@ -1,85 +1,105 @@
 
+estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_iters=FALSE) {
+  # estimate confidence interval using Garthwaite's Robbins-Munro process (1995)
+  
+  n=length(W)
+  # get point estimate of theta
+  theta.hat = estimate_theta.rm(W)
+  # calculate p
+  p = calc_prop_constant(alpha)
+  # initialize lower and upper vecs
+  CI.iters = cbind(lower=rep(NA, max_iter), upper=rep(NA, max_iter))
+  # calculate m
+  m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
+  # compute starting estimates
+  CI.iters[m, ] = get_starting_vals(method="percentile", alpha, theta, n, K, eps.mean, eps.sigma)
+  # estimate lower
+  CI.iters$lower = estimate_bound.rm("lower", CI.iters[, "lower"], alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma)
+  # estimate upper
+  CI.iters$upper = estimate_bound.rm("upper", CI.iters[, "upper"], alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma)
+  CI = list(CI.lower=CI.iters[nrow(CI.iters), "lower"], CI.upper=CI.iters[nrow(CI.iters), "upper"])
+  if (return_iters == TRUE) {
+    CI$CI.iters = CI.iters
+  }
+  return(CI)
+}
 
-calc_step_length_k = function (alpha) {
-  # K := Step length proportionality constant
+estimate_theta.rm = function (W) {
+  min(W)
+}
+
+calc_prop_constant = function (alpha) {
+  # p := Step length proportionality constant (garthwaite calls it k)
   # Garthwaite 1995 paper
-  # Normal distribution heuristic
-  2 / (qnorm(1-alpha) * (2*pi)^(-0.5) * exp(- (qnorm(1-alpha)^2)/2))
+  2 / (qnorm(1-alpha) * (2*pi)^(-0.5) * exp(- (qnorm(1-alpha)^2)/2))   # Normal distribution heuristic
 }
 
-calc_unbiased_estimator = function (X, K, n) {
-  min(X) - (K - min(X))/(n-1)
+get_starting_vals = function (method="percentile", ...) {
+  switch(method,
+         percentile=get_starting_est.percentile(...),
+         analytic=get_starting_vals.analytic(...))
 }
 
-generate_starting_estimates.percentile = function (alpha, theta, n, K) {
+simulate_fossils = function (n, theta, K, eps.mean=0, eps.sigma=0) {
+  # Simulate fossils assuming:
+  # - Uniform deposition from theta to K
+  # - Gaussian measurement error
+  X = runif(n, min=theta, max=K)
+  eps = rnorm(n, mean=eps.mean, sd=eps.sigma)
+  W = X + eps
+  return(W)
+}
+
+get_starting_est.percentile = function (alpha, theta, n, K, eps.mean, eps.sigma) {
   # Implements percentile method (Buckland, 1980; Efron, 1981)
   n.resamples = (2-alpha)/alpha
-  fossil.resamples = matrix(runif(n * n.resamples, min=theta, max=K),
+  fossil.resamples = matrix(simulate_fossils(n*n.resamples, theta, K, eps.mean, eps.sigma),
                             ncol=n.resamples)
-  theta.resamples = apply(fossil.resamples,
-                          2,
-                          FUN=min)#function (x) calc_unbiased_estimator(x, b, n))
+  theta.resamples = apply(fossil.resamples, 2, FUN=min)
   theta.resamples.sorted = sort(theta.resamples)
-  return(list(L=theta.resamples.sorted[2],
-              U=theta.resamples.sorted[n.resamples-1],
-              m=ceiling(min(50, 0.3 * n.resamples))))
+  return(cbind(lower=theta.resamples.sorted[2],
+               upper=theta.resamples.sorted[n.resamples-1]))
 }
 
-rm_process = function (
-    bound_vec, theta.hat, n, alpha, K, m, max_iter, k
-) {
+get_starting_est.analytic = function () {} # TODO
+
+estimate_bound.rm = function (bound, bound.iters, alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma) {
+  # TODO - simplify this (repeating functions because of calculation of c)
+  switch(bound,
+         lower=estimate_bound.rm.lower(bound.iters, alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma),
+         upper=estimate_bound.rm.upper(bound.iters, 1-alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma))
+}
+
+estimate_bound.rm.lower = function (bound.iters, alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma) {
   for (i in m:max_iter) {
     # Generate resamples
-    resamples = runif(n=n, min=bound_vec[i], max=K)
-    
+    resamples = simulate_fossils(n, theta=bound.iters[i], K, eps.mean, eps.sigma)
+    theta.hat.resample = estimate_theta.rm(resamples)
     # calculate step length
-    c = min(2*k*abs(bound_vec[i] - theta.hat), 1000) # TODO
-    
-    # Update upper bound
-    if (min(resamples) <= theta.hat) {
-      bound_vec[i+1] = (bound_vec[i] + c*(1-alpha)/ i)
-    } 
-    else {
-      bound_vec[i+1] = (bound_vec[i] - c*alpha / i)
+    c = max(2*p*(bound.iters[i] - theta.hat), 1000)
+    # Update
+    if (theta.hat.resample <= theta.hat) {
+      bound.iters[i+1] = (bound.iters[i] - c*(alpha/2)/ i)
+    } else {
+      bound.iters[i+1] = (bound.iters[i] + c*(1-alpha/2) / i)
     }
   }
-  return(bound_vec[m:max_iter])
+  return(bound.iters)
 }
 
-getConfidenceInterval.rm_process = function (theta.hat, n, alpha, K, max_iter, return_iters=FALSE) {
-  # Step length proportionality constant
-  k = calc_step_length_k(alpha)
-  # Starting values
-  starting_est = generate_starting_estimates.percentile(alpha, theta.hat, n, K)
-  
-  bound_lower = bound_upper = rep(NA, max_iter)
-  m = starting_est$m
-  bound_lower[m] = starting_est$L
-  bound_upper[m] = starting_est$U
-  
-  lower = rm_process(bound_vec = bound_lower,
-                     theta.hat = theta.hat,
-                     n = n,
-                     alpha = (1 - alpha),
-                     K = K,
-                     m = m,
-                     max_iter = max_iter,
-                     k = k)
-  upper = rm_process(bound_vec = bound_upper,
-                     theta.hat = theta.hat,
-                     n = n,
-                     alpha = alpha,
-                     K = K,
-                     m = m,
-                     max_iter = max_iter,
-                     k = k)
-  CI.iters = cbind(lower, upper)
-  return_vals = list(L=lower[length(lower)],
-                     U=upper[length(upper)])
-  return_vals$mean = mean(return_vals$L, return_vals$U)
-  return_vals$width = return_vals$U - return_vals$L
-  if (return_iters==TRUE) {
-    return_vals$CI.iters=CI.iters
+estimate_bound.rm.upper = function (bound.iters, alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma) {
+  for (i in m:max_iter) {
+    # Generate resamples
+    resamples = simulate_fossils(n, theta=bound.iters[i], K, eps.mean, eps.sigma)
+    theta.hat.resample = estimate_theta.rm(resamples)
+    # calculate step length
+    c = max(2*p*(theta.hat - bound.iters[i]), 1000)
+    # Update
+    if (theta.hat.resample <= theta.hat) {
+      bound.iters[i+1] = (bound.iters[i] + c*(1-alpha/2)/ i)
+    } else {
+      bound.iters[i+1] = (bound.iters[i] - c*(alpha/2) / i)
+    }
   }
-  return(return_vals)
+  return(bound.iters)
 }
