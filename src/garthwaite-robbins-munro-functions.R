@@ -8,18 +8,19 @@ estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_it
   # calculate p
   p = calc_prop_constant(alpha)
   # initialize lower and upper vecs
-  CI.iters = cbind(lower=rep(NA, max_iter), upper=rep(NA, max_iter))
+  lower.iters = upper.iters = rep(NA, max_iter)
   # calculate m
   m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
   # compute starting estimates
-  CI.iters[m, ] = get_starting_vals(method="percentile", alpha, theta, n, K, eps.mean, eps.sigma)
+  starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
+  lower.iters[m] = starting_ests[, "lower"]
+  upper.iters[m] = starting_ests[, "upper"]
   # estimate lower
-  CI.iters$lower = estimate_bound.rm("lower", CI.iters[, "lower"], alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma)
-  # estimate upper
-  CI.iters$upper = estimate_bound.rm("upper", CI.iters[, "upper"], alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma)
-  CI = list(CI.lower=CI.iters[nrow(CI.iters), "lower"], CI.upper=CI.iters[nrow(CI.iters), "upper"])
+  lower.iters = estimate_bound.rm("lower", lower.iters, alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma)
+  upper.iters = estimate_bound.rm("upper", upper.iters, alpha, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma)
+  CI = list(CI.lower=lower.iters[length(lower.iters)], CI.upper=upper.iters[length(upper.iters)])
   if (return_iters == TRUE) {
-    CI$CI.iters = CI.iters
+    CI$CI.iters = cbind(lower=lower.iters, upper=upper.iters)
   }
   return(CI)
 }
