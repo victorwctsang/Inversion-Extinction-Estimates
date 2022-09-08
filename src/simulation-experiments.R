@@ -15,22 +15,23 @@
 #   - Interval width with varying error
 #   - Computational efficiency
 
+library(tidyverse)
+source("helpers-simulation-experiments.R")
+source("meme-functions.R")
+source("garthwaite-robbins-munro-functions.R")
+
 ################################################################################
 # Experiment Setup
 ################################################################################
 
-library(tidyverse)
-source("helpers.R")
-
 set.seed(2022)
 
-n.sims = 250
-n = 30
-theta.true = 10000
-K = 20000
+n.sims = 300                      # Number of simulated datasets
+n = 30                            # Number of fossil samples in each dataset
+theta.true = 10000                # True extinction date
+K = 20000                         # Upper bound for fossil ages
 
-
-dating_error.mean = 0
+dating_error.mean = 0             # True mean of radiocarbon dating error
 dating_error.sd = getStdDevFromFossilData(path='../data/fossildata.xlsx',
                                           K=K,
                                           sheet="MammothPrimEBer", 
@@ -38,65 +39,47 @@ dating_error.sd = getStdDevFromFossilData(path='../data/fossildata.xlsx',
                                           col_names=c("age", "sd"), 
                                           col_types=c('numeric', 'numeric'))
 
-alpha = 0.05
-B = 1000
-uniroot.interval = c(5000, 25000) # TODO
+alpha = 0.05                      # 95% confidence interval
+B = 500                           # Number of monte carlo samples
+uniroot.interval = c(2000, 19500) # TODO uniroot search interval
+max_iter = 2000                   # Number of iterations for Garthwaite RM
 
-error_factor = c(0, 1, 2, 4)
-col.names = c("Lower", "Upper", "Mean", "Width", "Contains_Theta", "Time")
-results.colnames = paste0(paste(col.names, rep(error_factor, each=length(col.names)), sep="."), "sigma")
-
-results.CI.df = data.frame(matrix(NA, 
-                                  ncol=length(col.names)*length(error_factor), 
-                                  nrow=n.sims,
-                                  dimnames = list(1:n.sims,
-                                                  results.colnames)))
+methods = c("mc", "rm")           # Methods to use
+error_factors = c(0, 1, 2, 4)     # Different multiples to apply to dating error sd
 
 ################################################################################
-# Run experiments
+# Initialise variables
 ################################################################################
 
-# Simulate datasets with varying amounts of measurement error
-sim.datasets.0 = lapply(1:n.sims, function (x) simulateFossils(n, theta.true, K, dating_error.mean, 0*dating_error.sd))
-sim.datasets.1 = lapply(1:n.sims, function (x) simulateFossils(n, theta.true, K, dating_error.mean, 1*dating_error.sd))
-sim.datasets.2 = lapply(1:n.sims, function (x) simulateFossils(n, theta.true, K, dating_error.mean, 2*dating_error.sd))
-sim.datasets.4 = lapply(1:n.sims, function (x) simulateFossils(n, theta.true, K, dating_error.mean, 4*dating_error.sd))
+u = matrix(runif(n*B, min=0, max=1), ncol=B)                 # Base MC Samples
 
-# Generate MC Samples
-u = matrix(runif(n*B, min=0, max=1), ncol=B)
+result.df = create_result_df(n.sims, methods, error_factors)
+sim.datasets = simulate_datasets(n.sims, error_factors, theta.true, K, dating_error.mean, dating_error.sd, n)
 
-# Compute confidence intervals
+#####################
+###################################################################################
+# Run experiments########################################################
 
-for (sim in 1:n.sims) {
-  W = sim.datasets.0[[sim]]$W
-  for (error_case_idx in 1:4) {
-    start_col_idx = (error_case_idx-1)*6+1
-    end_col_idx = start_col_idx+3
-    contains_theta_col_idx = end_col_idx + 1
-    time_col_idx = contains_theta_col_idx + 1
-
-    start_time = Sys.time()
-    results.CI.df[sim, start_col_idx:end_col_idx] = getConfidenceInterval(alpha, n, K, W, u, error_factor[error_case_idx]*dating_error.sd, dating_error.mean, uniroot.interval)
-    results.CI.df[sim, contains_theta_col_idx] = (results.CI.df[sim, start_col_idx] < theta.true) & (theta.true < results.CI.df[sim, start_col_idx+1])
-    results.CI.df[sim, time_col_idx] = Sys.time() - start_time
+for (i in 1:nrow(result.df)) {
+  row = result.df[i, ]
+  W = sim.datasets[(sim.datasets$sim_id == row$sim_id) & (sim.datasets$error_factor == row$error_factor), "W"][[1]]
+  start_time = Sys.time()
+  if (row$method == "mc") {
+    row[c("lower", "upper")] = estimate_CI.mc(alpha, n, K, W, u, dating_error.mean, (row$error_factor * dating_error.sd), uniroot.interval)
+  } else if (row$method == "rm") {
+    row[c("lower", "upper")] = estimate_CI.rm(W, K, alpha, max_iter, dating_error.mean, (row$error_factor * dating_error.sd), return_iters=FALSE)
   }
+  row$compute_time = Sys.time() - start_time
+  row$mean = mean(c(row$lower, row$upper))
+  row$width = row$upper - row$lower
+  row$contains_theta = (row$lower < theta.true) & (theta.true < row$upper)
+  result.df[i, ] = row
 }
 
-View(results.CI.df)
+View(result.df)
 
-results.CI.df %>%
-  select(starts_with(c("Contains", "Time"))) %>%
-  colMeans() %>%
-  as.data.frame() %>%
-  View()
-
-results.CI.df %>%
-  select(starts_with("Width")) %>%
-  colMeans() %>%
-  as.data.frame() %>%
-  View()
-
-################################################################################
-# Log results
-################################################################################
-
+result.df %>%
+  group_by(method, error_factor) %>%
+  summarise(coverage = mean(contains_theta),
+            avg.width = mean(width),
+            avg.time = mean(compute_time))

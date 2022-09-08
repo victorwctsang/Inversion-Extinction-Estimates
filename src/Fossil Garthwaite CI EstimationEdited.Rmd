@@ -123,6 +123,25 @@ abline(h=theta.hat.y, col="black")
 legend("topright", legend=c("U_i", "L_i", "observed min"), col=c("red", "blue", "black"), lty=c(1,1,1))
 ```
 
+```{r}
+res = estimate_CI.rm(W=fossil_dataframe$age,
+                     K=18000,
+                     alpha=0.05,
+                     max_iter=2000,
+                     eps.mean=0,
+                     eps.sigma=mean(fossil_dataframe$sd),
+                     return_iters=T)
+c(res$CI.lower, res$CI.upper)
+```
 
+```{r}
+plot(na.omit(res$CI.iters[, "upper"]), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
+     ylim=c(min(na.omit(res$CI.iters[, "lower"])), max(na.omit(res$CI.iters[, "upper"]))))
+
+lines(na.omit(res$CI.iters[, "lower"]), pch=4, col='blue')
+abline(h=theta.hat.y, col="black")
+
+legend("topright", legend=c("U_i", "L_i", "observed min"), col=c("red", "blue", "black"), lty=c(1,1,1))
+```
 
 

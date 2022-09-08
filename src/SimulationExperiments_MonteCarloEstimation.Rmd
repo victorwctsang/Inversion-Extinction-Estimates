@@ -35,7 +35,37 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
-source("helpers.R")
+source("meme-functions.R")
+
+library(ggplot2)
+library(latex2exp)
+
+simulateConfidenceIntervals.mc = function (
+    nSim, alpha, n, theta, K, B=0, eps.mean=0, eps.sigma=0, uniroot.interval=NA
+) {
+  CI.df = data.frame(i=1:nSim,
+                     L=rep(NA, nSim),
+                     U=rep(NA, nSim),
+                     mean=rep(NA, nSim),
+                     width=rep(NA, nSim),
+                     containsTheta=FALSE)
+  u = matrix(runif(n*B, min=0, max=1), ncol=B)
+  
+  for (i in 1:nSim) {
+    sim.data = simulateFossils(n, theta, K, eps.mean, eps.sigma)
+    CI.df[i, 2:5] = getConfidenceInterval.mc(alpha, n, K, sim.data$W, u, eps.sigma, eps.mean, uniroot.interval)
+    CI.df[i, 6] = (CI.df[i, 2] < theta) & (theta < CI.df[i, 3])
+  }
+  return(CI.df)
+}
+
+plot.simCIs = function(df, theta) {
+  ggplot(data=df, aes(x=i, y=mean)) +
+    geom_errorbar(aes(ymax = U, ymin = L, colour=containsTheta)) +
+    geom_hline(yintercept=theta) +
+    labs(title=paste("Confidence interval;", TeX("\\theta"), "=", theta),
+         y=TeX("\\theta"))
+}
 ```
 
 

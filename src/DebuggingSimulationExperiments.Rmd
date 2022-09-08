@@ -75,7 +75,7 @@ set.seed(2022)
 
 u = matrix(runif(1*B, 0, 1), ncol=B)
 
-m = min(fossil_dataframe$age)
+m = theta.true+10 ##min(fossil_dataframe$age)
 
 for (i in 1:nThetas) {
   A1[i] = .calcA1(theta=theta.range[i],
@@ -252,4 +252,68 @@ target.trials.df %>%
 target.trials.df %>%
   filter(abs(q_upper) < 1e-3)
 ```
+
+
+## Prove P(M > m) is stochastically increasing
+
+$$
+\phi(\theta) = \int^{m-\theta}_{-\infty} \frac{K-m}{K - e - \theta} f_\varepsilon(e) de
+
+\\
+
+P(M \ge m) = \prod_{i=1}^n P(W \ge m) =\prod_{i=1}^n 1 - \frac{F_\varepsilon (m-\theta)}{F_\varepsilon (K-\theta)} + \frac{\phi(\theta)}{F_\varepsilon (K-\theta)}
+$$
+
+$$
+
+\begin{aligned}
+\frac{\partial}{\partial \theta} P
+  &= \frac{\partial}{\partial \theta} \left[ 1 - \frac{F_\varepsilon (m-\theta)}{F_\varepsilon (K-\theta)} + \frac{\phi(\theta)}{F_\varepsilon (K-\theta)} \right] \\
+  &= \frac{\partial}{\partial \theta} \left[ 1 + \frac{\phi(\theta) - F_\varepsilon (m-\theta)}{F_\varepsilon (K-\theta)} \right] \\
+  &= \frac{ F_\varepsilon(K-\theta){ \frac{\partial}{\partial \theta} \Big[\phi(\theta) - F_\varepsilon (m-\theta) \Big]} - { \Big[\phi(\theta) - F_\varepsilon (m-\theta) \Big] \frac{\partial}{\partial \theta}F_\varepsilon(K-\theta) } }{ \left[ F_\varepsilon (K-\theta) \right]^2 } \\
+  &= \frac{ \overbrace{ F_\varepsilon(K-\theta){ \Big[ \frac{\partial}{\partial \theta} \phi(\theta) - f_\varepsilon (m-\theta) \Big] } }^{A} + \overbrace{ (-1)\Big[ \phi(\theta) - F_\varepsilon (m-\theta) \Big] f_\varepsilon(K-\theta) }^{B} }{ \left[ F_\varepsilon (K-\theta) \right]^2 }
+\end{aligned}
+$$
+
+$$
+\phi(\theta) = \int^{m-\theta}_{-\infty} \frac{K-m}{K - e - \theta} f_\varepsilon(e) de \le \int^{m-\theta}_{-\infty} f_\varepsilon(e) de = F_\varepsilon(m-\theta) \\
+(\text{because } -\infty < e < m - \theta \implies 0 < \frac{K-m}{K-e-\theta} < 1) \\
+\therefore B \ge 0
+$$
+
+$$
+\begin{aligned}
+\frac{\partial}{\partial \theta} \phi(\theta) = \frac{\partial}{\partial \theta}  \int^{m-\theta}_{-\infty} \frac{K-m}{K - e - \theta} f_\varepsilon(e) de \\
+\end{aligned}
+$$
+
+$$
+
+$$
+
+
+$$
+\hat\phi (\theta) = \sum_{b=1}^B \frac{K-m}{K-e_{ib}-\theta}, \quad e_{ib} \le m-\theta
+$$
+
+
+
+$$
+\begin{aligned}
+(1) &\quad F_\varepsilon(m-\theta) = \int^{m-\theta}_{-\infty} f_\varepsilon (e) de\\
+(2) &\quad \frac{\partial}{\partial \theta} F_\varepsilon(m - \theta) = f_\varepsilon(m - \theta) \times (-1)\\
+\end{aligned}
+$$
+
+$$
+\frac{dF}{d\theta} = \frac{dF}{d(m-\theta)} \frac{d(m-\theta)}{d\theta}
+$$
+
+
+
+
+
+
+
+
 

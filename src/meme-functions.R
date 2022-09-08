@@ -1,7 +1,7 @@
 library(extraDistr)
 
 estimate_CI.mc = function (
-    alpha, n, K, W, u, eps.sigma, eps.mean, uniroot.interval
+    alpha, n, K, W, u, eps.mean, eps.sigma, uniroot.interval
   ) {
   CI.lower = estimate_quantile.mc(q=alpha/2, K, W, u, eps.mean, eps.sigma, uniroot.interval)
   CI.upper = CI.lower
@@ -23,9 +23,17 @@ estimate_quantile.mc = function (
     theta_q.hat = K - q^(-1/n) * (K-m)
   } else  {
     # Measurement Error case
-    res = uniroot(function(theta) prod(calc_P(theta, K, u, m, eps.mean, eps.sigma)) - q,
-                  interval=uniroot.interval)
-    theta_q.hat = res$root
+    theta_q.hat = tryCatch(
+      {
+        uniroot(function(theta) prod(calc_P(theta, K, u, m, eps.mean, eps.sigma)) - q,
+                interval=uniroot.interval)$root
+      },
+      error=function(cond) {
+        message("Error in uniroot")
+        message(cond)
+        return(NA)
+      }
+    )
   }
   return(theta_q.hat)
 }
