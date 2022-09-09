@@ -77,7 +77,7 @@ estimate_bound.rm.lower = function (bound.iters, alpha, theta.hat, n, K, p, m, m
     resamples = simulate_fossils(n, theta=bound.iters[i], K, eps.mean, eps.sigma)
     theta.hat.resample = estimate_theta.rm(resamples)
     # calculate step length
-    c = min(2*p*abs(bound.iters[i] - theta.hat), 1000)
+    c = max(2*p*abs(bound.iters[i] - theta.hat), 1000)
     # Update
     if (theta.hat.resample <= theta.hat) {
       bound.iters[i+1] = (bound.iters[i] - c*(alpha/2)/ i)
@@ -94,7 +94,7 @@ estimate_bound.rm.upper = function (bound.iters, alpha, theta.hat, n, K, p, m, m
     resamples = simulate_fossils(n, theta=bound.iters[i], K, eps.mean, eps.sigma)
     theta.hat.resample = estimate_theta.rm(resamples)
     # calculate step length
-    c = min(2*p*abs(theta.hat - bound.iters[i]), 1000)
+    c = max(2*p*abs(theta.hat - bound.iters[i]), 1000)
     # Update
     if (theta.hat.resample <= theta.hat) {
       bound.iters[i+1] = (bound.iters[i] + c*(1-alpha/2)/ i)

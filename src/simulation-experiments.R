@@ -1,23 +1,17 @@
 # Simulation Experiments
 # Approaches:
-# - Measurement Error Monte Carlo Estimate
-# - GRIWM
-# - GRIWM Corrected
+# - New Method
+# - Garthwaite Robbins Munro
 # Metrics:
-# - Point Estimates:
-#   - MSE
-#   - Bias
-#   - Variance
-#   - L1 Norm
-#   - Computational efficiency
 # - 95% confidence intervals
-#   - Coverage with varying error
-#   - Interval width with varying error
-#   - Computational efficiency
+#   - Coverage
+#   - Interval width
+#   - Computation time
+#   - Above, but as error increases
 
 library(tidyverse)
 source("helpers-simulation-experiments.R")
-source("meme-functions.R")
+source("new-method-functions.R")
 source("garthwaite-robbins-munro-functions.R")
 
 ################################################################################
@@ -44,7 +38,7 @@ B = 500                           # Number of monte carlo samples
 uniroot.interval = c(2000, 19500) # TODO uniroot search interval
 max_iter = 2000                   # Number of iterations for Garthwaite RM
 
-methods = c("mc", "rm")           # Methods to use
+methods = c("new_method", "rm")           # Methods to use
 error_factors = c(0, 1, 2, 4)     # Different multiples to apply to dating error sd
 
 ################################################################################
@@ -64,7 +58,7 @@ for (i in 1:nrow(result.df)) {
   row = result.df[i, ]
   W = sim.datasets[(sim.datasets$sim_id == row$sim_id) & (sim.datasets$error_factor == row$error_factor), "W"][[1]]
   start_time = Sys.time()
-  if (row$method == "mc") {
+  if (row$method == "new_method") {
     row[c("lower", "upper")] = estimate_CI.mc(alpha, n, K, W, u, dating_error.mean, (row$error_factor * dating_error.sd), uniroot.interval)
   } else if (row$method == "rm") {
     row[c("lower", "upper")] = estimate_CI.rm(W, K, alpha, max_iter, dating_error.mean, (row$error_factor * dating_error.sd), return_iters=FALSE)
