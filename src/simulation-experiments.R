@@ -13,6 +13,7 @@ library(tidyverse)
 source("helpers-simulation-experiments.R")
 source("new-method-functions.R")
 source("garthwaite-robbins-munro-functions.R")
+options(nwarnings = 10000) 
 
 ################################################################################
 # Experiment Setup
@@ -35,10 +36,10 @@ dating_error.sd = getStdDevFromFossilData(path='../data/fossildata.xlsx',
 
 alpha = 0.05                      # 95% confidence interval
 B = 500                           # Number of monte carlo samples
-uniroot.interval = c(2000, 19500) # TODO uniroot search interval
-max_iter = 2000                   # Number of iterations for Garthwaite RM
+uniroot.interval = c(3000, 19500) # TODO uniroot search interval
+max_iter = 10000                   # Number of iterations for Garthwaite RM
 
-methods = c("new_method", "rm")           # Methods to use
+methods = c("new_method", "rm")#, "optimal_rm")   # Methods to use
 error_factors = c(0, 1, 2, 4)     # Different multiples to apply to dating error sd
 
 ################################################################################
@@ -50,12 +51,14 @@ u = matrix(runif(n*B, min=0, max=1), ncol=B)                 # Base MC Samples
 result.df = create_result_df(n.sims, methods, error_factors)
 sim.datasets = simulate_datasets(n.sims, error_factors, theta.true, K, dating_error.mean, dating_error.sd, n)
 
-#####################
-###################################################################################
-# Run experiments########################################################
+################################################################################
+# Run experiments
+################################################################################
 
 for (i in 1:nrow(result.df)) {
   row = result.df[i, ]
+  print(paste0("Estimate: ", i, "/", nrow(result.df)))#, " (", round(i/nrow(result.df)*100, 2) ,"%)", sep=""))
+  # print(paste0("Running method `", row$method, "` with error multiple `", row$error_factor, "` on dataset `", row$sim_id, "`"))
   W = sim.datasets[(sim.datasets$sim_id == row$sim_id) & (sim.datasets$error_factor == row$error_factor), "W"][[1]]
   start_time = Sys.time()
   if (row$method == "new_method") {
@@ -63,6 +66,9 @@ for (i in 1:nrow(result.df)) {
   } else if (row$method == "rm") {
     row[c("lower", "upper")] = estimate_CI.rm(W, K, alpha, max_iter, dating_error.mean, (row$error_factor * dating_error.sd), return_iters=FALSE)
   }
+  # else if (row$method == "optimal_rm") {
+  #   row[c("lower", "upper")] = estimate_CI.optimal_rm(W, K, alpha, max_iter, dating_error.mean, (row$error_factor * dating_error.sd), return_iters=FALSE, theta_L=, theta_U=, B=B)
+  # }
   row$compute_time = Sys.time() - start_time
   row$mean = mean(c(row$lower, row$upper))
   row$width = row$upper - row$lower
@@ -76,4 +82,10 @@ result.df %>%
   group_by(method, error_factor) %>%
   summarise(coverage = mean(contains_theta),
             avg.width = mean(width),
-            avg.time = mean(compute_time))
+            avg.time = round(mean(compute_time), 4),
+            sd.lower = sd(lower),
+            sd.upper = sd(upper)) %>%
+  # filter(method != "optimal_rm") %>%
+  View()
+
+warnings()
