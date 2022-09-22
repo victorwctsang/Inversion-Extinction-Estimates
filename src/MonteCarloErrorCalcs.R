@@ -8,7 +8,7 @@ theta.true = 10000                # True extinction date
 K = 20000                         # Upper bound for fossil ages
 
 dating_error.mean = 0             # True mean of radiocarbon dating error
-dating_error.sd = 700             # True Standard deviation
+dating_error.sd = 272             # True Standard deviation
 
 alpha = 0.05                      # 95% confidence interval
 B = 500                           # Number of monte carlo samples

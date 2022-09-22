@@ -1,0 +1,259 @@
+---
+title: "Monte Carlo Sample Calculations"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Setup
+
+Source our helper functions and set our parameters.
+
+```{r}
+source("new-method-functions.R")
+
+set.seed(2022)
+
+n = 30                             # Number of fossil samples in each dataset
+theta.true = 10000                 # True extinction date
+K = 20000                          # Upper bound for fossil ages
+ 
+dating_error.mean = 0              # True mean of radiocarbon dating error
+dating_error.sd = 272              # True Standard deviation
+ 
+alpha = 0.05                       # 95% confidence interval
+```
+
+Then, simulate some data
+
+```{r}
+W = runif(n=n, min=theta.true, max=K) + rnorm(n=n, mean=dating_error.mean, sd=dating_error.sd)
+m=min(W)
+m
+```
+
+**Goal:** Find an expression for the variance of our estimator. We have:
+
+$$
+\begin{align*}
+    q^{-\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m - \hat{\theta}_q)}{F_\varepsilon(K - \hat{\theta}_q)} + \frac{\phi}{F_\varepsilon(K - \hat{\theta}_q)}; &\phi =  \int^{m-\theta}_{-\infty} \frac{K - m}{K - e - \theta } f_\varepsilon(e) de \\
+    \implies \phi &= F_\varepsilon(m - \hat{\theta}_q) - (1-q^{-\frac{1}{n}}) F_\varepsilon(K - \hat{\theta}_q)
+\end{align*}
+$$
+
+**(1)** --- Since $\hat\phi = \frac{1}{B} \sum_{b=1}^B \frac{K-m}{K-e_b-\theta_q}$, we can apply the central limit theorem:
+
+$$
+\sqrt{B} \Big[ \hat\phi - \phi \Big] \overset{D}{\sim} \mathcal{N}\Big(0, \mathrm{Var}(\phi) \Big)
+$$
+
+**(2)** --- Applying the delta method, we get the asymptotic distribution of $\hat\theta$:
+
+$$
+\sqrt{B} \Big[ \hat\theta - \theta \Big] \overset{D}{\sim} \mathcal{N}\left(0,\mathrm{Var}(\phi) \cdot \left[\frac{d}{d\theta} \phi \right]^{-2} \right) 
+\implies \mathrm{Var}\{\hat{\theta}_q\} = \frac{\mathrm{Var}(\phi)}{\left[\frac{d}{d\theta} \phi \right]^{2}} \approx \frac{\mathrm{Var}(\hat\phi)}{\left[\frac{d}{d\theta} \phi\right]^{2}}
+$$
+
+**(3)** --- $\mathrm{Var}(\hat\phi)$
+
+$$
+\begin{align*}
+    \mathrm{Var}(\hat\phi)
+        &= \mathrm{Var}\left\{\frac{1}{B} \sum_{b=1}^B \frac{K-m}{K-e_b-\theta_q} \right\} \\
+        &= \frac{1}{B} {\mathrm{Var}\left\{ \frac{K-m}{K-e-\theta_q} \right\}} \\
+        &\approx \frac{1}{B} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q} \right\} = \frac{1}{B} \sigma_\phi^2
+\end{align*}
+$$
+
+We can estimate $\sigma_\phi^2$ for our upper and lower bounds by taking the sample variance of $\frac{K-m}{K-e-\hat\theta_q}$, where $\hat\theta_q$ is estimated using some arbitrary $B$ for our monte carlo integral.
+
+Initial estimates of $\hat\theta_q$:
+
+```{r}
+B = 500                            # Arbitrary initial B (number of monte carlo samples)
+u=matrix(runif(n*B, 0, 1), ncol=B) # Base MC Samples to plug into our method
+uniroot.interval = c(2000, 19500)  # Search interval for uniroot (TODO - a better way of picking this?)
+
+init.CI = estimate_CI.mc(alpha, n, K, W, u, dating_error.mean, dating_error.sd, uniroot.interval)
+init.CI
+```
+
+Use this initial estimate to estimate $\sigma_\phi^2$
+
+```{r}
+e = list()
+e$lower = rtnorm(n, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
+e$upper = rtnorm(n, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.upper)
+e
+
+sigma.phi = list()
+sigma.phi$lower = sd((K - m)/(K-e$lower-init.CI$CI.lower))
+sigma.phi$upper = sd((K - m)/(K-e$upper-init.CI$CI.upper))
+sigma.phi
+```
+
+**(4)** --- $\frac{d}{d\theta} \phi$
+
+$$
+\begin{align*}
+    \frac{d}{d\theta}  \phi
+        &= \frac{d}{d\theta} \left[ F_\varepsilon(m - {\theta}_q) - (1-q^{-1/n}) F_\varepsilon(K - {\theta}_q) \right] \\
+        &= (1-q^{-1/n}) f_\varepsilon(K - {\theta}_q) - f_\varepsilon(m - {\theta}_q) \\
+        &\approx (1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q)
+\end{align*}
+$$
+
+**(5)** --- Put it all together:
+
+$$
+\mathrm{Var}\{\hat{\theta}_q\}
+    \approx \frac{1}{B} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}
+        \right\} \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+$$
+
+$$
+\implies B
+    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}         \right\} \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+$$
+
+Using the $\sigma_\phi^2$ we estimated earlier and an arbitrary target $\mathrm{Var}\{\hat\theta_q\} = 0.2*\sigma^2$, we can use the above formula to find an estimate of the optimal $B$
+
+```{r}
+optimal_B = list()
+optimal_B$lower = find_optimal_B(target_sd=0.2*dating_error.sd,
+                                 q=alpha/2,
+                                 theta=init.CI$CI.lower,
+                                 K, n, m,
+                                 sd.phi=sigma.phi$lower,
+                                 dating_error.mean,
+                                 dating_error.sd)
+
+optimal_B$upper = find_optimal_B(target_sd=0.2*dating_error.sd,
+                                 q=(1 - alpha/2),
+                                 theta=init.CI$CI.upper,
+                                 K, n, m,
+                                 sd.phi=sigma.phi$upper,
+                                 dating_error.mean,
+                                 dating_error.sd)
+optimal_B
+```
+
+**TODO** ok lets just find sample variance at different B's empirically
+
+**TODO** why are the numbers so weird??
+
+## Checks
+
+Three things to check expected behaviour:
+
+$$
+\mathrm{Var}(\hat\theta_q), \quad \mathrm{Var}\left\{ \frac{K-m}{K-e-\theta_q} \right\}, \quad \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+$$
+
+1. For 1000 different $B$'s, generate 100 $\hat\theta_q$s and get the sample variance each time. Look at how the variance changes with different values for $B$.
+2. Take 1000 different sets of monte carlo samples of size $B$ and calculate the sample variance of $\frac{K-m}{K-e-\hat\theta_q}$. What is the range? What's the variance of our variance estimate?
+3. How does $\left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}$ change with $q$? How about relative to $\hat\theta_q$, fixing everything else?
+
+### Variance of $\hat\theta_q$
+
+For the purposes of this check, we'll only look at the lower bound estimate.
+
+```{r}
+n = 30
+
+num.B = 100
+B = seq(from=0, by=10, length.out=num.B) + 10
+
+num.estimates = 100
+
+# Simulate a dataset
+W = runif(n=n, min=theta.true, max=K) + rnorm(n=n, mean=dating_error.mean, sd=dating_error.sd)
+m=min(W)
+
+var.theta_q = rep(NA, num.B)
+seed.count = 1
+for (i in 1:num.B) {
+  # Generate 100 estimates of \theta_0.025
+  theta.hat = rep(NA, num.estimates)
+  for (j in 1:num.estimates) {
+    # Set different randomisation seed
+    set.seed(seed.count)
+    
+    u = matrix(runif(n*B[i], min=0, max=1), ncol=B[i])
+    theta.hat[j] = estimate_quantile.mc(q=0.025, K, W, u, 
+                                        dating_error.mean, 
+                                        dating_error.sd, uniroot.interval)
+    seed.count = seed.count+1
+  }
+  # save sample variance
+  var.theta_q[i] = var(theta.hat)
+}
+plot(B, var.theta_q, type="b")
+```
+
+### $\sigma^2_\phi = \mathrm{Var}\left(\frac{K-m}{K-e-\hat\theta_q}\right)$
+
+```{r}
+B = 1000
+num.estimates = 1000
+
+sigma2_phi = rep(NA, num.estimates)
+for (i in 1:num.estimates) {
+  # Get B samples of e
+  e = extraDistr::rtnorm(n=B, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
+  
+  sigma2_phi[i] = var((K-m)/(K-e-init.CI$CI.lower))
+}
+mean(sigma2_phi)
+var(sigma2_phi)
+
+plot(sigma2_phi)
+boxplot(sigma2_phi)
+```
+
+
+### Weird term
+
+$$
+\left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+$$
+
+
+```{r}
+set.seed(2022)
+n = 30
+B = 200
+u = matrix(runif(n*B, min=0, max=1), ncol=B)
+
+q = seq(from=0.025, to=0.975, by=0.025)
+theta_q = rep(NA, length(q))
+term = rep(NA, length(q))
+for (i in 1:length(q) ) {
+  # estimate theta_q
+  theta_q[i] = estimate_quantile.mc(q=q[i], K, W, u, dating_error.mean, 
+                               dating_error.sd, c(5000, 19500))
+  term[i] = ( (1 - q[i]^(-1/n)) * dnorm(K - theta_q[i], dating_error.mean, dating_error.sd) - dnorm(m - theta_q[i], dating_error.mean, dating_error.sd) )^(-2)
+}
+
+plot(x=q, y=log(term), type="b")
+```
+
+```{r}
+log(term)
+```
+
+```{r}
+m-theta_q
+dnorm(m - theta_q, dating_error.mean, dating_error.sd)
+```
+
+
+
+
+
+
+
