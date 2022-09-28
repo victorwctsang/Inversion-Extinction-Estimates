@@ -62,13 +62,3 @@ uniform_to_tnorm = function (u, mean, sd, a, b) {
   mc.samples = matrix(qtnorm(p=u, mean=mean, sd=sd, a=a, b=b), ncol=B)
   return(mc.samples)
 }
-
-find_optimal_B = function (target_sd, q, theta, K, n, m, sd.phi, eps.mean, eps.sigma) {
-  # print(paste("sd.phi^2", sd.phi^2))
-  # print(paste("target_sd^2", target_sd^2))
-  # print(paste("(1-q^(-1/n)", (1 - q^(-1/n))))
-  # print(paste("f(K-theta.hat.q)", dnorm(K - theta, eps.mean, eps.sigma)))
-  # print(paste("f(m-theta.hat.q)", dnorm(m - theta, eps.mean, eps.sigma)))
-  # print(paste("whole term", ((1 - q^(-1/n)) * dnorm(K - theta, eps.mean, eps.sigma) - dnorm(m - theta, eps.mean, eps.sigma) )^2))
-  (sd.phi^2) / (target_sd^2 * ( (1 - q^(-1/n)) * dnorm(K - theta, eps.mean, eps.sigma) - dnorm(m - theta, eps.mean, eps.sigma) )^2 )
-}
