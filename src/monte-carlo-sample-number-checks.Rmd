@@ -7,6 +7,20 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+knitr::knit_hooks$set(timeit = local({
+  now = NULL
+  function(before, options) {
+    if (before) {
+      now <<- Sys.time()
+    } else {
+      res = difftime(Sys.time(), now)
+      now <<- NULL
+      # use options$label if you want the chunk label as well
+      paste('Time for this code chunk:', as.character(res))
+    }
+  }})
+)
 ```
 
 #### Setup
@@ -40,12 +54,11 @@ m
 
 $$
 \begin{align*}
-    q^{-\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m - \hat{\theta}_q)}{F_\varepsilon(K - \hat{\theta}_q)} + \frac{\phi}{F_\varepsilon(K - \hat{\theta}_q)}; &\phi =  \int^{m-\theta}_{-\infty} \frac{K - m}{K - e - \theta } f_\varepsilon(e) de \\
-    \implies \phi &= F_\varepsilon(m - \hat{\theta}_q) - (1-q^{-\frac{1}{n}}) F_\varepsilon(K - \hat{\theta}_q)
+    q^{-\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m - {\theta}_q)}{F_\varepsilon(K - {\theta}_q)} + \frac{\phi}{F_\varepsilon(K - {\theta}_q)}; &\phi =  \int^{m-\theta_q}_{-\infty} \frac{K - m}{K - e - \theta_q } f_\varepsilon(e) de
 \end{align*}
 $$
 
-**(1)** --- Since $\hat\phi = \frac{1}{B} \sum_{b=1}^B \frac{K-m}{K-e_b-\theta_q}$, we can apply the central limit theorem:
+**(1)** --- Since $\hat\phi = \frac{1}{B} \sum_{b=1}^B \frac{K-m}{K-e_b-\theta_q}$ is a sample mean of $\phi$, we can apply the central limit theorem:
 
 $$
 \sqrt{B} \Big[ \hat\phi - \phi \Big] \overset{D}{\sim} \mathcal{N}\Big(0, \mathrm{Var}(\phi) \Big)
@@ -82,28 +95,24 @@ init.CI = estimate_CI.mc(alpha, n, K, W, u, dating_error.mean, dating_error.sd, 
 init.CI
 ```
 
-Use this initial estimate to estimate $\sigma_\phi^2$
+Use this initial estimate to generate our monte carlo samples.
 
 ```{r}
 e = list()
 e$lower = rtnorm(n, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
 e$upper = rtnorm(n, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.upper)
 e
-
-sigma.phi = list()
-sigma.phi$lower = sd((K - m)/(K-e$lower-init.CI$CI.lower))
-sigma.phi$upper = sd((K - m)/(K-e$upper-init.CI$CI.upper))
-sigma.phi
 ```
 
 **(4)** --- $\frac{d}{d\theta} \phi$
 
 $$
 \begin{align*}
-    \frac{d}{d\theta}  \phi
-        &= \frac{d}{d\theta} \left[ F_\varepsilon(m - {\theta}_q) - (1-q^{-1/n}) F_\varepsilon(K - {\theta}_q) \right] \\
-        &= (1-q^{-1/n}) f_\varepsilon(K - {\theta}_q) - f_\varepsilon(m - {\theta}_q) \\
-        &\approx (1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q)
+    \frac{d}{d\theta_q}  \phi
+        &= \frac{d}{d\theta_q} \int^{m-\theta_q}_{-\infty} \frac{K-m}{K-e-\theta_q}f_\varepsilon(e)de \\
+        &= \int^{m-\theta_q}_{-\infty} \frac{\partial}{\partial \theta_q}\frac{K-m}{K-e-\theta_q}f_\varepsilon(e)de + \frac{K-m}{K-(m-\theta_q)-\theta_q}f_\varepsilon(m-\theta_q)(-1) - 0 \\
+        &= \int^{m-\theta_q}_{-\infty} \frac{K-m}{(K-e-\theta_q)^2}f_\varepsilon(e)de - f_\varepsilon(m-\theta_q) \\
+        &\approx \frac{1}{B} \sum_{b=1}^B\frac{K-m}{(K-e_b-\hat\theta_q)^2} - f_\varepsilon(m-\hat\theta_q)
 \end{align*}
 $$
 
@@ -112,34 +121,71 @@ $$
 $$
 \mathrm{Var}\{\hat{\theta}_q\}
     \approx \frac{1}{B} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}
-        \right\} \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+        \right\} \left[ \frac{1}{B} \sum_{b=1}^B\frac{K-m}{(K-e_b-\hat\theta_q)^2} - f_\varepsilon(m-\hat\theta_q) \right]^{-2}
 $$
 
 $$
 \implies B
-    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}         \right\} \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}         \right\} \left[ \frac{1}{B} \sum_{b=1}^B\frac{K-m}{(K-e_b-\hat\theta_q)^2} - f_\varepsilon(m-\hat\theta_q) \right]^{-2}
 $$
 
 Using the $\sigma_\phi^2$ we estimated earlier and an arbitrary target $\mathrm{Var}\{\hat\theta_q\} = 0.2*\sigma^2$, we can use the above formula to find an estimate of the optimal $B$
 
 ```{r}
-optimal_B = list()
-optimal_B$lower = find_optimal_B(target_sd=0.2*dating_error.sd,
-                                 q=alpha/2,
-                                 theta=init.CI$CI.lower,
-                                 K, n, m,
-                                 sd.phi=sigma.phi$lower,
-                                 dating_error.mean,
-                                 dating_error.sd)
+find_optimal_B.phi = function (var.theta, theta, K, m, e, eps.mean, eps.sigma) {
+  var.theta^(-1) * var((K - m)/(K-e-theta)* pnorm(m-theta, eps.mean, eps.sigma)) * ( mean((K-m)/(K-e-theta)^2)* pnorm(m-theta, eps.mean, eps.sigma) - dnorm(m-theta) )^(-2)
+}
+```
 
-optimal_B$upper = find_optimal_B(target_sd=0.2*dating_error.sd,
-                                 q=(1 - alpha/2),
-                                 theta=init.CI$CI.upper,
-                                 K, n, m,
-                                 sd.phi=sigma.phi$upper,
-                                 dating_error.mean,
-                                 dating_error.sd)
-optimal_B
+```{r}
+var.theta.target = (0.05*dating_error.sd)^2
+
+optimal_B.phi = list()
+optimal_B.phi$lower = find_optimal_B.phi(var.theta=var.theta.target,
+                                         theta=init.CI$CI.lower,
+                                         K, m, e$lower,
+                                         dating_error.mean,
+                                         dating_error.sd)
+
+optimal_B.phi$upper = find_optimal_B.phi(var.theta=var.theta.target,
+                                         theta=init.CI$CI.upper,
+                                         K, m, e$upper,
+                                         dating_error.mean,
+                                         dating_error.sd)
+optimal_B.phi
+```
+
+What if used $\psi$ instead of $\phi$?
+
+$$
+\implies B
+    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1}  \underbrace{ \mathrm{Var}\left\{\frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}}_{\sigma^2_\psi} \left[ \underbrace{\frac{1}{B} \sum_{b=1}^B\frac{m-K}{(K-e_b-\hat\theta_q)^2}}_{d\psi/d\hat\theta_q} \right]^{-2}
+$$
+
+```{r}
+find_optimal_B.psi = function (var.theta, theta, K, m, e, eps.mean, eps.sigma) {
+  sigma2.psi = var((m-e-theta)/(K-e-theta)* pnorm(m-theta, eps.mean, eps.sigma))
+  dpsi.dtheta = mean((m-K)/(K-e-theta)^2) * pnorm(m-theta, eps.mean, eps.sigma)
+
+  var.theta^(-1) * sigma2.psi * dpsi.dtheta^(-2)
+  # var.theta * sigma2.psi^(-1) * (sum((m-K)/(K-e-theta)^2) * pnorm(m-theta, eps.mean, eps.sigma))^2
+}
+```
+
+```{r timeit = TRUE}
+optimal_B.psi = list()
+optimal_B.psi$lower = find_optimal_B.psi(var.theta=var.theta.target,
+                                         theta=init.CI$CI.lower,
+                                         K, m, e$lower,
+                                         dating_error.mean,
+                                         dating_error.sd)
+
+optimal_B.psi$upper = find_optimal_B.psi(var.theta=var.theta.target,
+                                         theta=init.CI$CI.upper,
+                                         K, m, e$upper,
+                                         dating_error.mean,
+                                         dating_error.sd)
+optimal_B.psi
 ```
 
 **TODO** ok lets just find sample variance at different B's empirically
@@ -151,22 +197,18 @@ optimal_B
 Three things to check expected behaviour:
 
 $$
-\mathrm{Var}(\hat\theta_q), \quad \mathrm{Var}\left\{ \frac{K-m}{K-e-\theta_q} \right\}, \quad \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+\mathrm{Var}(\hat\theta_q), \quad \mathrm{Var}\left\{ \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}, \quad \left[ \frac{1}{B} \sum_{b=1}^B\frac{m-K}{(K-e_b-\hat\theta_q)^2} \right]^{-2}
 $$
-
-1. For 1000 different $B$'s, generate 100 $\hat\theta_q$s and get the sample variance each time. Look at how the variance changes with different values for $B$.
-2. Take 1000 different sets of monte carlo samples of size $B$ and calculate the sample variance of $\frac{K-m}{K-e-\hat\theta_q}$. What is the range? What's the variance of our variance estimate?
-3. How does $\left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}$ change with $q$? How about relative to $\hat\theta_q$, fixing everything else?
 
 ### Variance of $\hat\theta_q$
 
 For the purposes of this check, we'll only look at the lower bound estimate.
 
-```{r}
+```{r, timeit = TRUE}
 n = 30
 
-num.B = 100
-B = seq(from=0, by=10, length.out=num.B) + 10
+num.B = 30
+B = seq(from=2, by=50, length.out=num.B)
 
 num.estimates = 100
 
@@ -174,37 +216,104 @@ num.estimates = 100
 W = runif(n=n, min=theta.true, max=K) + rnorm(n=n, mean=dating_error.mean, sd=dating_error.sd)
 m=min(W)
 
-var.theta_q = rep(NA, num.B)
-seed.count = 1
+var.theta_q = list()
+var.theta_q$lower = rep(NA, num.B)
+var.theta_q$upper = rep(NA, num.B)
+
+u = matrix(runif(n*num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
+```
+
+```{r, timeit=TRUE, cache=TRUE}
 for (i in 1:num.B) {
   # Generate 100 estimates of \theta_0.025
-  theta.hat = rep(NA, num.estimates)
+  theta.hat.lower = rep(NA, num.estimates)
+  theta.hat.upper = rep(NA, num.estimates)
   for (j in 1:num.estimates) {
-    # Set different randomisation seed
-    set.seed(seed.count)
-    
-    u = matrix(runif(n*B[i], min=0, max=1), ncol=B[i])
-    theta.hat[j] = estimate_quantile.mc(q=0.025, K, W, u, 
-                                        dating_error.mean, 
-                                        dating_error.sd, uniroot.interval)
-    seed.count = seed.count+1
+    theta.hat.lower[j] = estimate_quantile.mc(q=0.025, K, W, u[((j-1)*n+1):((j)*n), 1:(B[i])], 
+                                              dating_error.mean, 
+                                              dating_error.sd, uniroot.interval)
+    theta.hat.upper[j] = estimate_quantile.mc(q=0.975, K, W, u[((j-1)*n+1):((j)*n), 1:(B[i])], 
+                                              dating_error.mean, 
+                                              dating_error.sd, uniroot.interval)
   }
   # save sample variance
-  var.theta_q[i] = var(theta.hat)
+  var.theta_q$lower[i] = var(theta.hat.lower)
+  var.theta_q$upper[i] = var(theta.hat.upper)
 }
-plot(B, var.theta_q, type="b")
 ```
+
+```{r}
+plot(B, var.theta_q$lower, type="l", col='blue', 
+     log = "xy", 
+     main="Sample Var(theta_q) against Number of MC Samples",
+     ylab=paste("sample variance"), 
+     ylim=c(min(c(var.theta_q$lower, var.theta_q$upper)), max(c(var.theta_q$lower, var.theta_q$upper))))
+lines(B, var.theta_q$upper, type="l", col='red')
+# abline(v=optimal_B.psi$lower, lty=2, col='blue')
+# abline(v=optimal_B.psi$upper, lty=2, col='red')
+# abline(h=var.theta.target, lty=2)
+legend("topright",
+       c("q=0.025", "q=0.975"),
+       lty=c(1, 1),
+       col=c('blue', 'red'))
+```
+
+### $\mathrm{Var}\left\{ \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}$
+
+```{r}
+num.mc_samples = 1000
+num.estimates = 1000
+
+sigma2_psi = rep(NA, num.estimates)
+for (i in 1:num.estimates) {
+  # Get B samples of e
+  e = extraDistr::rtnorm(n=num.mc_samples, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
+  
+  sigma2_psi[i] = var((m-e-init.CI$CI.lower)/(K-e-init.CI$CI.lower)* pnorm(m-init.CI$CI.lower, dating_error.mean, dating_error.sd))
+}
+
+hist(sigma2_psi, main="Histogram of Var(psi)")
+qqnorm(sigma2_psi, pch = 1, frame = FALSE)
+qqline(sigma2_psi, col = "steelblue", lwd = 2)
+```
+
+
+### \left[ \frac{1}{B} \sum_{b=1}^B\frac{m-K}{(K-e_b-\hat\theta_q)^2} \right]^{-2}
+
+```{r}
+num.mc_samples = 1000
+num.estimates = 1000
+
+dpsi.dtheta = rep(NA, num.estimates)
+for (i in 1:num.estimates) {
+  # Get B samples of e
+  e = extraDistr::rtnorm(n=num.mc_samples, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
+  
+  dpsi.dtheta[i] = mean((m-e-init.CI$CI.lower)/(K-e-init.CI$CI.lower)^2* pnorm(m-init.CI$CI.lower, dating_error.mean, dating_error.sd))
+}
+
+plot(dpsi.dtheta)
+```
+
+## From before:
 
 ### $\sigma^2_\phi = \mathrm{Var}\left(\frac{K-m}{K-e-\hat\theta_q}\right)$
 
+$$
+\quad \mathrm{Var}\left\{ \frac{K-m}{K-e-\theta_q} \right\}, \quad \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
+$$
+
+2.  Take 1000 different sets of monte carlo samples of size $B$ and calculate the sample variance of $\frac{K-m}{K-e-\hat\theta_q}$. What is the range? What's the variance of our variance estimate?
+3.  How does $\left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}$ change with $q$? How about relative to $\hat\theta_q$, fixing everything else?
+
 ```{r}
-B = 1000
+num.mc_samples = 1000
 num.estimates = 1000
 
 sigma2_phi = rep(NA, num.estimates)
 for (i in 1:num.estimates) {
   # Get B samples of e
-  e = extraDistr::rtnorm(n=B, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
+  e = extraDistr::rtnorm(n=num.mc_samples, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
   
   sigma2_phi[i] = var((K-m)/(K-e-init.CI$CI.lower))
 }
@@ -215,13 +324,11 @@ plot(sigma2_phi)
 boxplot(sigma2_phi)
 ```
 
-
 ### Weird term
 
 $$
 \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
 $$
-
 
 ```{r}
 set.seed(2022)
@@ -239,7 +346,7 @@ for (i in 1:length(q) ) {
   term[i] = ( (1 - q[i]^(-1/n)) * dnorm(K - theta_q[i], dating_error.mean, dating_error.sd) - dnorm(m - theta_q[i], dating_error.mean, dating_error.sd) )^(-2)
 }
 
-plot(x=q, y=log(term), type="b")
+plot(x=q, y=term, type="b", log="y")
 ```
 
 ```{r}
@@ -251,9 +358,4 @@ m-theta_q
 dnorm(m - theta_q, dating_error.mean, dating_error.sd)
 ```
 
-
-
-
-
-
-
+Conclusion: using the term with $q$ in it is causing $B$ to explode.
