@@ -67,13 +67,11 @@ estimate_bound.rm = function (theta_q.iters, alpha.star, theta.hat, n, K, p, m, 
   i = m
   mc.var = Inf
   while (i < max_iter && mc.var > max_var) {
-    # print(c(theta_q.iters[i], theta.hat, K))
     # Generate resamples
     resamples = simulate_fossils(n, theta=theta_q.iters[i], K, eps.mean, eps.sigma)
     theta.hat.resample = estimate_theta.rm(resamples)
     # calculate step length
     c = 2*p*abs(theta_q.iters[i] - theta.hat)
-    # print(paste("Step:", c))
     # Update
     if (theta.hat.resample <= theta.hat) {
       theta_q.iters[i+1] = (theta_q.iters[i] + c*(alpha.star)/ i)
@@ -120,7 +118,6 @@ estimate_CI.optimal_rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, r
 estimate_bound.optimal_rm = function (theta_q.iters, alpha.star, theta.hat, n, K, m, max_var=1000, max_iter, eps.mean, eps.sigma, theta_q.true, B) {
   # optimal step length c
   c = 1/calculate_g(m, K, theta_q.true, B, eps.mean, eps.sigma)
-  print(c)
   i = m
   mc.var = Inf
   while (i < max_iter && mc.var > max_var) {
