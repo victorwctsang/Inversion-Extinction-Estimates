@@ -50,161 +50,51 @@ m=min(W)
 m
 ```
 
-**Goal:** Find an expression for the variance of our estimator. We have:
-
-$$
-\begin{align*}
-    q^{-\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m - {\theta}_q)}{F_\varepsilon(K - {\theta}_q)} + \frac{\phi}{F_\varepsilon(K - {\theta}_q)}; &\phi =  \int^{m-\theta_q}_{-\infty} \frac{K - m}{K - e - \theta_q } f_\varepsilon(e) de
-\end{align*}
-$$
-
-**(1)** --- Since $\hat\phi = \frac{1}{B} \sum_{b=1}^B \frac{K-m}{K-e_b-\theta_q}$ is a sample mean of $\phi$, we can apply the central limit theorem:
-
-$$
-\sqrt{B} \Big[ \hat\phi - \phi \Big] \overset{D}{\sim} \mathcal{N}\Big(0, \mathrm{Var}(\phi) \Big)
-$$
-
-**(2)** --- Applying the delta method, we get the asymptotic distribution of $\hat\theta$:
-
-$$
-\sqrt{B} \Big[ \hat\theta - \theta \Big] \overset{D}{\sim} \mathcal{N}\left(0,\mathrm{Var}(\phi) \cdot \left[\frac{d}{d\theta} \phi \right]^{-2} \right) 
-\implies \mathrm{Var}\{\hat{\theta}_q\} = \frac{\mathrm{Var}(\phi)}{\left[\frac{d}{d\theta} \phi \right]^{2}} \approx \frac{\mathrm{Var}(\hat\phi)}{\left[\frac{d}{d\theta} \phi\right]^{2}}
-$$
-
-**(3)** --- $\mathrm{Var}(\hat\phi)$
-
-$$
-\begin{align*}
-    \mathrm{Var}(\hat\phi)
-        &= \mathrm{Var}\left\{\frac{1}{B} \sum_{b=1}^B \frac{K-m}{K-e_b-\theta_q} \right\} \\
-        &= \frac{1}{B} {\mathrm{Var}\left\{ \frac{K-m}{K-e-\theta_q} \right\}} \\
-        &\approx \frac{1}{B} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q} \right\} = \frac{1}{B} \sigma_\phi^2
-\end{align*}
-$$
-
-We can estimate $\sigma_\phi^2$ for our upper and lower bounds by taking the sample variance of $\frac{K-m}{K-e-\hat\theta_q}$, where $\hat\theta_q$ is estimated using some arbitrary $B$ for our monte carlo integral.
-
-Initial estimates of $\hat\theta_q$:
-
-```{r}
-B = 500                            # Arbitrary initial B (number of monte carlo samples)
-u=matrix(runif(n*B, 0, 1), ncol=B) # Base MC Samples to plug into our method
-uniroot.interval = c(2000, 19500)  # Search interval for uniroot (TODO - a better way of picking this?)
-
-init.CI = estimate_CI.mc(alpha, n, K, W, u, dating_error.mean, dating_error.sd, uniroot.interval)
-init.CI
-```
-
-Use this initial estimate to generate our monte carlo samples.
-
-```{r}
-e = list()
-e$lower = rtnorm(n, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
-e$upper = rtnorm(n, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.upper)
-e
-```
-
-**(4)** --- $\frac{d}{d\theta} \phi$
-
-$$
-\begin{align*}
-    \frac{d}{d\theta_q}  \phi
-        &= \frac{d}{d\theta_q} \int^{m-\theta_q}_{-\infty} \frac{K-m}{K-e-\theta_q}f_\varepsilon(e)de \\
-        &= \int^{m-\theta_q}_{-\infty} \frac{\partial}{\partial \theta_q}\frac{K-m}{K-e-\theta_q}f_\varepsilon(e)de + \frac{K-m}{K-(m-\theta_q)-\theta_q}f_\varepsilon(m-\theta_q)(-1) - 0 \\
-        &= \int^{m-\theta_q}_{-\infty} \frac{K-m}{(K-e-\theta_q)^2}f_\varepsilon(e)de - f_\varepsilon(m-\theta_q) \\
-        &\approx \frac{1}{B} \sum_{b=1}^B\frac{K-m}{(K-e_b-\hat\theta_q)^2} - f_\varepsilon(m-\hat\theta_q)
-\end{align*}
-$$
-
-**(5)** --- Put it all together:
-
-$$
-\mathrm{Var}\{\hat{\theta}_q\}
-    \approx \frac{1}{B} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}
-        \right\} \left[ \frac{1}{B} \sum_{b=1}^B\frac{K-m}{(K-e_b-\hat\theta_q)^2} - f_\varepsilon(m-\hat\theta_q) \right]^{-2}
-$$
 
 $$
 \implies B
-    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1} \mathrm{Var}\left\{ \frac{K-m}{K-e-\hat\theta_q}         \right\} \left[ \frac{1}{B} \sum_{b=1}^B\frac{K-m}{(K-e_b-\hat\theta_q)^2} - f_\varepsilon(m-\hat\theta_q) \right]^{-2}
+    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1} \mathrm{Var} \left\{ \frac{m - e_1^* - \hat\theta_q}{K - e_1^* - \hat\theta_q } \right\} \left[ F_\varepsilon (m - \hat\theta_q) \right]^2 \left[ - \frac{f_\varepsilon (K - \hat\theta_q)}{F_\varepsilon (K - \hat\theta_q)} \psi \right]^{-2}
 $$
 
-Using the $\sigma_\phi^2$ we estimated earlier and an arbitrary target $\mathrm{Var}\{\hat\theta_q\} = 0.2*\sigma^2$, we can use the above formula to find an estimate of the optimal $B$
+where $e_b^*$ are samples from distribution with $f_varepsilon(e_b)$ but right-truncated at $m-\hat\theta_q$
 
 ```{r}
-find_optimal_B.phi = function (var.theta, theta, K, m, e, eps.mean, eps.sigma) {
-  f_eps.K = dnorm(K-theta, eps.mean, eps.sigma)
-  F_eps.K = pnorm(K-theta, eps.mean, eps.sigma)
-  f_eps.m = dnorm(m-theta, eps.mean, eps.sigma)
-  F_eps.m = pnorm(m-theta, eps.mean, eps.sigma)
+find_optimal_B.psi = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
+  # Initial estimate of theta_q using no measurement error case
+  theta_q.hat.init = K - q^(-1/n)*(K-m) 
   
-  sigma2.phi = var((K-m)/(K-e-theta) * F_eps.m)
-  dphi.dtheta = f_eps.m*F_eps.K - f_eps.K*F_eps.m - f_eps.K*mean((K-m)/(K-e-theta))
+  # Monte carlo samples
+  e = rtnorm(B, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta_q.hat.init)
   
-  var.theta^(-1) * sigma2.phi * dphi.dtheta^(-2)
-}
-```
-
-```{r}
-var.theta.target = 0.2*(dating_error.sd)^2
-
-optimal_B.phi = list()
-optimal_B.phi$lower = find_optimal_B.phi(var.theta=var.theta.target,
-                                         theta=init.CI$CI.lower,
-                                         K, m, e$lower,
-                                         dating_error.mean,
-                                         dating_error.sd)
-
-optimal_B.phi$upper = find_optimal_B.phi(var.theta=var.theta.target,
-                                         theta=init.CI$CI.upper,
-                                         K, m, e$upper,
-                                         dating_error.mean,
-                                         dating_error.sd)
-optimal_B.phi
-```
-
-What if used $\psi$ instead of $\phi$?
-
-$$
-\implies B
-    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1}  \underbrace{ \mathrm{Var}\left\{\frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}}_{\sigma^2_\psi} \left[ \underbrace{\frac{1}{B} \sum_{b=1}^B\frac{m-K}{(K-e_b-\hat\theta_q)^2}}_{d\psi/d\hat\theta_q} \right]^{-2}
-$$
-
-```{r}
-find_optimal_B.psi = function (var.theta, theta, K, m, e, eps.mean, eps.sigma) {
-  f_eps.K = dnorm(K-theta, eps.mean, eps.sigma)
-  F_eps.K = pnorm(K-theta, eps.mean, eps.sigma)
-  f_eps.m = dnorm(m-theta, eps.mean, eps.sigma)
-  F_eps.m = pnorm(m-theta, eps.mean, eps.sigma)
+  f_eps.K = dnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
+  F_eps.K = pnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
+  f_eps.m = dnorm(m-theta_q.hat.init, eps.mean, eps.sigma)
+  F_eps.m = pnorm(m-theta_q.hat.init, eps.mean, eps.sigma)
   
-  sigma2.psi = var((m-e-theta)/(K-e-theta) * F_eps.m)
-  dpsi.dtheta =  mean((m-e-theta)/(K-e-theta)) * (f_eps.m*F_eps.m - f_eps.K/F_eps.K)
+  sigma2.psi_hat = var((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init))
+  psi_hat = mean((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init)) * F_eps.m
+  dpsi_hat.dtheta =  -f_eps.m/F_eps.m * psi_hat
 
-  var.theta^(-1) * sigma2.psi * dpsi.dtheta^(-2)
+  max_var^(-1) * sigma2.psi_hat * F_eps.m^2 * dpsi_hat.dtheta^(-2)
 }
 ```
 
 ```{r timeit = TRUE}
+var.theta.target = (0.2*dating_error.sd)^2
+
 optimal_B.psi = list()
-optimal_B.psi$lower = find_optimal_B.psi(var.theta=var.theta.target,
-                                         theta=init.CI$CI.lower,
-                                         K, m, e$lower,
+optimal_B.psi$lower = find_optimal_B.psi(max_var=var.theta.target,
+                                         q=0.025,
+                                         K, m,
                                          dating_error.mean,
                                          dating_error.sd)
 
-optimal_B.psi$upper = find_optimal_B.psi(var.theta=var.theta.target,
-                                         theta=init.CI$CI.upper,
-                                         K, m, e$upper,
+optimal_B.psi$upper = find_optimal_B.psi(max_var=var.theta.target,
+                                         q=0.975,
+                                         K, m,
                                          dating_error.mean,
                                          dating_error.sd)
 optimal_B.psi
-```
-
-```{r}
-F.m_theta = pnorm(m-init.CI$CI.lower, dating_error.mean, dating_error.sd)
-F.K_theta = pnorm(K-init.CI$CI.lower, dating_error.mean, dating_error.sd)
-
-F.m_theta/F.K_theta
 ```
 
 **TODO** ok lets just find sample variance at different B's empirically
@@ -263,12 +153,14 @@ for (i in 1:num.B) {
 
 ```{r}
 options(scipen = 100)
+B = seq(from=2, by=50, length.out=num.B)
 plot(B, var.theta_q$lower, type="b", col='blue', 
      log = "xy", 
      main="Sample Var(theta_q) against Number of MC Samples",
      ylab=paste("sample variance"), 
      ylim=c(min(c(var.theta_q$lower, var.theta_q$upper)), max(c(var.theta_q$lower, var.theta_q$upper))))
 lines(B, var.theta_q$upper, type="b", col='red')
+abline(h=var.theta.target, lty=2, col='green')
 legend("topright",
        c("q=0.025", "q=0.975"),
        lty=c(1, 1),
@@ -276,7 +168,6 @@ legend("topright",
 
 # Add lines for our target variance and optimal B's calculated previously
 # abline(v=c(optimal_B.psi$lower, optimal_B.psi$upper), lty=2, col=c("blue", "red"))
-# abline(h=var.theta.target, lty=2, col='green')
 # abline(h=6, lty=2)
 ```
 
