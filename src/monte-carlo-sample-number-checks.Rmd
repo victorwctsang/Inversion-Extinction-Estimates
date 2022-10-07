@@ -50,13 +50,11 @@ m=min(W)
 m
 ```
 
-
 $$
-\implies B
-    \approx \left[\mathrm{Var}\{\hat{\theta}_q\}\right]^{-1} \mathrm{Var} \left\{ \frac{m - e_1^* - \hat\theta_q}{K - e_1^* - \hat\theta_q } \right\} \left[ F_\varepsilon (m - \hat\theta_q) \right]^2 \left[ - \frac{f_\varepsilon (K - \hat\theta_q)}{F_\varepsilon (K - \hat\theta_q)} \psi \right]^{-2}
+B = \frac{1}{\mathrm{Var}(\hat\theta_q )} \mathrm{Var} \left\{ \frac{m - e_1^* - \hat\theta_q}{K - e_1^* - \hat\theta_q } \right\} \left[ F_\varepsilon (m - \hat\theta_q) \right]^2 \left[ \hat\theta_q/\hat\psi \right]^2
 $$
 
-where $e_b^*$ are samples from distribution with $f_varepsilon(e_b)$ but right-truncated at $m-\hat\theta_q$
+where $e_b^*$ are samples from distribution with $f_\varepsilon(e_b)$ but right-truncated at $m-\hat\theta_q$
 
 ```{r}
 find_optimal_B.psi = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
@@ -73,9 +71,8 @@ find_optimal_B.psi = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
   
   sigma2.psi_hat = var((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init))
   psi_hat = mean((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init)) * F_eps.m
-  dpsi_hat.dtheta =  -f_eps.m/F_eps.m * psi_hat
-
-  max_var^(-1) * sigma2.psi_hat * F_eps.m^2 * dpsi_hat.dtheta^(-2)
+  
+  max_var^(-1) * sigma2.psi_hat * F_eps.m^2 * (theta_q.hat.init/psi_hat)^2
 }
 ```
 
@@ -116,8 +113,8 @@ For the purposes of this check, we'll only look at the lower bound estimate.
 ```{r, timeit = TRUE}
 n = 30
 
-num.B = 30
-B = seq(from=2, by=50, length.out=num.B)
+B = unique(round(pracma::logseq(2, 2000, 30)))
+num.B = length(B)
 
 num.estimates = 100
 
@@ -130,6 +127,8 @@ var.theta_q$lower = rep(NA, num.B)
 var.theta_q$upper = rep(NA, num.B)
 
 u = matrix(runif(n*num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
+
+uniroot.interval = c(5000, 19500)
 ```
 
 ```{r, timeit=TRUE, cache=TRUE}
@@ -152,7 +151,7 @@ for (i in 1:num.B) {
 ```
 
 ```{r}
-options(scipen = 100)
+options(scipen=999)
 B = seq(from=2, by=50, length.out=num.B)
 plot(B, var.theta_q$lower, type="b", col='blue', 
      log = "xy", 
@@ -165,10 +164,6 @@ legend("topright",
        c("q=0.025", "q=0.975"),
        lty=c(1, 1),
        col=c('blue', 'red'))
-
-# Add lines for our target variance and optimal B's calculated previously
-# abline(v=c(optimal_B.psi$lower, optimal_B.psi$upper), lty=2, col=c("blue", "red"))
-# abline(h=6, lty=2)
 ```
 
 ### $\mathrm{Var}\left\{ \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}$
@@ -245,8 +240,8 @@ $$
 ```{r}
 set.seed(2022)
 n = 30
-B = 200
-u = matrix(runif(n*B, min=0, max=1), ncol=B)
+num.mce_samples = 200
+u = matrix(runif(n*num.mce_samples, min=0, max=1), ncol=B)
 
 q = seq(from=0.025, to=0.975, by=0.025)
 theta_q = rep(NA, length(q))
