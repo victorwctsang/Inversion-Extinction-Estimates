@@ -28,7 +28,7 @@ knitr::knit_hooks$set(timeit = local({
 Source our helper functions and set our parameters.
 
 ```{r}
-source("new-method-functions.R")
+source("minmi-functions.R")
 
 set.seed(2022)
 
@@ -77,7 +77,7 @@ find_optimal_B.psi = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
 ```
 
 ```{r timeit = TRUE}
-var.theta.target = 1000 #(0.2*dating_error.sd)^2
+var.theta.target = 225 #(0.2*dating_error.sd)^2
 
 optimal_B.psi = list()
 optimal_B.psi$lower = find_optimal_B.psi(max_var=var.theta.target,
@@ -118,7 +118,7 @@ n = 30
 B = unique(round(pracma::logseq(2, 2000, 40)))
 num.B = length(B)
 
-num.estimates = 100
+num.estimates = 50
 
 # Simulate a dataset
 W = runif(n=n, min=theta.true, max=K) + rnorm(n=n, mean=dating_error.mean, sd=dating_error.sd)
@@ -168,104 +168,3 @@ legend("topright",
        col=c('blue', 'red'))
 ```
 
-
-### $\mathrm{Var}\left\{ \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}$
-
-```{r}
-num.mc_samples = 1000
-num.estimates = 1000
-
-sigma2_psi = rep(NA, num.estimates)
-for (i in 1:num.estimates) {
-  # Get B samples of e
-  e = extraDistr::rtnorm(n=num.mc_samples, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
-  
-  sigma2_psi[i] = var((m-e-init.CI$CI.lower)/(K-e-init.CI$CI.lower)* pnorm(m-init.CI$CI.lower, dating_error.mean, dating_error.sd))
-}
-
-hist(sigma2_psi, main="Histogram of Var(psi)")
-qqnorm(sigma2_psi, pch = 1, frame = FALSE)
-qqline(sigma2_psi, col = "steelblue", lwd = 2)
-```
-
-### \left[ \frac{1}{B} \sum_{b=1}^B\frac{m-K}{(K-e_b-\hat\theta_q)^2} \right]\^{-2}
-
-```{r}
-num.mc_samples = 1000
-num.estimates = 1000
-
-dpsi.dtheta = rep(NA, num.estimates)
-for (i in 1:num.estimates) {
-  # Get B samples of e
-  e = extraDistr::rtnorm(n=num.mc_samples, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
-  
-  dpsi.dtheta[i] = mean((m-e-init.CI$CI.lower)/(K-e-init.CI$CI.lower)^2* pnorm(m-init.CI$CI.lower, dating_error.mean, dating_error.sd))
-}
-
-plot(dpsi.dtheta)
-```
-
-## From before:
-
-### $\sigma^2_\phi = \mathrm{Var}\left(\frac{K-m}{K-e-\hat\theta_q}\right)$
-
-$$
-\quad \mathrm{Var}\left\{ \frac{K-m}{K-e-\theta_q} \right\}, \quad \left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
-$$
-
-2.  Take 1000 different sets of monte carlo samples of size $B$ and calculate the sample variance of $\frac{K-m}{K-e-\hat\theta_q}$. What is the range? What's the variance of our variance estimate?
-3.  How does $\left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}$ change with $q$? How about relative to $\hat\theta_q$, fixing everything else?
-
-```{r}
-num.mc_samples = 1000
-num.estimates = 1000
-
-sigma2_phi = rep(NA, num.estimates)
-for (i in 1:num.estimates) {
-  # Get B samples of e
-  e = extraDistr::rtnorm(n=num.mc_samples, mean=dating_error.mean, sd=dating_error.sd, a=-Inf, b=m-init.CI$CI.lower)
-  
-  sigma2_phi[i] = var((K-m)/(K-e-init.CI$CI.lower))
-}
-mean(sigma2_phi)
-var(sigma2_phi)
-
-plot(sigma2_phi)
-boxplot(sigma2_phi)
-```
-
-### Weird term
-
-$$
-\left[(1-q^{-1/n}) f_\varepsilon(K - \hat{\theta}_q) - f_\varepsilon(m - \hat{\theta}_q) \right]^{-2}
-$$
-
-```{r}
-set.seed(2022)
-n = 30
-num.mce_samples = 200
-u = matrix(runif(n*num.mce_samples, min=0, max=1), ncol=B)
-
-q = seq(from=0.025, to=0.975, by=0.025)
-theta_q = rep(NA, length(q))
-term = rep(NA, length(q))
-for (i in 1:length(q) ) {
-  # estimate theta_q
-  theta_q[i] = estimate_quantile.mc(q=q[i], K, W, u, dating_error.mean, 
-                               dating_error.sd, c(5000, 19500))
-  term[i] = ( (1 - q[i]^(-1/n)) * dnorm(K - theta_q[i], dating_error.mean, dating_error.sd) - dnorm(m - theta_q[i], dating_error.mean, dating_error.sd) )^(-2)
-}
-
-plot(x=q, y=term, type="b", log="y")
-```
-
-```{r}
-log(term)
-```
-
-```{r}
-m-theta_q
-dnorm(m - theta_q, dating_error.mean, dating_error.sd)
-```
-
-Conclusion: using the term with $q$ in it is causing $B$ to explode.
