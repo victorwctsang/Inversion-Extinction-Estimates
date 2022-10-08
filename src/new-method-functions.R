@@ -43,7 +43,7 @@ calc_P = function (theta, K, u, m, eps.mean, eps.sigma) {
   F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
-  P = 1 - F.eps.m/F.eps.K * (1 - psi.hat)
+  P = 1 - F.eps.m/F.eps.K * psi.hat
   return(P)
 }
 
