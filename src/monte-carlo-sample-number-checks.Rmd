@@ -168,3 +168,32 @@ legend("topright",
        col=c('blue', 'red'))
 ```
 
+```{r}
+library(readxl)
+# Import mammoth data from fossildata.xlsx
+fossil_dataframe = read_excel(
+  path='../data/fossildata.xlsx', 
+  sheet="MammothPrimEBer", 
+  range="M3:N36", 
+  col_names=c("age", "sd"), 
+  col_types=c('numeric', 'numeric')
+)
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+
+start_time = Sys.time()
+estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K)
+print(Sys.time() - start_time)
+```
+
+```{r}
+start_time = Sys.time()
+estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95)
+print(Sys.time() - start_time)
+```
+
+```{r}
+start_time = Sys.time()
+estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95, B=500)
+print(Sys.time() - start_time)
+```
+

@@ -1,27 +1,60 @@
 library(extraDistr)
 
-estimate_extinction.minmi = function (W, sd, K, level = NA) {
-  result = list(extinction=NA)
+estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL) {
+  result = list(extinction=NULL)
   n = length(W)
   m = min(W)
   dating.sd = mean(sd)
-  uniroot.interval = c(5000, 19500) #c(m-(K-m)/2, m+(K-m)/2)
+  uniroot.interval = c(m-(K-m)/2, m+(K-m)/2)
   
-  B = 100
-  u = matrix(runif(n*B, min=0, max=1), ncol=B)
+  # Calculate number of monte carlo samples to use
+  B.extinction = B.lower = B.upper = NULL
+  if (!is.null(B)) {
+    B.extinction = B.lower = B.upper = B
+  } else {
+    B.extinction = ceiling(find_optimal_B(max_var = (0.2*dating.sd)^2,
+                                  q=0.5,
+                                  K=K,
+                                  m=m,
+                                  eps.mean=0,
+                                  eps.sigma=dating.sd,
+                                  B=500))
+    if (!is.null(level)) {
+      alpha = (1 - level)/2
+      B.lower = ceiling(find_optimal_B(max_var = (0.2*dating.sd)^2,
+                               q=alpha,
+                               K=K,
+                               m=m,
+                               eps.mean=0,
+                               eps.sigma=dating.sd,
+                               B=500))
+      B.upper = ceiling(find_optimal_B(max_var = (0.2*dating.sd)^2,
+                               q=1-alpha,
+                               K=K,
+                               m=m,
+                               eps.mean=0,
+                               eps.sigma=dating.sd,
+                               B=500))
+    }
+  }
   
-  result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=u,
-                                              eps.mean=0, eps.sigma=dating.sd,
-                                              uniroot.interval=uniroot.interval)
-  if (!is.na(level)) {
+  # Generate Monte Carlo Samples
+  B.max = max(B.extinction, B.lower, B.upper)
+  u = matrix(runif(n*B.max, min=0, max=1), ncol=B.max)
+
+  # Perform estimates  
+  if (!is.null(level)) {
     alpha = (1 - level)/2
-    result$lower = estimate_quantile.minmi(q=alpha, K=K, W=W, u=u,
+    result$lower = estimate_quantile.minmi(q=alpha, K=K, W=W, u=u[, 1:B.lower],
                                            eps.mean=0, eps.sigma=dating.sd,
                                            uniroot.interval=uniroot.interval)
-    result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=u,
+    result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=u[, 1:B.upper],
                                            eps.mean=0, eps.sigma=dating.sd,
                                            uniroot.interval=uniroot.interval)
   }
+  result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=u[, 1:B.extinction],
+                                              eps.mean=0, eps.sigma=dating.sd,
+                                              uniroot.interval=uniroot.interval)
   return(result)
 }
 
@@ -85,4 +118,20 @@ uniform_to_tnorm = function (u, mean, sd, a, b) {
   B = ncol(u)
   mc.samples = matrix(qtnorm(p=u, mean=mean, sd=sd, a=a, b=b), ncol=B)
   return(mc.samples)
+}
+
+find_optimal_B = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
+  # Initial estimate of theta_q using no measurement error case
+  theta_q.hat.init = K - q^(-1/n)*(K-m) 
+  
+  # Monte carlo samples
+  e = rtnorm(B, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta_q.hat.init)
+  
+  F_eps.K = pnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
+  F_eps.m = pnorm(m-theta_q.hat.init, eps.mean, eps.sigma)
+  
+  sigma2.psi_hat = var((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init))
+  psi_hat = mean((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init)) * F_eps.m
+  
+  max_var^(-1) * sigma2.psi_hat * F_eps.m^2 * (theta_q.hat.init/psi_hat)^2
 }
