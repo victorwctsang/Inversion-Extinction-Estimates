@@ -71,8 +71,10 @@ find_optimal_B.psi = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
   
   sigma2.psi_hat = var((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init))
   psi_hat = mean((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init)) * F_eps.m
+  psi_hat.prime = mean((m-K)/(K-e-theta_q.hat.init)^2) * F_eps.m
+  u.prime = psi_hat * ( (F_eps.m * f_eps.K)/F_eps.K^2 - f_eps.m/F_eps.K) + F_eps.m/F_eps.K * psi_hat.prime
   
-  max_var^(-1) * sigma2.psi_hat * F_eps.m^2 * (theta_q.hat.init/psi_hat)^2
+  ceiling(sigma2.psi_hat/max_var * (F_eps.m/F_eps.K)^2 * (u.prime)^(-2))
 }
 ```
 
@@ -92,12 +94,6 @@ optimal_B.psi$upper = find_optimal_B.psi(max_var=var.theta.target,
                                          dating_error.mean,
                                          dating_error.sd)
 optimal_B.psi
-```
-
-```{r}
-all_q = seq(0.01, 1, length.out=100)
-all_optimal_B = sapply(all_q, FUN= function(x) find_optimal_B.psi(max_var=var.theta.target, q=x, K, m, dating_error.mean, dating_error.sd))
-plot(all_q, all_optimal_B, type="b", main="optimal_B against q", xlab="q", ylab="optimal_B")
 ```
 
 ## Checks
@@ -153,19 +149,23 @@ for (i in 1:num.B) {
 }
 ```
 
-```{r}
-options(scipen=999)
+```{r fig.height=6}
+options(scipen=1)
 plot(B, var.theta_q$lower, type="b", col='blue', 
      log = "xy", 
      main="Sample Var(theta_q) against Number of MC Samples",
      ylab=paste("sample variance"), 
-     ylim=c(min(c(var.theta_q$lower, var.theta_q$upper)), max(c(var.theta_q$lower, var.theta_q$upper))))
+     ylim=c(min(c(var.theta_q$lower, var.theta_q$upper, var.theta.target)), max(c(var.theta_q$lower, var.theta_q$upper, var.theta.target))))
 lines(B, var.theta_q$upper, type="b", col='red')
 abline(h=var.theta.target, lty=2, col='green')
-legend("topright",
-       c("q=0.025", "q=0.975"),
-       lty=c(1, 1),
-       col=c('blue', 'red'))
+abline(v=optimal_B.psi$lower, lty=2, col='blue')
+abline(v=optimal_B.psi$upper, lty=2, col='red')
+abline(h=var.theta_q$upper[which(abs(B - optimal_B.psi$upper)==min(abs(B - optimal_B.psi$upper)))], lty=1, col='grey')
+abline(h=var.theta_q$lower[which(abs(B - optimal_B.psi$lower)==min(abs(B - optimal_B.psi$lower)))], lty=1, col='grey')
+legend("bottomleft",
+       c(paste0("var.theta.target=", var.theta.target), "q=0.025", paste0("optimal_B.lower=", optimal_B.psi$lower), "q=0.975", paste0("optimal_B.upper=", optimal_B.psi$upper)),
+       lty=c(2, 1, 2, 1, 2),
+       col=c('green', 'blue', 'blue', 'red', 'red'))
 ```
 
 ```{r}
@@ -180,20 +180,14 @@ fossil_dataframe = read_excel(
 )
 fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 
-start_time = Sys.time()
-estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K)
-print(Sys.time() - start_time)
+estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, speed=T)
 ```
 
 ```{r}
-start_time = Sys.time()
-estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95)
-print(Sys.time() - start_time)
+estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95, speed=T)
 ```
 
 ```{r}
-start_time = Sys.time()
-estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95, B=500)
-print(Sys.time() - start_time)
+estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95, B=500, speed=T)
 ```
 
