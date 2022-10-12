@@ -2,7 +2,10 @@
 title: "Monte Carlo Sample Calculations"
 author: "Victor Tsang (z5209633)"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -40,75 +43,50 @@ dating_error.mean = 0              # True mean of radiocarbon dating error
 dating_error.sd = 272              # True Standard deviation
  
 alpha = 0.05                       # 95% confidence interval
+
 ```
 
-Then, simulate some data
+First, simulate some data:
 
 ```{r}
 W = runif(n=n, min=theta.true, max=K) + rnorm(n=n, mean=dating_error.mean, sd=dating_error.sd)
 m=min(W)
-m
 ```
 
-$$
-B = \frac{1}{\mathrm{Var}(\hat\theta_q )} \mathrm{Var} \left\{ \frac{m - e_1^* - \hat\theta_q}{K - e_1^* - \hat\theta_q } \right\} \left[ F_\varepsilon (m - \hat\theta_q) \right]^2 \left[ \hat\theta_q/\hat\psi \right]^2
-$$
 
-where $e_b^*$ are samples from distribution with $f_\varepsilon(e_b)$ but right-truncated at $m-\hat\theta_q$
+## Asymptotic Variance Formula
 
 ```{r}
-find_optimal_B.psi = function (max_var, q, K, m, eps.mean, eps.sigma, B=500) {
+estimate_var.delta_method = function (q, B, u, K, m, eps.mean, eps.sigma) {
   # Initial estimate of theta_q using no measurement error case
   theta_q.hat.init = K - q^(-1/n)*(K-m) 
   
   # Monte carlo samples
-  e = rtnorm(B, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta_q.hat.init)
+  e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat.init)
   
+  # pdfs and CDF evaluations (for convenience)
   f_eps.K = dnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
   F_eps.K = pnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
   f_eps.m = dnorm(m-theta_q.hat.init, eps.mean, eps.sigma)
   F_eps.m = pnorm(m-theta_q.hat.init, eps.mean, eps.sigma)
   
-  sigma2.psi_hat = var((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init))
-  psi_hat = mean((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init)) * F_eps.m
-  psi_hat.prime = mean((m-K)/(K-e-theta_q.hat.init)^2) * F_eps.m
-  u.prime = psi_hat * ( (F_eps.m * f_eps.K)/F_eps.K^2 - f_eps.m/F_eps.K) + F_eps.m/F_eps.K * psi_hat.prime
+  # Monte carlo estimates
+  psi_hat = apply((m-e-theta_q.hat.init)/(K-e-theta_q.hat.init) * F_eps.m, 1, mean)
+  psi_hat.prime = apply((m-K)/(K-e-theta_q.hat.init)^2 * F_eps.m, 1, mean)
   
-  ceiling(sigma2.psi_hat/max_var * (F_eps.m/F_eps.K)^2 * (u.prime)^(-2))
+  u_hat.prime = psi_hat * ( (F_eps.m * f_eps.K)/F_eps.K^2 - f_eps.m/F_eps.K) + F_eps.m/F_eps.K * psi_hat.prime
+
+  var_estimate = (F_eps.m/F_eps.K)^2 * var(psi_hat) * (u_hat.prime)^(-2)
+  
+  return(var_estimate)
 }
-```
-
-```{r timeit = TRUE}
-var.theta.target = 225 #(0.2*dating_error.sd)^2
-
-optimal_B.psi = list()
-optimal_B.psi$lower = find_optimal_B.psi(max_var=var.theta.target,
-                                         q=0.025,
-                                         K, m,
-                                         dating_error.mean,
-                                         dating_error.sd)
-
-optimal_B.psi$upper = find_optimal_B.psi(max_var=var.theta.target,
-                                         q=0.975,
-                                         K, m,
-                                         dating_error.mean,
-                                         dating_error.sd)
-optimal_B.psi
 ```
 
 ## Checks
 
-Three things to check expected behaviour:
+### Sample Variance of $\hat\theta_q$
 
-$$
-\mathrm{Var}(\hat\theta_q), \quad \mathrm{Var}\left\{ \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \right\}, \quad \left[ \frac{1}{B} \sum_{b=1}^B\frac{m-K}{(K-e_b-\hat\theta_q)^2} \right]^{-2}
-$$
-
-### Variance of $\hat\theta_q$
-
-For the purposes of this check, we'll only look at the lower bound estimate.
-
-```{r, timeit = TRUE}
+```{r}
 n = 30
 
 B = unique(round(pracma::logseq(2, 2000, 40)))
@@ -116,78 +94,81 @@ num.B = length(B)
 
 num.estimates = 50
 
-# Simulate a dataset
-W = runif(n=n, min=theta.true, max=K) + rnorm(n=n, mean=dating_error.mean, sd=dating_error.sd)
-m=min(W)
+sample_var.theta_q = list()
+sample_var.theta_q$lower = rep(NA, num.B)
+sample_var.theta_q$upper = rep(NA, num.B)
 
-var.theta_q = list()
-var.theta_q$lower = rep(NA, num.B)
-var.theta_q$upper = rep(NA, num.B)
+expctd_var.theta_q = list()
+expctd_var.theta_q$lower = rep(NA, num.B)
+expctd_var.theta_q$upper = rep(NA, num.B)
 
 u = matrix(runif(n*num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
 
 uniroot.interval = c(5000, 19500)
 ```
 
-```{r, timeit=TRUE, cache=TRUE}
+```{r}
+start_time = Sys.time()
 for (i in 1:num.B) {
-  # Generate 100 estimates of \theta_0.025
+  # Get Sample Variances
   theta.hat.lower = rep(NA, num.estimates)
   theta.hat.upper = rep(NA, num.estimates)
+  # Generate 100 estimates of \theta_q
   for (j in 1:num.estimates) {
     mc.samples = u[((j-1)*n+1):((j)*n), 1:(B[i])]
-    theta.hat.lower[j] = estimate_quantile.mc(q=0.025, K, W, mc.samples, 
-                                              dating_error.mean, 
-                                              dating_error.sd, uniroot.interval)
-    theta.hat.upper[j] = estimate_quantile.mc(q=0.975, K, W, mc.samples, 
-                                              dating_error.mean, 
-                                              dating_error.sd, uniroot.interval)
+    theta.hat.lower[j] = estimate_quantile.minmi(q=0.025, K, W, mc.samples, 
+                                                 dating_error.mean, 
+                                                 dating_error.sd, uniroot.interval)
+    theta.hat.upper[j] = estimate_quantile.minmi(q=0.975, K, W, mc.samples, 
+                                                 dating_error.mean, 
+                                                 dating_error.sd, uniroot.interval)
   }
-  # save sample variance
-  var.theta_q$lower[i] = var(theta.hat.lower)
-  var.theta_q$upper[i] = var(theta.hat.upper)
+  sample_var.theta_q$lower[i] = var(theta.hat.lower)
+  sample_var.theta_q$upper[i] = var(theta.hat.upper)
+  
+  # Get E(delta method estimate of variance)
+  expctd_var.theta_q$upper[i] = mean(estimate_var.delta_method(q=0.025, B[i], u[, 1:B[i]],
+                                                       K, m, dating_error.mean, dating_error.sd))
+  expctd_var.theta_q$lower[i] = mean(estimate_var.delta_method(q=0.975, B[i], u[, 1:B[i]], 
+                                                       K, m, dating_error.mean, dating_error.sd))
 }
-```
+print(Sys.time() - start_time)
 
-```{r fig.height=6}
-options(scipen=1)
-plot(B, var.theta_q$lower, type="b", col='blue', 
-     log = "xy", 
-     main="Sample Var(theta_q) against Number of MC Samples",
-     ylab=paste("sample variance"), 
-     ylim=c(min(c(var.theta_q$lower, var.theta_q$upper, var.theta.target)), max(c(var.theta_q$lower, var.theta_q$upper, var.theta.target))))
-lines(B, var.theta_q$upper, type="b", col='red')
-abline(h=var.theta.target, lty=2, col='green')
-abline(v=optimal_B.psi$lower, lty=2, col='blue')
-abline(v=optimal_B.psi$upper, lty=2, col='red')
-abline(h=var.theta_q$upper[which(abs(B - optimal_B.psi$upper)==min(abs(B - optimal_B.psi$upper)))], lty=1, col='grey')
-abline(h=var.theta_q$lower[which(abs(B - optimal_B.psi$lower)==min(abs(B - optimal_B.psi$lower)))], lty=1, col='grey')
-legend("bottomleft",
-       c(paste0("var.theta.target=", var.theta.target), "q=0.025", paste0("optimal_B.lower=", optimal_B.psi$lower), "q=0.975", paste0("optimal_B.upper=", optimal_B.psi$upper)),
-       lty=c(2, 1, 2, 1, 2),
-       col=c('green', 'blue', 'blue', 'red', 'red'))
-```
-
-```{r}
-library(readxl)
-# Import mammoth data from fossildata.xlsx
-fossil_dataframe = read_excel(
-  path='../data/fossildata.xlsx', 
-  sheet="MammothPrimEBer", 
-  range="M3:N36", 
-  col_names=c("age", "sd"), 
-  col_types=c('numeric', 'numeric')
+res.df = data.frame(
+  B = B,
+  sample_var.upper = sample_var.theta_q$upper,
+  sample_var.lower = sample_var.theta_q$lower,
+  expctd_var.upper = expctd_var.theta_q$upper,
+  expctd_var.lower = expctd_var.theta_q$lower
 )
-fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
 
-estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, speed=T)
+head(res.df)
 ```
 
-```{r}
-estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95, speed=T)
+```{r fig.width=12, fig.height=5}
+options(scipen=9)
+
+par(mfrow=c(1,2))
+
+plot(B, sample_var.theta_q$lower, log="xy",
+     type="b", main="Sample Var vs. E(Delta method var) | q=0.025", col="blue",
+     ylim=c(min(sample_var.theta_q$lower, expctd_var.theta_q$lower), max(sample_var.theta_q$lower, expctd_var.theta_q$lower)), ylab=NA)
+lines(B, expctd_var.theta_q$lower, type="b", main="Expected Var",  col="red")
+legend("topright",
+       legend=c("E(Delta Method Var)", "Sample Var"),
+       lty=c(1,1),
+       pch=c(1,1),
+       col=c("red", "blue"))
+
+plot(B, sample_var.theta_q$upper, log="xy",
+     type="b", main="Sample Var vs. E(Delta method var) | q=0.975", col="blue",
+     ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper), max(sample_var.theta_q$upper, expctd_var.theta_q$upper)), ylab=NA)
+lines(B, expctd_var.theta_q$upper, type="b", main="Expected Var",  col="red")
+legend("topright",
+       legend=c("E(Delta Method Var)", "Sample Var"),
+       lty=c(1,1),
+       pch=c(1,1),
+       col=c("red", "blue"))
 ```
 
-```{r}
-estimate_extinction.minmi(W, sd=fossil_dataframe$sd, K, level = 0.95, B=500, speed=T)
-```
 
