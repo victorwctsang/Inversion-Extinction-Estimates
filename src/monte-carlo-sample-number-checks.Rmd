@@ -65,23 +65,31 @@ list(theta.true=theta.true, m=m)
 \]
 
 ```{r}
-estimate_var.delta_method = function (q, theta_q.hat, B, u, K, m, eps.mean, eps.sigma) {
+estimate_var.delta_method = function (q, theta_q.hat, B, K, m, eps.mean, eps.sigma) {
   # pdfs and CDF evaluations (for convenience)
   f_eps.K = dnorm(K-theta_q.hat, eps.mean, eps.sigma)
   F_eps.K = pnorm(K-theta_q.hat, eps.mean, eps.sigma)
   f_eps.m = dnorm(m-theta_q.hat, eps.mean, eps.sigma)
   F_eps.m = pnorm(m-theta_q.hat, eps.mean, eps.sigma)
   
-  # Monte carlo estimates
-  e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat)
+  # Monte carlo samples
+  e = matrix(extraDistr::rtnorm(100*B, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat), ncol=B)
   
-  psi_hat = apply((m-e-theta_q.hat)/(K-e-theta_q.hat), 1, mean)
-  psi_hat.prime = - apply((K-m)/(K-e-theta_q.hat)^2, 1, mean)
+  # Estimate var(\hat\psi)
+  sample_var.psi_hat = var(apply((m-e-theta_q.hat)/(K-e-theta_q.hat), 1, mean))
   
-  var_estimate = var(psi_hat) * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
-  expected_var_estimate = mean(var_estimate)
-  return(expected_var_estimate)
+  # Estimate \hat\psi and \hat\psi prime
+  psi_hat = mean((m-e[1,]-theta_q.hat)/(K-e[1,]-theta_q.hat))
+  psi_hat.prime = - mean((K-m)/(K-e[1,]-theta_q.hat)^2)
+  
+  var_estimate = sample_var.psi_hat * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
+  
+  return(var_estimate)
 }
+
+estimate_var.delta_method(q=0.975, 10181.15,
+                          B=500, K, m,
+                          dating_error.mean, dating_error.sd)
 ```
 
 ## Checks
@@ -104,7 +112,7 @@ expctd_var.theta_q = list()
 expctd_var.theta_q$lower = rep(NA, num.B)
 expctd_var.theta_q$upper = rep(NA, num.B)
 
-u = matrix(runif(n*num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
+u = matrix(runif(num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
 
 uniroot.interval = c(5000, 19500)
 ```
@@ -114,30 +122,31 @@ start_time = Sys.time()
 for (i in 1:num.B) {
   theta.hat.lower = rep(NA, num.estimates)
   theta.hat.upper = rep(NA, num.estimates)
-  exptd_var.lower = rep(NA, num.estimates)
-  exptd_var.upper = rep(NA, num.estimates)
+  var_delta.lower = rep(NA, num.estimates)
+  var_delta.upper = rep(NA, num.estimates)
   # Generate 100 estimates of \theta_q
   for (j in 1:num.estimates) {
-    mc.samples = u[((j-1)*n+1):((j)*n), 1:(B[i])]
+    mc.samples = u[j, 1:(B[i])]
     theta.hat.lower[j] = estimate_quantile.minmi(q=0.025, K, W, mc.samples,
                                                  dating_error.mean,
                                                  dating_error.sd, uniroot.interval)
     theta.hat.upper[j] = estimate_quantile.minmi(q=0.975, K, W, mc.samples,
                                                  dating_error.mean,
                                                  dating_error.sd, uniroot.interval)
-    exptd_var.lower[j] = estimate_var.delta_method(q=0.025, theta.hat.lower[j],
-                                                   B[i], mc.samples, K, m,
+    var_delta.lower[j] = estimate_var.delta_method(q=0.025, theta.hat.lower[j],
+                                                   B[i], K, m,
                                                    dating_error.mean, dating_error.sd)
-    exptd_var.upper[j] = estimate_var.delta_method(q=0.975, theta.hat.upper[j],
-                                                   B[i], mc.samples, K, m,
+    var_delta.upper[j] = estimate_var.delta_method(q=0.975, theta.hat.upper[j],
+                                                   B[i], K, m,
                                                    dating_error.mean, dating_error.sd)
   }
   sample_var.theta_q$lower[i] = var(theta.hat.lower)
   sample_var.theta_q$upper[i] = var(theta.hat.upper)
-  expctd_var.theta_q$lower[i] = mean(exptd_var.lower)
-  expctd_var.theta_q$upper[i] = mean(exptd_var.upper)
+  expctd_var.theta_q$lower[i] = mean(var_delta.lower)
+  expctd_var.theta_q$upper[i] = mean(var_delta.upper)
 }
-print(Sys.time() - start_time)
+time_taken = Sys.time() - start_time
+print(time_taken)
 
 res.df = data.frame(
   B = B,
@@ -147,9 +156,14 @@ res.df = data.frame(
   expctd_var.lower = expctd_var.theta_q$lower
 )
 
-lapply(list(upper_ratio=res.df$expctd_var.upper/res.df$sample_var.upper), FUN=function(x) c(min=min(x), max=max(x)))
-lapply(list(lower_ratio=res.df$expctd_var.lower/res.df$sample_var.lower), FUN=function(x) c(min=min(x), max=max(x)))
+lapply(list(ratio_lower=res.df$expctd_var.lower/res.df$sample_var.lower), FUN=function(x) c(min=min(x), max=max(x)))
+lapply(list(ratio_upper=res.df$expctd_var.upper/res.df$sample_var.upper), FUN=function(x) c(min=min(x), max=max(x)))
 ```
+
+Our expected variance from the delta method is approximately:
+
+* equal to the sample variance for $q=0.025$.
+* ~0.3x the sample variance for $q=0.975$
 
 ```{r fig.width=12, fig.height=4}
 options(scipen=9)
@@ -171,11 +185,35 @@ plot(B, sample_var.theta_q$upper, log="xy",
      ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper), max(sample_var.theta_q$upper, expctd_var.theta_q$upper)), ylab=NA)
 lines(B, expctd_var.theta_q$upper, type="b", col="red")
 legend("topright",
+       legend=c("Sample Var", "E(Delta Method Var)"),
+       lty=c(1,1),
+       pch=c(1,1),
+       col=c("blue","red"))
+```
+
+
+```{r fig.width=12, fig.height=4}
+options(scipen=9)
+
+par(mfrow=c(1,2))
+
+plot(B, sample_var.theta_q$lower, log="x",
+     type="b", main="Sample Var vs. E(Delta method var) | q=0.025", col="blue",
+     ylim=c(min(sample_var.theta_q$lower, expctd_var.theta_q$lower), max(sample_var.theta_q$lower, expctd_var.theta_q$lower)), ylab=NA)
+lines(B, expctd_var.theta_q$lower, type="b", col="red")
+legend("topright",
+       legend=c("E(Delta Method Var)", "Sample Var"),
+       lty=c(1,1),
+       pch=c(1,1),
+       col=c("red", "blue"))
+
+plot(B, sample_var.theta_q$upper, log="x",
+     type="b", main="Sample Var vs. E(Delta method var) | q=0.975", col="blue",
+     ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper), max(sample_var.theta_q$upper, expctd_var.theta_q$upper)), ylab=NA)
+lines(B, expctd_var.theta_q$upper, type="b", col="red")
+legend("topright",
        legend=c("E(Delta Method Var)", "Sample Var"),
        lty=c(1,1),
        pch=c(1,1),
        col=c("red", "blue"))
 ```
-
-Our expected variance from the delta method is consistently 10x larger for $q=0.025$, and 20-40x larger for $q=0.975$
-
