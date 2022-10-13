@@ -85,9 +85,9 @@ estimate_quantile.minmi = function (
   } else  {
     # Measurement Error case
     theta_q.hat = tryCatch(
-      {
-        uniroot(function(theta) prod(calc_P(theta, K, u, m, eps.mean, eps.sigma)) - q,
-                interval=uniroot.interval)$root
+      { 
+      uniroot(function(theta) estimating_eqn(theta, q, K, u, m, eps.mean, eps.sigma),
+              interval=uniroot.interval)$root
       },
       error=function(cond) {
         message("Error in uniroot")
@@ -99,13 +99,11 @@ estimate_quantile.minmi = function (
   return(theta_q.hat)
 }
 
-calc_P = function (theta, K, u, m, eps.mean, eps.sigma) {
-  # P(W >= m)
+estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
   F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
-  P = 1 - F.eps.m/F.eps.K * psi.hat
-  return(P)
+  prod(1 - F.eps.m/F.eps.K * psi.hat) - q
 }
 
 estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
