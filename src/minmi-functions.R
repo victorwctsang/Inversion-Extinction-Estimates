@@ -41,19 +41,19 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, speed=F)
   
   # Generate Monte Carlo Samples
   B.max = max(B.extinction, B.lower, B.upper)
-  u = matrix(runif(n*B.max, min=0, max=1), ncol=B.max)
+  u = runif(B.max, min=0, max=1)
 
   # Perform estimates  
   if (!is.null(level)) {
     alpha = (1 - level)/2
-    result$lower = estimate_quantile.minmi(q=alpha, K=K, W=W, u=u[, 1:B.lower],
+    result$lower = estimate_quantile.minmi(q=alpha, K=K, W=W, u=u[1:B.lower],
                                            eps.mean=0, eps.sigma=dating.sd,
                                            uniroot.interval=uniroot.interval)
     result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=u[, 1:B.upper],
                                            eps.mean=0, eps.sigma=dating.sd,
                                            uniroot.interval=uniroot.interval)
   }
-  result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=u[, 1:B.extinction],
+  result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=u[1:B.extinction],
                                               eps.mean=0, eps.sigma=dating.sd,
                                               uniroot.interval=uniroot.interval)
   
@@ -103,21 +103,19 @@ estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
   F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
-  prod(1 - F.eps.m/F.eps.K * psi.hat) - q
+  1 - F.eps.m/F.eps.K * psi.hat - q^(1/n)
 }
 
 estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
   # Monte Carlo integral
   e = uniform_to_tnorm(u, mean, sd, a, b)
-  psi.hat = apply((m-e-theta)/(K-e-theta), 1, mean)
+  psi.hat = mean((m-e-theta)/(K-e-theta))
   return(psi.hat)
 }
 
 uniform_to_tnorm = function (u, mean, sd, a, b) {
   # Transforms uniform mc samples to truncated normal
-  n = nrow(u)
-  B = ncol(u)
-  mc.samples = matrix(qtnorm(p=u, mean=mean, sd=sd, a=a, b=b), ncol=B)
+  mc.samples = qtnorm(p=u, mean=mean, sd=sd, a=a, b=b)
   return(mc.samples)
 }
 
