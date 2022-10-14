@@ -60,36 +60,33 @@ list(theta.true=theta.true, m=m)
 
 ## Asymptotic Variance Formula
 
-\[
-\mathrm{Var}(\hat\theta_q) \longrightarrow \sigma^2_{\psi(\theta_q)} \left[ \left( - \frac{f(m - \theta)}{F(m - \theta)} + \frac{f(K - \theta)}{F(K - \theta)} \right) \hat\psi(\theta) + \hat\psi^\prime(\theta) \right]^{-2}
-\]
+$$
+\mathrm{Var}(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\theta_q)} \left[ \left( - \frac{f(m - \theta)}{F(m - \theta)} + \frac{f(K - \theta)}{F(K - \theta)} \right) \hat\psi(\theta) + \hat\psi^\prime(\theta) \right]^{-2}
+$$
 
 ```{r}
-estimate_var.delta_method = function (q, theta_q.hat, B, K, m, eps.mean, eps.sigma) {
+estimate_var.delta_method = function (theta_q.hat, B, u, K, m, eps.mean, eps.sigma) {
   # pdfs and CDF evaluations (for convenience)
   f_eps.K = dnorm(K-theta_q.hat, eps.mean, eps.sigma)
   F_eps.K = pnorm(K-theta_q.hat, eps.mean, eps.sigma)
   f_eps.m = dnorm(m-theta_q.hat, eps.mean, eps.sigma)
   F_eps.m = pnorm(m-theta_q.hat, eps.mean, eps.sigma)
   
-  # Monte carlo samples
-  e = matrix(extraDistr::rtnorm(100*B, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat), ncol=B)
-  
-  # Estimate var(\hat\psi)
-  sample_var.psi_hat = var(apply((m-e-theta_q.hat)/(K-e-theta_q.hat), 1, mean))
+  # Estimate sigma^2_var
+  e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat)
+  sample_var.psi_hat = var((m-e-theta_q.hat)/(K-e-theta_q.hat))
   
   # Estimate \hat\psi and \hat\psi prime
-  psi_hat = mean((m-e[1,]-theta_q.hat)/(K-e[1,]-theta_q.hat))
-  psi_hat.prime = - mean((K-m)/(K-e[1,]-theta_q.hat)^2)
+  psi_hat = mean((m-e-theta_q.hat)/(K-e-theta_q.hat))
+  psi_hat.prime = - mean((K-m)/(K-e-theta_q.hat)^2)
   
-  var_estimate = sample_var.psi_hat * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
+  var_estimate = 1/B * sample_var.psi_hat * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
   
   return(var_estimate)
 }
 
-estimate_var.delta_method(q=0.975, 10181.15,
-                          B=500, K, m,
-                          dating_error.mean, dating_error.sd)
+estimate_var.delta_method(10180.92, B=500, u=runif(500, 0, 1), K, m, dating_error.mean, dating_error.sd)
+estimate_var.delta_method(8441.491, B=500, u=runif(500, 0, 1), K, m, dating_error.mean, dating_error.sd)
 ```
 
 ## Checks
@@ -102,7 +99,7 @@ n = 30
 B = unique(round(pracma::logseq(2, 2000, 40)))
 num.B = length(B)
 
-num.estimates = 100
+num.estimates = 250
 
 sample_var.theta_q = list()
 sample_var.theta_q$lower = rep(NA, num.B)
@@ -117,6 +114,21 @@ u = matrix(runif(num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
 uniroot.interval = c(5000, 19500)
 ```
 
+$$
+q^{\frac{1}{n}} = 1 - \frac{F_\varepsilon(m - \hat{\theta}_q)}{F_\varepsilon(K - \hat{\theta}_q)} \hat\psi_B \quad ; \quad \hat\psi_B =  \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\hat\theta_q}{K-e_b-\hat{\theta}_q}
+$$
+
+```{r}
+theta.hat.lower.gold = estimate_quantile.minmi(q=0.025, K, W, u,
+                                               dating_error.mean,
+                                               dating_error.sd)
+theta.hat.upper.gold = estimate_quantile.minmi(q=0.975, K, W, u,
+                                               dating_error.mean,
+                                               dating_error.sd)
+
+print(list(lower.gold=theta.hat.lower.gold, upper.gold=theta.hat.upper.gold))
+```
+
 ```{r}
 start_time = Sys.time()
 for (i in 1:num.B) {
@@ -129,21 +141,19 @@ for (i in 1:num.B) {
     mc.samples = u[j, 1:(B[i])]
     theta.hat.lower[j] = estimate_quantile.minmi(q=0.025, K, W, mc.samples,
                                                  dating_error.mean,
-                                                 dating_error.sd, uniroot.interval)
+                                                 dating_error.sd)
     theta.hat.upper[j] = estimate_quantile.minmi(q=0.975, K, W, mc.samples,
                                                  dating_error.mean,
-                                                 dating_error.sd, uniroot.interval)
-    var_delta.lower[j] = estimate_var.delta_method(q=0.025, theta.hat.lower[j],
-                                                   B[i], K, m,
-                                                   dating_error.mean, dating_error.sd)
-    var_delta.upper[j] = estimate_var.delta_method(q=0.975, theta.hat.upper[j],
-                                                   B[i], K, m,
-                                                   dating_error.mean, dating_error.sd)
+                                                 dating_error.sd)
   }
   sample_var.theta_q$lower[i] = var(theta.hat.lower)
   sample_var.theta_q$upper[i] = var(theta.hat.upper)
-  expctd_var.theta_q$lower[i] = mean(var_delta.lower)
-  expctd_var.theta_q$upper[i] = mean(var_delta.upper)
+  expctd_var.theta_q$lower[i] = estimate_var.delta_method(theta.hat.lower.gold,
+                                                          B[i], u=u, K, m,
+                                                          dating_error.mean, dating_error.sd)
+  expctd_var.theta_q$upper[i] = estimate_var.delta_method(theta.hat.upper.gold,
+                                                          B[i], u=u, K, m,
+                                                          dating_error.mean, dating_error.sd)
 }
 time_taken = Sys.time() - start_time
 print(time_taken)
@@ -156,6 +166,8 @@ res.df = data.frame(
   expctd_var.lower = expctd_var.theta_q$lower
 )
 
+res.df[sample(nrow(res.df), 5), ]
+
 lapply(list(ratio_lower=res.df$expctd_var.lower/res.df$sample_var.lower), FUN=function(x) c(min=min(x), max=max(x)))
 lapply(list(ratio_upper=res.df$expctd_var.upper/res.df$sample_var.upper), FUN=function(x) c(min=min(x), max=max(x)))
 ```
@@ -163,9 +175,9 @@ lapply(list(ratio_upper=res.df$expctd_var.upper/res.df$sample_var.upper), FUN=fu
 Our expected variance from the delta method is approximately:
 
 * equal to the sample variance for $q=0.025$.
-* ~0.3x the sample variance for $q=0.975$
+* a third of the sample variance for $q=0.975$
 
-```{r fig.width=12, fig.height=4}
+```{r fig.width=12, fig.height=5}
 options(scipen=9)
 
 par(mfrow=c(1,2))
@@ -192,7 +204,7 @@ legend("topright",
 ```
 
 
-```{r fig.width=12, fig.height=4}
+```{r fig.width=12, fig.height=5}
 options(scipen=9)
 
 par(mfrow=c(1,2))
@@ -217,3 +229,43 @@ legend("topright",
        pch=c(1,1),
        col=c("red", "blue"))
 ```
+
+```{r}
+options(scipen=9)
+
+plot(B, res.df$expctd_var.lower/res.df$sample_var.lower, col="blue",
+     type="b", main="E(Delta method var):Sample Var", log="x",
+     ylab=NA, ylim=c(min(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper)), max(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper))))
+
+lines(B, res.df$expctd_var.upper/res.df$sample_var.upper,
+     type="b", col="red", ylab=NA)
+
+abline(h=mean(res.df$expctd_var.lower/res.df$sample_var.lower), lty=2, col="blue")
+abline(h=mean(res.df$expctd_var.upper/res.df$sample_var.upper), lty=2, col="red")
+
+legend("right", legend=c("q=0.025", "q=0.975"), pch=c(1,1), lty=c(1,1), col=c("blue", "red"))
+```
+
+```{r}
+sample_var.theta_q$upper[B==48]
+
+estimate_var.delta_method(theta.hat.upper.gold, B=48 , u=u, K, m, dating_error.mean, dating_error.sd)
+
+# pdfs and CDF evaluations (for convenience)
+f_eps.K = dnorm(K-theta.hat.upper.gold, dating_error.mean, dating_error.sd)
+F_eps.K = pnorm(K-theta.hat.upper.gold, dating_error.mean, dating_error.sd)
+f_eps.m = dnorm(m-theta.hat.upper.gold, dating_error.mean, dating_error.sd)
+F_eps.m = pnorm(m-theta.hat.upper.gold, dating_error.mean, dating_error.sd)
+
+# Estimate sigma^2_var
+e = uniform_to_tnorm(u, dating_error.mean, dating_error.sd, a=-Inf, b=m-theta.hat.upper.gold)
+sample_var.psi_hat = var((m-e-theta.hat.upper.gold)/(K-e-theta.hat.upper.gold))
+
+# Estimate \hat\psi and \hat\psi prime
+psi_hat = mean((m-e-theta.hat.upper.gold)/(K-e-theta.hat.upper.gold))
+psi_hat.prime = - mean((K-m)/(K-e-theta.hat.upper.gold)^2)
+
+7/2 * 1/48 * sample_var.psi_hat * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
+
+```
+
