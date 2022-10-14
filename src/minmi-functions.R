@@ -73,28 +73,18 @@ estimate_CI.minmi = function (
   return(CI)
 }
 
-estimate_quantile.minmi = function (
-  q, K, W, u=NA, eps.mean=0, eps.sigma=0, uniroot.interval=NA
-) {
+estimate_quantile.minmi = function (q, K, W, u=NA, eps.mean=0, eps.sigma=0) {
   n = length(W)
   m = min(W)
-  theta_q.hat = NA
-  if (eps.mean==0 & eps.sigma==0) {
-    # No Measurement Error Case
-    theta_q.hat = K - q^(-1/n) * (K-m)
-  } else  {
+  # No Measurement Error case
+  theta_q.hat = K - q^(-1/n) * (K-m)
+  if (eps.mean!=0 || eps.sigma!=0) {
     # Measurement Error case
-    theta_q.hat = tryCatch(
-      { 
-      uniroot(function(theta) estimating_eqn(theta, q, K, u, m, eps.mean, eps.sigma),
-              interval=uniroot.interval)$root
-      },
-      error=function(cond) {
-        message("Error in uniroot")
-        message(cond)
-        return(NA)
-      }
-    )
+    newton.res = pracma::newtonRaphson(fun=function(theta) estimating_eqn(theta, q, K, u, m, eps.mean, eps.sigma),
+                                       x0=theta_q.hat,
+                                       dfun=function(theta) estimating_eqn.deriv(theta, K, u, m, eps.mean, eps.sigma),
+                                       maxiter = 200)
+    theta_q.hat = newton.res$root
   }
   return(theta_q.hat)
 }
@@ -104,6 +94,20 @@ estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
   1 - F.eps.m/F.eps.K * psi.hat - q^(1/n)
+}
+
+estimating_eqn.deriv = function (theta, K, u, m, eps.mean, eps.sigma) {
+  # pdfs and CDF evaluations (for convenience)
+  f_eps.K = dnorm(K-theta, eps.mean, eps.sigma)
+  F_eps.K = pnorm(K-theta, eps.mean, eps.sigma)
+  f_eps.m = dnorm(m-theta, eps.mean, eps.sigma)
+  F_eps.m = pnorm(m-theta, eps.mean, eps.sigma)
+  
+  e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta)
+  psi_hat = mean((m-e-theta)/(K-e-theta))
+  psi_hat.prime = - mean((K-m)/(K-e-theta)^2)
+
+  - psi_hat * (F_eps.m*f_eps.K - f_eps.m*F_eps.K)/F_eps.K^2 - psi_hat.prime
 }
 
 estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
