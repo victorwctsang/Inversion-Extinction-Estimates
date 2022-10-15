@@ -1,0 +1,138 @@
+
+This chapter introduces test statistic inversion as a method of estimating confidence intervals and outlines several inversion-based approaches for estimating extinction times. This chapter also introduces a new inference approach called Min-MI, which can be used to estimate extinction time using the sample minimum statistic.
+
+\section{Test Inversion Confidence Intervals}
+
+We first introduce test statistic inversion as a method for constructing confidence intervals for an unknown parameter $\theta \in \R$ \parencite{Carpenter1999}. Let $\bm{X} = [X_1, X_2, \dots, X_n]^\top$ denote a random vector of independent and identically distributed random variables from a distribution with CDF $F_X (\cdot; \theta)$. Let $S(\bm{X})$ be a consistent estimator of $\theta$. Denote $\bm{x}$ and $S(\bm{x})$ be a realisation of $\bm{X}$ and $S(\bm{X})$ respectively, and let $\alpha$ be a fixed significance level for the test. Suppose $S$ is stochastically increasing with $\theta$:
+
+\begin{equation}
+    \theta_1 < \theta_2 \implies F_S(\theta_1) < F_S(\theta_2) 
+\end{equation}
+
+where $F_S(\theta) = \PP_\theta\left\{S(\bm{X}) > S(\bm{x})\right\}$. Then, a central $100(1-\alpha)\%$ confidence interval denoted by $[L, U]$ can be found, where $L$ and $U$ satisfy: \begin{equation}
+\begin{aligned}
+    \PP_{\theta = L}\left\{S(\bm{X}) > S(\bm{x})\right\} &= \alpha/2 \\
+    \PP_{\theta = U}\left\{S(\bm{X}) > S(\bm{x})\right\} &= 1 - \alpha/2
+\end{aligned}
+\end{equation}
+
+This method of constructing confidence intervals exploits the duality between confidence intervals and hypothesis tests. Consider a two-sided test of the null hypothesis $H_0: \theta = \theta_0$ using test statistic $S(\bm{x})$. A $100(1-\alpha)\%$ confidence interval is the set of hypothesised values for $\theta_0$ where the test is not significant at level $\alpha$. The duality refers to the way $\theta_0$ is always in the $100(1-\alpha)\%$ confidence interval if the test is not significant at $\alpha$.
+
+Thus, by inverting the test's acceptance region so that the region is a function of $\theta$ rather than being a function of the test-statistic, a confidence interval may be constructed. This naturally relies on a monotonocity assumption, as inversion is only valid where $S$ is stochastically increasing with $\theta$.
+
+\section{Simulated-Inversion Estimator}
+
+We now describe the simulated-inversion (SI) estimator, a method proposed by Huang (2019). This method assumes a data generation process following model $M$, which may or may not account for measurement error. The goal is to estimate $\PP_\theta\left\{S(\bm{X}) > S(\bm{x})\right\}$ by simulation, and then construct confidence intervals by inversion \parencite{Huang2019}. These two steps are described below:
+
+\begin{enumerate}
+    \item \textbf{Simulation}: Suppose we have a given dataset $\bm{x} = [x_1, x_2, \dots, x_n]^\top$ and a known set of $r$ potential values for the true extinction time $\bm{\theta} = [\theta_1, \theta_2, \dots, \theta_r]^\top$. Then, for each potential value $\theta_i$, simulate a pseudo dataset $\bm{x}^*_i$ from the model $M$ specified by $\theta_i$ and take a sample statistic $S^*_i$ from the pseudo dataset. Thus, for a given dataset of $n$ observations and a set of $r$ potential values for $\theta$, a set of $r$ simulated statistics $\bm{S}^*$ can be obtained.
+    \item \textbf{Inversion}: An estimate for $\PP_\theta\left\{S(\bm{X}) > S(\bm{x})\right\}$ is constructed by regressing the indicator $\mathbbm{1}\left\{ S(\bm{X}^*_i) > S(\bm{x}^*_i) \right\}$ against $\theta_i$ for all $i \in \left\{ 1, \dots, r \right\}$. Finally, $\theta$ can be estimated by inverting the estimated curve.
+\end{enumerate}
+
+This method of extinction estimation lends itself to be fairly general, as it only requires a vector of potential values for $\theta$, a stochastically increasing statistic, and a simulation model. Thus, Simulated Inversion can be used regardless of a uniform distribution assumption and can also account for the presence of measurement errors.
+
+That being said, there are some disadvantages to the SI estimator. Since the true extinction time is unknown, the interval of potential values for $\theta$ must necessarily be wide, and even wider where confidence intervals need to be constructed; resulting in fairly slow computation time in the absence of information to constrain the search interval. In the inversion step, the regression fit for $\PP_\theta\left\{S(\bm{X}) > S(\bm{x})\right\}$ may not necessarily be monotonic, and so this method could be improved by enforcing monotonicity, a conclusion supported by work done by King (2020) \parencite{King2020}.
+
+\section{Robbins-Monro Process}
+
+\begin{align*}
+L_{i+1} = \begin{cases}
+    L_i + c(\frac{\alpha}{2})/i &\text{if $\hat\theta_i < \hat\theta(\textbf{y})$} \\
+    L_i - c(1 - \frac{\alpha}{2})/i &\text{if $\hat\theta_i \ge \hat\theta(\textbf{y})$} 
+\end{cases}
+&\quad\quad 
+U_{i+1} = \begin{cases}
+    U_i + c(1 - \frac{\alpha}{2})/i &\text{if $\hat\theta_i \le \hat\theta(\textbf{y})$}   \\
+    U_i - c(\frac{\alpha}{2})/i & \text{if $\hat\theta_i > \hat\theta(\textbf{y})$}
+\end{cases}
+\end{align*}
+
+Where $c$ is the step length constant and $i$ is the number of steps taken so far.
+
+Consider the estimation of the upper end point of our $100(1-\alpha/2)\%$ confidence interval for simplicity:
+
+The optimal step length is given by $c^* = 1/g$ where
+
+\[
+g = \left[ \frac{d A(U) }{dU} \right]_{U=\theta_U}, \quad A(U) = P\left(\hat\theta > \hat\theta(\bm{y})\right) \text{ when a resample is taken with $\theta = U$} 
+\]
+
+Essentially, our optimal step length is the gradient of $A(U)$ evaluated at the $(1-\alpha/2)\%$ quantile of $\theta$
+
+\section{Minimum-Statistic Monte-Carlo Inversion (Min-MI)}\label{new-method}
+
+We now propose the Minimum-Statistic Monte-Carlo Inversion (Min-MI) estimator\footnote{The name Min-MI is a reference to \textit{Minmi}, a genus of ankylosaurian dinosaur. Notably, \textit{Minmi} is the only known genus of ankylosaurs from Australia - only seven are known and they were all discovered in Queensland. We love our 'smol boi' \textit{Minmi}}. The Min-MI estimator assumes fossil recovery and measurement error come from known and independent distributions to directly estimate $\PP_\theta\left\{S(\bm{X}) > S(\bm{x})\right\}$, where the test-statistic $S$ is the minimum. Monte Carlo integrals are used to estimate certain integrals and a quantile estimate can be found using inversion. Suppose we have observed fossil ages $W_1, W_2, \dots, W_n$ such that
+
+\[
+W_i = X_i + \varepsilon_i, \quad i = 1, 2, \dots, n
+\]
+
+where:
+\begin{itemize}
+    \item $\varepsilon_i$ come from a \textbf{known} distribution $f_{\varepsilon}$ independent to $X_i$.
+    \item $\varepsilon_i$ are i.i.d $\forall i$ and are defined over $\mathbb{R}$
+    \item $X_i$ are conditionally uniform on $\varepsilon_i$; that is, $X_i | \varepsilon_i = e_i \sim \mathcal{U}(\theta, K - e_i) $
+\end{itemize}
+
+The joint density of $(X, \varepsilon)$ is \[ f_{X, \varepsilon} ( x , \varepsilon) = c f_{X | \varepsilon} ( x | \varepsilon=e) f_\varepsilon(e) \]
+
+where $x > \theta$, $x+e \leq K$, and $c$ is a normalising constant. Rearranging to find $c$:
+\begin{align*}
+    c^{-1}
+        &= \int_{e=-\infty}^{K-\theta} \int_{x=\theta}^{K-e} f_{X | \varepsilon} ( x | \varepsilon=e) f_\varepsilon(e) dx de = \int_{e=-\infty}^{K-\theta} f_\varepsilon(e) de \\
+    \therefore c^{-1} &= F_\varepsilon(K - \theta)
+\end{align*}
+
+Thus our joint density function is given by \begin{align*}
+    f_{X, \varepsilon} ( x , \varepsilon)
+        =& [F_\varepsilon(K - \theta)]^{-1} f_{X | \varepsilon} ( x | \varepsilon=e) f_\varepsilon(e) \\
+        =& [F_\varepsilon(K - \theta)]^{-1} \frac{1}{K - e - \theta} f_\varepsilon(e)
+\end{align*}
+
+since $f_{X | \varepsilon} ( x | \varepsilon=e) = \frac{1}{K - e - \theta}$ ($X|\varepsilon$ is conditionally uniform). 
+
+From this, we can geometrically identify our region of interest:
+
+\textcolor{red}{Diagram here} % \include{figures/minmi-integral.tex}
+
+and therefore find $\PP_\theta ( X + \varepsilon \geq m)$ for some value $w$. \begin{align*}
+    \PP_\theta ( X + \varepsilon \geq w)
+        =& 1 - \PP_\theta ( X + \varepsilon < w) \\
+        =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} f_{X, \varepsilon}(x, e) dx de \\
+        =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} \frac{1}{K - \theta - e} \frac{1}{F_\varepsilon (K - \theta)} f_\varepsilon(e) dx de \\
+        =& 1 - \frac{1}{F_\varepsilon (K-\theta)} \int_{-\infty}^{w-\theta} \frac{w - \theta - e }{K - \theta - e} f_\varepsilon(e) de \\
+    \therefore \PP_\theta ( X + \varepsilon \geq w) =& 1 - \frac{F_\varepsilon(w-\theta)}{F_\varepsilon(K - \theta)} \psi(\theta; w) \numberthis \label{minmi}
+\end{align*} where 
+\[
+ \psi(\theta; w) =  \int^{w-\theta}_{-\infty} \frac{w - e - \theta}{K - e - \theta) } \frac{f_\varepsilon(e)}{F_\varepsilon(w-\theta)} de
+\]
+
+
+Let our statistic $S(\bm{W})$ be the minimum statistic $\min(W_1, \dots, W_n)$, $m = S(\bm{w})$ be the observed minimum, and $\theta_q$ be the $q\textsuperscript{th}$ quantile such that $\PP_{\theta_q} (S(\bm{W}) \geq m) = q$: \begin{align*}
+    q &= \PP_{\theta_q} (S(\bm{W}) \geq m) \\
+        &= \prod_{i=1}^n \PP_{\theta_q} (X_{i} + \varepsilon_i \geq m) \\
+        &= \left[ 1 - \frac{F_\varepsilon(m-\theta_q)}{F_\varepsilon(K - \theta_q)} \psi(\theta_q; m)  \right]^n \\
+    q^{\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m-\theta_q)}{F_\varepsilon(K - \theta_q)} \psi(\theta_q; m) \numberthis \label{eqn: minmi-ee}
+\end{align*}
+
+The Min-MI estimator $\hat\theta_q$ can be found using inversion by solving the above equation for $\theta = \hat\theta_q$. However, since $\psi$ does not simplify in general, we can approximate it with a Monte Carlo integral using $B$ samples, resulting in the below Min-MI estimating equation:
+
+\begin{align*}
+    q^{\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m - \theta_q)}{F_\varepsilon(K - \theta_q)} \hat\psi_B(\theta_q; m); &\hat\psi_B(\theta_q; m) =  \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\hat\theta_q}{K-e_b-\theta_q} \numberthis \label{eqn: minmi-ee-mc}
+\end{align*}
+
+where $e_b$ are drawn from $f_\varepsilon(e_b)$ truncated at $m-\hat\theta_q$
+
+As mentioned before, a requirement for inversion is for $\PP_{\theta} (M \geq m)$ to be stochastically increasing in $\theta$. This does not appear to be true for all $f_\varepsilon$ (see appendix for proof).
+
+\subsection{No Measurement Error}
+
+If we assume measurement error is negligible, we may completely eliminate $\varepsilon$ from the above. Thus, the quantile estimate becomes trivial to find as $W = X$, which is uniformly distributed:
+\begin{align*}
+    \PP_\theta (M \geq m)
+        &= \prod_{i=1}^n \PP_\theta (X_i \geq m) \\
+        &= \left[ \PP_\theta (X_i \geq m) \right]^n, \quad \text{since our $X$'s are assumed i.i.d}\\
+        &= \left( \frac{K - m}{K - \theta} \right)^n \\
+    \implies q = \PP_{\hat{\theta}_q}(M \geq m) &= \left( \frac{K - m}{K - \hat{\theta}_q} \right)^n \\
+    \therefore \hat{\theta}_q &= K - q^{-1/n} (K-m)
+\end{align*}

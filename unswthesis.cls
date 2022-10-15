@@ -91,9 +91,9 @@
 \ifcase \@ptsize \relax % 10pt
   \linespread{1.25}%
 \or % 11pt
-  \linespread{1.213}%
+  \linespread{1.5}%
 \or % 12pt
-  \linespread{1.6}%
+  \linespread{2}%
 \fi
 
 %-----------------------------------------------------------------------
