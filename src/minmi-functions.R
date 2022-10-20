@@ -82,8 +82,7 @@ estimate_quantile.minmi = function (q, K, W, u=NA, eps.mean=0, eps.sigma=0) {
     # Measurement Error case
     newton.res = pracma::newtonRaphson(fun=function(theta) estimating_eqn(theta, q, K, u, m, eps.mean, eps.sigma),
                                        x0=theta_q.hat,
-                                       dfun=function(theta) estimating_eqn.deriv(theta, K, u, m, eps.mean, eps.sigma),
-                                       maxiter = 200)
+                                       dfun=function(theta) estimating_eqn.deriv(theta, K, u, m, eps.mean, eps.sigma))
     theta_q.hat = newton.res$root
   }
   return(theta_q.hat)
