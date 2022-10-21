@@ -1,33 +1,12 @@
-
-\section{Delta Method}
-
-Suppose that an estimator $\hat\theta$ of a parameter's true value $\theta_0$ is asymptotically normal:
-
-\begin{equation}
-    \sqrt{B} (\hat\theta - \theta_0) \longrightarrow_d \mathcal{N} (0, \sigma^2)
-\end{equation}
-
-Then, for any "smooth enough" transformation $h(\theta)$, we can apply a Taylor expansion of $h(\hat\theta)$ around true parameter $\theta_0$:
-
-\begin{equation}
-h(\hat\theta) \approx h(\theta_0) + (\hat\theta - \theta_0)\frac{\partial h}{\partial\theta}(\theta_0) + \frac{1}{2} (\hat\theta - \theta_0)^2 \frac{\partial^2 h}{\partial\theta^2}(\theta_0) + \cdots
-\end{equation}
-
-And then using asymptotic normality property of $\hat\theta$, we have convergence in distribution of $h(\hat\theta)$:
-
-\begin{equation}
-    \sqrt{B} (h(\hat\theta) - h(\theta_0)) \longrightarrow_d \mathcal{N} \left( 0, \sigma^2 \cdot \left[ \frac{\partial h}{\partial \theta} (\theta_0) \right]^2 \right)
-\end{equation}
-
-\clearpage
-
 \section{Asymptotic Variance}
 
-Recall: $q^{\frac{1}{n}} = 1 - \frac{F_\varepsilon(m - \hat{\theta}_q)}{F_\varepsilon(K - \hat{\theta}_q)} \hat\psi_B$,  $\hat\psi_B =  \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\hat\theta_q}{K-e_b-\hat{\theta}_q}$
+We would like to find the asymptotic variance of the MINMI estimator. Recall that the estimator $\hat\theta_q$ satisfies \autoref{eqn: minmi-ee}: \[
+q^{1/n} = 1 - \frac{1}{F(K - \hat\theta_q)} \int^{m-\hat\theta_q}_{-\infty} \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} f(e) de
+\]
 
-\begin{equation}
-    \text{Let: } u(\theta) = \frac{F(m - \theta)}{F(K - \theta)} \psi(\theta) - 1 + q^{1/n} \quad;\quad \psi(\theta) = \int^{m-\theta}_{-\infty} \frac{m - e - \theta}{K - e - \theta } \frac{f(e)}{F(m - \theta)}
-\end{equation}
+Let $u(\theta)$ denote our estimating equation: \[
+    u(\theta) = \frac{1}{F(K - \theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de - 1 + q^{1/n}
+\]
 
 and let $\theta_q$ be the sample quantile such that $u(\theta_q) = 0$. We can approximate $\psi(\theta)$ with a monte carlo integral $\hat\psi$ to obtain $\hat{u}(\theta)$:
 
@@ -43,7 +22,7 @@ By CLT, $\sqrt{B} (\hat\psi(\theta) - \psi(\theta) ) \overset{D}{\longrightarrow
 
 Hence, $\sqrt{B} (\hat{u}(\theta) - u(\theta) ) \overset{D}{\longrightarrow} \cN \left( 0, \sigma^2_{\psi(\theta)} \left[ \frac{F(m - \theta)}{F(K - \theta)} \right]^2 \right)$
 
-and since $u(\theta_q) = 0$, $\sqrt{B} \hat{u}(\theta_q) \overset{D}{\longrightarrow} \cN \left( 0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m - \hat\theta_q)}{F(K - \hat\theta_q)} \right]^2 \right)$
+and since $u(\theta_q) = 0$, $\sqrt{B} \hat{u}(\theta_q) \overset{D}{\longrightarrow} \cN \left( 0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m - \theta_q)}{F(K - \theta_q)} \right]^2 \right)$
 
 \
 
@@ -58,13 +37,13 @@ Now, a Taylor expansion of $\hat{u}(\hat\theta_q)$ about $\hat{u}(\theta_q)$ giv
 \begin{align}
     \hat{u}^\prime (\theta)
         &= \frac{d}{d\theta} \left\{ \frac{F(m - \theta)}{F(K - \theta)} \hat\psi(\theta) - 1 + q^{1/n} \right\} \\
-        &= \left[ \frac{-f(m - \theta)F(K-\theta) + F(m - \theta)f(K-\theta)}{[F(K - \theta)]^2} \right] \hat\psi(\theta) + \hat\psi^\prime(\theta) \\
+        &= \left[ \frac{-f(m - \theta)F(K-\theta) + F(m - \theta)f(K-\theta)}{[F(K - \theta)]^2} \right] \hat\psi(\theta) + \frac{F(m - \theta)}{F(K - \theta)} \hat\psi^\prime(\theta) \\
     \frac{\hat{u}^\prime (\theta) F(K - \theta)}{F(m - \theta)}
         &= \left[ - \frac{f(m - \theta)}{F(m - \theta)} + \frac{f(K - \theta)}{F(K - \theta)} \right] \hat\psi(\theta) + \hat\psi^\prime(\theta)
 \end{align}
 
 \begin{equation}
-    \therefore \Var(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\theta_q)} \left[ \left( - \frac{f(m - \theta)}{F(m - \theta)} + \frac{f(K - \theta)}{F(K - \theta)} \right) \hat\psi(\theta) + \hat\psi^\prime(\theta) \right]^{-2}
+    \therefore \Var(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\hat\theta_q)} \left[ \left( - \frac{f(m - \hat\theta_q)}{F(m - \hat\theta_q)} + \frac{f(K - \hat\theta_q)}{F(K - \hat\theta_q)} \right) \hat\psi(\hat\theta_q) + \hat\psi^\prime(\hat\theta_q) \right]^{-2}
 \end{equation}
 
 \clearpage
