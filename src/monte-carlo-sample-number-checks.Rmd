@@ -61,7 +61,7 @@ list(theta.true=theta.true, m=m)
 ## Asymptotic Variance Formula
 
 $$
-\mathrm{Var}(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\theta_q)} \left[ \left( - \frac{f(m - \theta)}{F(m - \theta)} + \frac{f(K - \theta)}{F(K - \theta)} \right) \hat\psi(\theta) + \hat\psi^\prime(\theta) \right]^{-2}
+\mathrm{Var}(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\theta_q)} \left[ \frac{F(K-\theta_q )\hat\psi'(\theta) + f(K-\theta_q)\hat\psi(\theta_q)}{F(K-\theta_q)} \right]^{-2}
 $$
 
 ```{r}
@@ -82,7 +82,7 @@ estimate_var.delta_method = function (theta_q.hat, u, K, m, eps.mean, eps.sigma)
   psi_hat = mean((m-e-theta_q.hat)/(K-e-theta_q.hat))
   psi_hat.prime = - mean((K-m)/(K-e-theta_q.hat)^2)
   
-  var_estimate = 1/B * sample_var.psi_hat * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
+  var_estimate = 1/B * sample_var.psi_hat * ( f_eps.K/F_eps.K * psi_hat + psi_hat.prime )^(-2)
   
   return(var_estimate)
 }
@@ -94,26 +94,6 @@ estimate_var.delta_method(8441.491, u=runif(500, 0, 1), K, m, dating_error.mean,
 ## Checks
 
 ### Sample Variance of $\hat\theta_q$
-
-```{r}
-n = 30
-
-B = unique(round(pracma::logseq(2, 2000, 40)))
-num.B = length(B)
-
-num.estimates = 250
-
-sample_var.theta_q = list()
-sample_var.theta_q$lower = rep(NA, num.B)
-sample_var.theta_q$upper = rep(NA, num.B)
-
-expctd_var.theta_q = list()
-expctd_var.theta_q$lower = rep(NA, num.B)
-expctd_var.theta_q$upper = rep(NA, num.B)
-expctd_var.theta_q$upper_naive = rep(NA, num.B)
-
-u = matrix(runif(num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
-```
 
 $$
 q^{\frac{1}{n}} = 1 - \frac{F_\varepsilon(m - \hat{\theta}_q)}{F_\varepsilon(K - \hat{\theta}_q)} \hat\psi_B \quad ; \quad \hat\psi_B =  \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\hat\theta_q}{K-e_b-\hat{\theta}_q}
@@ -137,6 +117,23 @@ print(list(lower.gold=theta.hat.lower.gold,
 Compute sample and expected variances for a set of values of $B$
 
 ```{r}
+n = 30
+
+B = unique(round(pracma::logseq(2, 5000, 40)))
+num.B = length(B)
+
+num.estimates = 250
+
+sample_var.theta_q = list()
+sample_var.theta_q$lower = rep(NA, num.B)
+sample_var.theta_q$upper = rep(NA, num.B)
+
+expctd_var.theta_q = list()
+expctd_var.theta_q$lower = rep(NA, num.B)
+expctd_var.theta_q$upper = rep(NA, num.B)
+
+u = matrix(runif(num.estimates*B[num.B], min=0, max=1), ncol=B[num.B])
+
 start_time = Sys.time()
 for (i in 1:num.B) {
   theta.hat.lower = rep(NA, num.estimates)
@@ -162,9 +159,6 @@ for (i in 1:num.B) {
   expctd_var.theta_q$upper[i] = estimate_var.delta_method(theta.hat.upper.gold,
                                                           u=u[1,1:(B[i])], K, m,
                                                           dating_error.mean, dating_error.sd)
-  expctd_var.theta_q$upper_naive[i] = estimate_var.delta_method(K - 0.975^(-1/n) * (K-m),
-                                                                u=u[1,1:(B[i])], K, m,
-                                                                dating_error.mean, dating_error.sd)
 }
 
 time_taken = Sys.time() - start_time
@@ -174,7 +168,6 @@ res.df = data.frame(
   B = B,
   sample_var.upper = sample_var.theta_q$upper,
   expctd_var.upper = expctd_var.theta_q$upper,
-  expctd_var.upper_naive = expctd_var.theta_q$upper_naive,
   sample_var.lower = sample_var.theta_q$lower,
   expctd_var.lower = expctd_var.theta_q$lower
 )
@@ -183,7 +176,6 @@ res.df[sample(nrow(res.df), 5), ]
 
 lapply(list(ratio_lower=res.df$sample_var.lower/res.df$expctd_var.lower), FUN=function(x) c(min=min(x), max=max(x)))
 lapply(list(ratio_upper=res.df$sample_var.upper/res.df$expctd_var.upper), FUN=function(x) c(min=min(x), max=max(x)))
-lapply(list(ratio_upper_naive=res.df$sample_var.upper/res.df$expctd_var.upper_naive), FUN=function(x) c(min=min(x), max=max(x)))
 ```
 
 Our expected variance from the delta method is approximately:
@@ -193,10 +185,10 @@ Our expected variance from the delta method is approximately:
 
 ### Plotting Sample Variances against Expected Variances
 
-```{r fig.width=18, fig.height=5}
+```{r fig.width=12, fig.height=5}
 options(scipen=9)
 
-par(mfrow=c(1,3))
+par(mfrow=c(1,2))
 
 plot(B, sample_var.theta_q$lower, log="xy",
      type="b", main="Sample Var vs. E(Delta method var) | q=0.025", col="blue",
@@ -219,17 +211,6 @@ legend("topright",
        pch=c(1,1),
        col=c("blue","red"))
 # abline(h=(0.2*dating_error.sd)^2, lty=2, col='green')
-
-plot(B, sample_var.theta_q$upper, log="xy",
-     type="b", main="Sample Var vs. E(Delta method var) | q=0.975 | theta_hat_q = K - q^(-1/n) * (K-m)", col="blue",
-     ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper_naive), max(sample_var.theta_q$upper, expctd_var.theta_q$upper_naive)), ylab=NA)
-lines(B, expctd_var.theta_q$upper_naive, type="b", col="red")
-legend("topright",
-       legend=c("Sample Var", "E(Naive Delta Method Var)"),
-       lty=c(1,1),
-       pch=c(1,1),
-       col=c("blue","red"))
-# abline(h=(0.2*dating_error.sd)^2, lty=2, col='green')
 ```
 
 - The left-most plot is the expected and sample variances for $q = 0.025$. This is pretty close to correct.
@@ -240,134 +221,21 @@ legend("topright",
 options(scipen=9)
 
 plot(B, res.df$expctd_var.lower/res.df$sample_var.lower, col="blue",
-     type="b", main="E(Delta method var):Sample Var", log="x",
+     type="b", main="Ratio of Delta Method Estimate and Sample Variances", log="x",
      ylab=NA, ylim=c(min(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper)), max(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper))))
 
 lines(B, res.df$expctd_var.upper/res.df$sample_var.upper, type="b", col="red", ylab=NA)
-lines(B, res.df$expctd_var.upper_naive/res.df$sample_var.upper, type="b", col="purple", ylab=NA)
 
 abline(h=mean(res.df$expctd_var.lower/res.df$sample_var.lower), lty=3, col="blue")
 abline(h=mean((res.df$expctd_var.upper)/res.df$sample_var.upper), lty=3, col="red")
-abline(h=mean((res.df$expctd_var.upper_naive)/res.df$sample_var.upper), lty=3, col="purple")
-
-text(x=1800, y=1.08, "q=0.025", col="blue")
-text(x=1800, y=0.33, "q=0.975", col="red")
-text(x=1800, y=0.63, "q=0.975", col="purple")
 
 mtext(round(mean(res.df$expctd_var.lower/res.df$sample_var.lower), 3), side=4, las=2, at=mean(res.df$expctd_var.lower/res.df$sample_var.lower), col="blue")
 mtext(round(mean(res.df$expctd_var.upper/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper/res.df$sample_var.upper), col="red")
-mtext(round(mean(res.df$expctd_var.upper_naive/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper_naive/res.df$sample_var.upper), col="purple")
-```
 
-Why do we get lower variance for our upper quantile estimates?
-
-### Expected Delta Method Variance as q varies
-
-```{r}
--
-q.seq = seq(from=0.005, to=0.995, by = 0.005)
-theta.hat.gold.seq = rep(NA, length(q.seq))
-sample_var.q.seq = rep(NA, length(q.seq))
-expctd_var.q.seq = rep(NA, length(q.seq))
-
-start_time = Sys.time()
-for (i in 1:length(q.seq)) {
-  theta.hat.q = rep(NA, num.estimates)
-  # Generate 100 estimates of \theta_q
-  for (j in 1:num.estimates) {
-    mc.samples = u[j, ]
-    theta.hat.q[j] = estimate_quantile.minmi(q=q.seq[i], K, W, mc.samples, dating_error.mean, dating_error.sd)
-  }
-  sample_var.q.seq[i] = var(theta.hat.q)
-  
-  theta.hat.gold.seq[i] = estimate_quantile.minmi(q=q.seq[i], K, W, u.gold, dating_error.mean, dating_error.sd)
-  expctd_var.q.seq[i] = estimate_var.delta_method(theta.hat.gold.seq[i], u=u[i, ], K, m, dating_error.mean, dating_error.sd)
-}
-
-time_taken = Sys.time() - start_time
-print(time_taken)
-print(m)
-```
-
-```{r}
-plot(q.seq, expctd_var.q.seq, type="b", col="red", ylab="Var", xlab="q", main="Variance estimates as q changes (B=2000)")
-lines(q.seq, sample_var.q.seq, type="b", col="blue")
 legend("topright",
-       legend=c("Sample Var", "E(Delta Method Var)"),
+       legend=c("q=0.025", "q=0.025"),
        lty=c(1,1),
        pch=c(1,1),
        col=c("blue","red"))
-```
-
-```{r}
-plot(q.seq, theta.hat.gold.seq, type="b", col="red", ylab="theta_hat Gold", xlab="q")
-abline(v=0.5, lty=3)
-abline(h=theta.hat.gold.seq[which(q.seq==0.5)], lty=3)
-text(0.52, theta.hat.gold.seq[which(q.seq==0.5)]-120, paste("q=0.5, theta_hat=", round(theta.hat.gold.seq[which(q.seq==0.5)], 2)), adj=0)
-```
-
-```{r}
-(pnorm(m- theta.hat.upper.gold, dating_error.mean, dating_error.sd)/pnorm(K- theta.hat.upper.gold, dating_error.mean, dating_error.sd))^2
-
-```
-
-
-
-### Minmi estimator for q=0.975 as m varies
-
-```{r}
-m.seq = seq(from=8000, to=12000, by=100)
-theta_hat.upper_naive = K - 0.975^(-1/n) * (K-m.seq)
-
-theta_hat.upper_minmi = rep(NA, length(m.seq))
-for (i in 1:length(m.seq)) {
-  theta_hat.upper_minmi[i] = estimate_quantile.minmi(q=0.975, K, rep(m.seq[i], n),
-                                                  u.gold, dating_error.mean, dating_error.sd)
-}
-
-plot(m.seq, theta_hat.upper_naive, type="b", col='purple', ylab="theta_hat_q", xlab="m")
-lines(m.seq, theta_hat.upper_minmi, type="b", col='red')
-
-abline(h=theta.true, lty=2)
-abline(v=theta.true, lty=2)
-
-legend("bottomright",
-       legend=c("Minmi", "K - 0.975^(-1/n) * m"),
-       lty=c(1,1),
-       pch=c(1,1),
-       col=c("red","purple"))
-
-```
-
-```{r}
-# pdfs and CDF evaluations (for convenience)
-theta.tmp = 10000
-m.tmp = 9000
-
-f_eps.K = dnorm(K-theta.tmp, 0, 272)
-f_eps.m = dnorm(m.tmp-theta.tmp, 0, 272)
-
-F_eps.K = pnorm(K-theta.tmp, 0, 272)
-F_eps.m = pnorm(m.tmp-theta.tmp, 0, 272)
-
-# Estimate sigma^2_var
-B.tmp = length(u.gold)
-
-# Estimate \hat\psi and \hat\psi prime
-e.tmp = uniform_to_tnorm(u.gold, 0, 272, a=-Inf, b=m.tmp-theta.tmp)
-sample_var.psi_hat = var((m.tmp-e-theta.tmp)/(K-e-theta.tmp))
-psi_hat = mean((m.tmp-e-theta.tmp)/(K-e-theta.tmp))
-psi_hat.prime = - mean((K-m.tmp)/(K-e-theta.tmp)^2)
-var_estimate = 1/B.tmp * sample_var.psi_hat * ( psi_hat*(f_eps.K/F_eps.K - f_eps.m/F_eps.m) + psi_hat.prime)^(-2)
-
-```
-
-```{r}
-vec=seq(from=-3000, to=0, by=10)
-test=dtnorm(vec,a=-Inf,b=9000-10000,mean=0,sd=272)
-test1=dtnorm(vec,a=-Inf,b=9000-11000,mean=0,sd=272)
-plot(vec, test1, type="l", col="blue")
-lines(vec, test, type="l")
-
 ```
 
