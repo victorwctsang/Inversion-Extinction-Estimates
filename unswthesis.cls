@@ -78,7 +78,8 @@
     \setlength\textheight{\@tempcnta\baselineskip}
     \addtolength\textheight{\topskip}
     \setlength{\topskip}{1\topskip \@plus 1\baselineskip}
-    \setlength{\parskip}{0pt}
+    \setlength{\parskip}{6pt}
+    \setlength{\parindent}{0pt}
     \raggedbottom
 }
 \setpagesize
@@ -89,11 +90,11 @@
 % \renewcommand{\baselinestretch}{1.25} etc.
 %-----------------------------------------------------------------------
 \ifcase \@ptsize \relax % 10pt
-  \linespread{1.25}%
+  \linespread{1.4}%
 \or % 11pt
-  \linespread{1.5}%
+  \linespread{1.4}%
 \or % 12pt
-  \linespread{2}%
+  \linespread{1.4}%
 \fi
 
 %-----------------------------------------------------------------------
@@ -660,7 +661,9 @@ acknowledged.
           \cleardoublepage
           \else\newpage
         \fi
+        % \linespread{0.5}
         \tableofcontents
+        % \linespread{1.4}
         \if@twoside
            \cleardoublepage
            \else\newpage
