@@ -27,6 +27,23 @@ knitr::knit_hooks$set(timeit = local({
     }
   }})
 )
+
+library(tikzDevice)
+
+options(
+    tikzLatexPackages = c(
+        "\\usepackage{amsmath,amssymb,amsfonts}",
+        "\\usepackage{tikz}",
+        "\\usepackage{standalone}",
+        "\\usepackage[utf8]{inputenc}",
+        "\\usetikzlibrary{decorations.pathreplacing}",
+        "\\usetikzlibrary{positioning}",
+        "\\usetikzlibrary{shapes.arrows,shapes.symbols}",
+        "\\usetikzlibrary{shapes.callouts}"
+    )
+)
+
+options(tikzMetricsDictionary="../tikzMetrics") # speeds tikz up
 ```
 
 #### Setup
@@ -61,7 +78,7 @@ list(theta.true=theta.true, m=m)
 ## Asymptotic Variance Formula
 
 $$
-\mathrm{Var}(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\theta_q)} \left[ \frac{F(K-\theta_q )\hat\psi'(\theta) + f(K-\theta_q)\hat\psi(\theta_q)}{F(K-\theta_q)} \right]^{-2}
+\mathrm{Var}(\hat\theta_q) \longrightarrow \frac{1}{B} \sigma^2_{\psi(\theta_q)} \left[ \frac{f(K-\theta_q)}{F(K-\theta_q)}\hat\psi(\theta_q) + \hat\psi'(\theta) \right]^{-2}
 $$
 
 ```{r}
@@ -185,32 +202,36 @@ Our expected variance from the delta method is approximately:
 
 ### Plotting Sample Variances against Expected Variances
 
-```{r fig.width=12, fig.height=5}
+```{r fig.width=12, fig.height=5, dev='tikz'}
+tikz("../figures/minmi-asymptotics.tex")
 options(scipen=9)
 
 par(mfrow=c(1,2))
 
 plot(B, sample_var.theta_q$lower, log="xy",
-     type="b", main="Sample Var vs. E(Delta method var) | q=0.025", col="blue",
-     ylim=c(min(sample_var.theta_q$lower, expctd_var.theta_q$lower), max(sample_var.theta_q$lower, expctd_var.theta_q$lower)), ylab=NA)
+     type="b",
+     main="Sample Var vs. Delta Method (q=0.025)", col="blue",
+     ylim=c(min(sample_var.theta_q$lower, expctd_var.theta_q$lower), max(sample_var.theta_q$lower, expctd_var.theta_q$lower)),
+     ylab=NA)
 lines(B, expctd_var.theta_q$lower, type="b", col="red")
 legend("topright",
-       legend=c("E(Delta Method Var)", "Sample Var"),
-       lty=c(1,1),
-       pch=c(1,1),
-       col=c("red", "blue"))
-# abline(h=(0.2*dating_error.sd)^2, lty=2, col='green')
-
-plot(B, sample_var.theta_q$upper, log="xy",
-     type="b", main="Sample Var vs. E(Delta method var) | q=0.975", col="blue",
-     ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper), max(sample_var.theta_q$upper, expctd_var.theta_q$upper)), ylab=NA)
-lines(B, expctd_var.theta_q$upper, type="b", col="red")
-legend("topright",
-       legend=c("Sample Var", "E(Delta Method Var)"),
+       legend=c("Sample Var", "Asymptotic"),
        lty=c(1,1),
        pch=c(1,1),
        col=c("blue","red"))
-# abline(h=(0.2*dating_error.sd)^2, lty=2, col='green')
+
+plot(B, sample_var.theta_q$upper, log="xy",
+     type="b",
+     main="Sample Var vs. Delta Method (q=0.975)", col="blue",
+     ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper), max(sample_var.theta_q$upper, expctd_var.theta_q$upper)),
+     ylab=NA)
+lines(B, expctd_var.theta_q$upper, type="b", col="red")
+legend("topright",
+       legend=c("Sample Var", "Asymptotic"),
+       lty=c(1,1),
+       pch=c(1,1),
+       col=c("blue","red"))
+dev.off()
 ```
 
 - The left-most plot is the expected and sample variances for $q = 0.025$. This is pretty close to correct.
@@ -233,9 +254,13 @@ mtext(round(mean(res.df$expctd_var.lower/res.df$sample_var.lower), 3), side=4, l
 mtext(round(mean(res.df$expctd_var.upper/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper/res.df$sample_var.upper), col="red")
 
 legend("topright",
-       legend=c("q=0.025", "q=0.025"),
+       legend=c("q=0.025", "q=0.975"),
        lty=c(1,1),
        pch=c(1,1),
        col=c("blue","red"))
+```
+
+```{r}
+
 ```
 
