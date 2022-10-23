@@ -1,0 +1,47 @@
+
+We would like to show that $\PP_\theta(S(\bm{W}) \geq m)$ is stochastically/monotonically increasing in $\theta$. Since $W_i = X_i + \varepsilon$ are independent random variables for all $i \in \{1, 2, \dots, n\}$, $\PP_\theta(S(\bm{W}) \geq m)$ is monotonically increasing if $\PP_\theta(W \geq m)$ is stochastically increasing.
+
+We assume that $X$ is conditionally uniform on $\varepsilon$, $\varepsilon$ are distributed according to a known density function $f(\cdot)$ that is symmetric and unimodal around 0. Suppose also that $f(2|m-\theta|) > f(K-\theta) \left(2 + \frac{K-\theta}{|m-\theta|} \right)$.
+
+Recall \begin{align*}
+    \PP_\theta(W \geq m) &= 1 - \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de \\
+    &= \frac{F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de}{F(K-\theta)}
+\end{align*}
+
+Note that $F(K-\theta)$ is monotonically decreasing in $\theta$. Thus, $\PP_\theta(W \geq m)$ is monotonically increasing if $F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de$ is monotonically increasing, since the ratio of a monotone increasing function and a non-increasing function is monotone increasing if both functions have positive range.
+
+Taking the first derivative of $F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de$:
+\begingroup
+\allowdisplaybreaks
+\begin{align*}
+    \frac{d}{d\theta}\Bigg[ &F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de \Bigg] \\
+        &= -f(K-\theta) - \int^{m-\theta}_{-\infty} \frac{\del}{\del\theta} \frac{m-e-\theta}{K-e-\theta}f(e)de \\
+        &\text{(integration by parts)} \\
+        &= -f(K-\theta) - \left[ \frac{m-\theta-e}{K-\theta-e} \right]^{m-\theta}_{-\infty} + \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de \\
+        &> -f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de 
+ \quad \text{since $\frac{m-e}{K-e} \geq 0$ for $e < m-\theta$}
+\end{align*}
+\endgroup
+
+Since $f$ is symmetric and unimodal about 0, $f^\prime(-e) = -f^\prime(e)$ for all $e$. Then
+\begin{flalign*}
+    &-f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de \\
+    &> \int^{-2|m-\theta|}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de -f(K-\theta) \\
+    &> \left[ \frac{|m-\theta|}{K-\theta+2|m-\theta|}\right]f(-2|m-\theta|) -f(K-\theta) \\
+    &> 0 \quad \text{since $f(2|m-\theta|) > f(K-\theta) \left(2 + \frac{K-\theta}{|m-\theta|} \right)$}
+\end{flalign*}
+
+Thus, we have shown that $\PP_\theta(S(\bm{W}) \geq m)$ is stochastically/monotonically increasing in $\theta$, subject to some conditions on the distribution of measurement error $\varepsilon$.
+
+% \section{(WIP) Alternate Proof}
+
+% \begin{align*}
+%     \PP_\theta(W \geq m)
+%         &= 1 - \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de \\
+%         &= 1 - \frac{F(m-\theta)}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}\frac{f(e)}{F(m-\theta)}de \\
+%         &= 1 - \frac{F(m-\theta)}{F(K-\theta)} \E \left[ \frac{m-\varepsilon^*-\theta}{K-\varepsilon^*-\theta} \right] \quad \text{where $\varepsilon^*$ are sampled from $f$ truncated at $m-\theta$}
+% \end{align*}
+
+% Taking the first derivative, we have:
+
+

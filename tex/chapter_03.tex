@@ -80,6 +80,8 @@ m = \min \left\{ 50, 0.3(4-\alpha)/\alpha \right\}
 
 The advantage of the RM process is clear when the function $M(\theta)$ is unknown or too complex to be written explicitly --- in the context of estimating extinction times and generating confidence intervals, it provides flexibility for non-uniform assumptions as well as measurement error.
 
+\clearpage
+
 \section{Minimum-Statistic Monte-Carlo Inversion (MINMI)}\label{new-method}
 
 We now propose the \textbf{Min}imu\textbf{m} Statistic \textbf{I}nversion (MINMI) estimator\footnote{The name MINMI is a reference to \textit{Minmi}, a genus of ankylosaur (or armoured dinosaur). Notably, \textit{Minmi} is the only known genus of ankylosaur from Australia \parencite{Carpenter2001}}. The MINMI estimator assumes fossil recovery and measurement error come from known and independent distributions to directly estimate $\PP_\theta\left\{S(\bm{X}) > S(\bm{x})\right\}$, where the minimum statistic is used to estimate confidence intervals by inversion. Suppose we have observed fossil ages $W_1, W_2, \dots, W_n$ such that
@@ -118,7 +120,7 @@ From this, we can geometrically identify our region of interest (see \autoref{fi
         =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} f_{X, \varepsilon}(x, e) dx de \\
         =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} \frac{1}{K - \theta - e} \frac{1}{F_\varepsilon (K - \theta)} f_\varepsilon(e) dx de \\
         =& 1 - \frac{1}{F_\varepsilon (K-\theta)} \int_{-\infty}^{w-\theta} \frac{w - \theta - e }{K - \theta - e} f_\varepsilon(e) de \\
-    \therefore \PP_\theta ( X + \varepsilon \geq w) =& 1 - \frac{F_\varepsilon(w-\theta)}{F_\varepsilon(K - \theta)} \psi(\theta; w) \numberthis \label{minmi}
+    \therefore \PP_\theta ( X + \varepsilon \geq w) =& 1 - \frac{F_\varepsilon(w-\theta)}{F_\varepsilon(K - \theta)} \psi(\theta; w) \numberthis \label{eqn:minmi}
 \end{align*} where 
 \[
  \psi(\theta; w) =  \int^{w-\theta}_{-\infty} \frac{w - e - \theta}{K - e - \theta) } \frac{f_\varepsilon(e)}{F_\varepsilon(w-\theta)} de
@@ -126,7 +128,7 @@ From this, we can geometrically identify our region of interest (see \autoref{fi
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\textwidth]{figures/minmi-integral-sketch.png}
+    \includegraphics[width=0.8\textwidth]{figures/minmi-integral-sketch.png}
     \caption{Sketch of the region to integrate over}
     \label{fig: minmi_integral}
 \end{figure}
@@ -144,7 +146,7 @@ The MINMI estimator $\hat\theta_q$ can be found using inversion by solving the a
 
 where $e_b$ are drawn from $f_\varepsilon(e_b)$ truncated at $m-\hat\theta_q$
 
-As mentioned before, a requirement for inversion is for $\PP_{\theta} (M \geq m)$ to be stochastically increasing in $\theta$.
+Generating confidence intervals by inversion is conditional on $\PP_{\theta_q} (S(\bm{W}) \geq m)$ being stochastically increasing in $\theta$. This is true under two conditions, shown in \autoref{apx:minmi-stoch-incr-proof}: that $f(e)$ is symmetric and unimodal about 0; and $f(2|m-\theta|) > f(K-\theta) \left(2 + \frac{K-\theta}{|m-\theta|} \right)$, where $f(\cdot)$ denotes the probability density function of $\varepsilon$.
 
 \subsection{Asymptotic Properties}
 
@@ -152,13 +154,16 @@ We now discuss the asymptotic properties of the MINMI estimator. The delta metho
     \Var(\hat\theta_q) \approx \sigma^2_{\psi(\theta_q)} \left[ \frac{F(K-\theta_q)}{f(K-\theta) \hat\psi(\theta_q) + F(K-\theta) \hat\psi^\prime(\theta_q)} \right]^2
 \end{equation}
 
-The full proof of this result is provided in Appendix \ref{apx: minmi-asymptotics}. We were also able to verify these results empirically by simulation, generating estimates for upper and lower endpoints of a central $100(1-\alpha/2)\%$ confidence interval across different values of $B$.
+A full derivation of this result is given in \autoref{apx:minmi-asymptotics-proof}. In general, we do not have know the true value of $\theta_q$ or $\sigma^2_{\psi(\theta_q)}$. Thus, the asymptotic variance must be further approximated by substituting some ``gold standard" estimate of $\theta_q$, $\hat\theta^*_{q}$ (for example, by using a large value of $B$) and using a Monte Carlo estimate of $\sigma^2_{\psi(\theta_q)}$.
 
-\begin{figure}
+We were also able to verify these results by simulation, generating estimates for upper and lower endpoints of a central $95\%$ confidence interval across different values of $B$. These are shown in \autoref{fig:asymptotics-plots} where the blue lines (representing the sample variance of $\hat\theta_q$) and the red lines (representing the variance calculated using the asymptotic approximation formula) converge as $B$ increases. The approximate variance tends to under estimate the variance for small $B$.
+
+\begin{figure}[ht]
     \centering
-    \include{figures/minmi-asymptotics.tex}
-    \caption{Caption}
-    \label{fig:my_label}
+    \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-lower.tex}}
+    \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-upper.tex}}
+    \caption{Sample variance of $\hat\theta_q$ (shown in \textcolor{red}{red}) plotted against the expected variance according to the asymptotic approximation (shown in \textcolor{blue}{blue}) on log-scales for both the $x$ and $y$ axes. The approximate variance obtained from the delta method approaches the sample variance as $B$ grows large; although the approximate variance tends to underestimate the variance (as indicated by the sample variance) for small $B$. Note the differences in the $x$ and $y$ axes; $\Var(\hat\theta_q)$ tends to grow disproportionately as $q$ becomes small.}
+    \label{fig:asymptotics-plots}
 \end{figure}
 
 \subsection{No Measurement Error}
