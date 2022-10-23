@@ -112,11 +112,7 @@ Thus our joint density function is given by \begin{align*}
 
 since $f_{X | \varepsilon} ( x | \varepsilon=e) = \frac{1}{K - e - \theta}$ ($X|\varepsilon$ is conditionally uniform). 
 
-From this, we can geometrically identify our region of interest:
-
-\textcolor{red}{Diagram here} % \include{figures/minmi-integral.tex}
-
-and therefore find $\PP_\theta ( X + \varepsilon \geq m)$ for some value $w$. \begin{align*}
+From this, we can geometrically identify our region of interest (see \autoref{fig: minmi_integral}) and find $\PP_\theta ( X + \varepsilon \geq m)$ for some value $w$. \begin{align*}
     \PP_\theta ( X + \varepsilon \geq w)
         =& 1 - \PP_\theta ( X + \varepsilon < w) \\
         =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} f_{X, \varepsilon}(x, e) dx de \\
@@ -128,6 +124,12 @@ and therefore find $\PP_\theta ( X + \varepsilon \geq m)$ for some value $w$. \b
  \psi(\theta; w) =  \int^{w-\theta}_{-\infty} \frac{w - e - \theta}{K - e - \theta) } \frac{f_\varepsilon(e)}{F_\varepsilon(w-\theta)} de
 \]
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{figures/minmi-integral-sketch.png}
+    \caption{Sketch of the region to integrate over}
+    \label{fig: minmi_integral}
+\end{figure}
 
 Let our statistic $S(\bm{W})$ be the minimum statistic $\min(W_1, \dots, W_n)$, $m = S(\bm{w})$ be the observed minimum, and $\theta_q$ be the $q\textsuperscript{th}$ quantile such that $\PP_{\theta_q} (S(\bm{W}) \geq m) = q$: \begin{align*}
     q &= \PP_{\theta_q} (S(\bm{W}) \geq m) \\
@@ -146,11 +148,18 @@ As mentioned before, a requirement for inversion is for $\PP_{\theta} (M \geq m)
 
 \subsection{Asymptotic Properties}
 
-Using the delta method, we found that the MINMI estimator converges in distribution to \begin{equation}
-    \sqrt{B} (\hat\theta_q - \theta_q) \overset{D}{\longrightarrow} \cN \left( 0, \sigma^2_{\psi(\theta_q)} \left[ \frac{f(K-\theta_q)}{F(K-\theta_q)}\hat\psi(\theta_q) + \hat\psi'(\theta) \right]^{-2} \right)
+We now discuss the asymptotic properties of the MINMI estimator. The delta method gives the approximate result \begin{equation}
+    \Var(\hat\theta_q) \approx \sigma^2_{\psi(\theta_q)} \left[ \frac{F(K-\theta_q)}{f(K-\theta) \hat\psi(\theta_q) + F(K-\theta) \hat\psi^\prime(\theta_q)} \right]^2
 \end{equation}
 
-The proof is in the appendix.
+The full proof of this result is provided in Appendix \ref{apx: minmi-asymptotics}. We were also able to verify these results empirically by simulation, generating estimates for upper and lower endpoints of a central $100(1-\alpha/2)\%$ confidence interval across different values of $B$.
+
+\begin{figure}
+    \centering
+    \include{}
+    \caption{Caption}
+    \label{fig:my_label}
+\end{figure}
 
 \subsection{No Measurement Error}
 
