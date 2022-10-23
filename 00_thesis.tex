@@ -7,7 +7,7 @@
 
 \documentclass[honours,12pt]{UNSWthesis}
 
-\input{tex/01_settings}
+\input{tex/01_settings.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -36,11 +36,11 @@
 
 \afterpage{\blankpage}
 
-\input{tex/02_plagiarism}
+\input{tex/02_plagiarism.tex}
 
-\input{tex/03_acknowledgements}
+\input{tex/03_acknowledgements.tex}
 
-\input{tex/04_abstract}
+\input{tex/04_abstract.tex}
 
 \afterpreface
 
@@ -53,34 +53,42 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \chapter{Introduction}\label{chap: intro}
-\input{tex/chapter_01}
+\input{tex/chapter_01.tex}
 
 \chapter{Background}\label{chap: background}
-\input{tex/chapter_02}
+\input{tex/chapter_02.tex}
 
 \chapter{Inversion}\label{chap: inversion}
-\input{tex/chapter_03}
+\input{tex/chapter_03.tex}
 
 \chapter{Simulation Experiments}\label{chap: experiments}
-\input{tex/chapter_04}
+\input{tex/chapter_04.tex}
 
 \chapter{Application}\label{chap: application}
-\input{tex/chapter_05}
+\input{tex/chapter_05.tex}
 
 \chapter{Extensions}\label{chap: extensions}
-\input{tex/chapter_06}
+\input{tex/chapter_06.tex}
 
 \chapter{Conclusion}\label{chap: conclusion}
-\input{tex/chapter_07}
+\input{tex/chapter_07.tex}
 
 \appendix
 
-\chapter{Proofs}
-\input{tex/appendix-a}\label{apx: A}
+% \chapter{Bias of Maximum Likelihood Estimator}
 
-\chapter{Charts}
+% \chapter{Strauss Estimator Proof}
 
-\chapter{Code}
+\chapter{Proof: Stochastically Increasing Property}\label{apx:minmi-stoch-incr-proof}
+\input{tex/appendix-minmi-stoch-incr.tex}
+
+\chapter{Derivation: MINMI Asymptotics}\label{apx:minmi-asymptotics-proof}
+\input{tex/appendix-minmi-asymptotics.tex}
+
+\chapter{Extra Tables and Figures}\label{apx:extras}
+\input{tex/appendix-extras.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \input{tex/references}
 
