@@ -207,7 +207,7 @@ options(scipen=9)
 tikz("../figures/minmi-asymptotics-lower.tex")
 plot(B, sample_var.theta_q$lower, log="xy",
      type="b",
-     main="Sample Var vs. Delta Method (q=0.025)", col="blue",
+     main="Sample Var vs. Asymptotic Var (q=0.025)", col="blue",
      ylim=c(min(sample_var.theta_q$lower, expctd_var.theta_q$lower), max(sample_var.theta_q$lower, expctd_var.theta_q$lower)),
      ylab=NA)
 lines(B, expctd_var.theta_q$lower, type="b", col="red")
@@ -224,7 +224,7 @@ tikz("../figures/minmi-asymptotics-upper.tex")
 
 plot(B, sample_var.theta_q$upper, log="xy",
      type="b",
-     main="Sample Var vs. Delta Method (q=0.975)", col="blue",
+     main="Sample Var vs. Asymptotic Var (q=0.975)", col="blue",
      ylim=c(min(sample_var.theta_q$upper, expctd_var.theta_q$upper), max(sample_var.theta_q$upper, expctd_var.theta_q$upper)),
      ylab=NA)
 lines(B, expctd_var.theta_q$upper, type="b", col="red")
@@ -241,7 +241,8 @@ dev.off()
 - The middle plot is the expected and sample variances for $q = 0.975$. Our sample is larger than our expected by a constant factor of ~3
 - The right-most plot is the expected and sample variances for $q=0.975$ using $\hat\theta_q = K - q^{-1/n} * (K-m)$ as per our no measurement error case, instead of `theta.hat.upper.gold`. Sample is larger than expected by a factor of ~1.6
 
-```{r}
+```{r dev='tikz'}
+tikz("../figures/minmi-asymptotics-ratios.tex")
 options(scipen=9)
 
 plot(B, res.df$expctd_var.lower/res.df$sample_var.lower, col="blue",
@@ -257,10 +258,11 @@ mtext(round(mean(res.df$expctd_var.lower/res.df$sample_var.lower), 3), side=4, l
 mtext(round(mean(res.df$expctd_var.upper/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper/res.df$sample_var.upper), col="red")
 
 legend("topright",
-       legend=c("q=0.025", "q=0.975"),
+       legend=c("q=0.975","q=0.025"),
        lty=c(1,1),
        pch=c(1,1),
-       col=c("blue","red"))
+       col=c("red","blue"))
+dev.off()
 ```
 
 ```{r}
