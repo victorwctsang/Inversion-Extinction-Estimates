@@ -31,10 +31,7 @@ for (i in 1:nrow(datasets)) {
   
   # point estimates
   for (method in methods.point_estimates) {
-    estimation = estimate_quantile(W=W, method=method, q=0.5, K=K, 
-                                   dating_error.mean=dating_error.mean,
-                                   dating_error.sd=iter$error_factor*dating_error.sd)
-    
+    estimation = estimate_quantile(W=W, sd=iter$error_factor*fossil.sd, method=method, q=0.5, K=K, dating_error.mean=dating_error.mean)
     results = tibble::add_row(results,
                               id=iter$id,
                               error_factor=iter$error_factor,
@@ -46,9 +43,8 @@ for (i in 1:nrow(datasets)) {
   
   # upper/lower estimates
   for (method in methods.conf_int) {
-    estimation = estimate_quantile(W=W, method=method, q=alpha/2, K=K, 
-                                   dating_error.mean=dating_error.mean,
-                                   dating_error.sd=iter$error_factor*dating_error.sd)
+    # lower
+    estimation = estimate_quantile(W=W, sd=iter$error_factor*fossil.sd, method=method, q=alpha/2, K=K, dating_error.mean=dating_error.mean)
     results = tibble::add_row(results,
                               id=iter$id,
                               error_factor=iter$error_factor,
@@ -56,9 +52,8 @@ for (i in 1:nrow(datasets)) {
                               method=method,
                               estimate=estimation$estimate,
                               time=estimation$runtime)
-    estimation = estimate_quantile(W=W, method=method, q=1-alpha/2, K=K, 
-                                   dating_error.mean=dating_error.mean,
-                                   dating_error.sd=iter$error_factor*dating_error.sd)
+    # upper
+    estimation = estimate_quantile(W=W, sd=iter$error_factor*fossil.sd, method=method, q=1-alpha/2, K=K, dating_error.mean=dating_error.mean)
     results = tibble::add_row(results,
                               id=iter$id,
                               error_factor=iter$error_factor,
@@ -67,8 +62,7 @@ for (i in 1:nrow(datasets)) {
                               estimate=estimation$estimate,
                               time=estimation$runtime)
   }
-  
 }
 
 View(results)
-saveRDS(results, "simulation_experiment_results.RDS")
+saveRDS(results, "../data/sim_exp-estimate_extinction_results.RDS")

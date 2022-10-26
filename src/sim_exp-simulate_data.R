@@ -17,13 +17,20 @@ synthetic.data.config = list(
   error_factors = c(0, 1, 2, 4),
   n.error_factors = length(error_factors),
   dating_error.mean = 0,
-  dating_error.sd = 272
+  fossil.sd = getStdDevFromFossilData(
+    path='../data/fossildata.xlsx',
+    sheet="MammothPrimEBer", 
+    range="M3:N36", 
+    col_names=c("age", "sd"), 
+    col_types=c('numeric', 'numeric'),
+    K=K
+  )
 )
 attach(synthetic.data.config)
 
 # Generate synthetic data
 set.seed(seed)
-datasets = simulate_datasets(n.datasets, error_factors, theta.true, K, dating_error.mean, dating_error.sd, n)
+datasets = simulate_datasets(n.datasets, error_factors, theta.true, K, dating_error.mean, mean(fossil.sd), n)
 
 # Export config and datasets
 save(synthetic.data.config, datasets, file = "../data/synthetic-data.RData")
