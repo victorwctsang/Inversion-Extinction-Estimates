@@ -13,7 +13,7 @@ boundFossilData = function (fossil.df, K) {
 getStdDevFromFossilData = function (path, K, ...) {
   df = getFossilData(path, ...)
   df = boundFossilData(df, K)
-  return(mean(df$sd))
+  return(df$sd)
 }
 
 create_result_df = function (n.sims, method, error_factor) {
@@ -50,30 +50,51 @@ simulate_datasets = function (n.sims, error_factor, theta.true, K, eps.mean, eps
   return(dataset.df)
 }
 
-estimate_quantile = function (W, method, q, K, dating_error.mean, dating_error.sd) {
+estimate_quantile = function (W, sd, method, q, K, dating_error.mean) {
   estimate=NA
   runtime = NA
   start_time=Sys.time()
   estimate = switch(method,
-    MLE = if (q != 0.5) NULL else estimate_extinction.mle(W),
-    `BA-MLE` = if (q != 0.5) NULL else estimate_extinction.ba_mle(W, K),
-    STRAUSS = if (q != 0.5) NULL else estimate_extinction.strauss(W, K),
-    MINMI = estimate_quantile.minmi(q, K, W, u=runif(length(W), 0, 1), eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
+    MLE = if (q != 0.5) NULL else mle(W),
+    `BA-MLE` = if (q != 0.5) NULL else ba_mle(W, K),
+    STRAUSS = if (q != 0.5) NULL else strauss(W, K),
+    MINMI = minmi(q, W, sd, K, dating_error.mean)
   )
   runtime = as.numeric(difftime(Sys.time(), start_time), units="secs")
   return(list(q=q, estimate=estimate, runtime=runtime))
 }
 
-estimate_extinction.mle = function (W) {
+mle = function (W) {
   return(min(W))
 }
 
-estimate_extinction.ba_mle = function (W, K) {
+ba_mle = function (W, K) {
   n = length(W)
   return(min(W) * (n+1)/n - K/n)
 }
 
-estimate_extinction.strauss = function (W) {
+strauss = function (W) {
   n = length(W)
   return((n*min(W) - max(W))/(n-1))
+}
+
+minmi = function (q, W, sd, K, dating_error.mean=0, .B_init=500) {
+  m = min(W)
+  n = length(W)
+  dating_error.sd = mean(sd)
+  
+  estimate = estimate_quantile.minmi(q=q, K=K, W=W)
+  
+  if (dating_error.sd != 0) {
+    # Generate initial MC samples
+    u.init = runif(.B_init, 0, 1)
+    
+    # Estimate optimal value for B
+    B = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=q, K=K, m=m, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
+    
+    # Generate MC samples
+    mc.samples = runif(B, 0, 1)
+    estimate = estimate_quantile.minmi(q=q, K=K, W=W, u=mc.samples, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
+  }
+  return(estimate)
 }

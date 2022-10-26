@@ -125,5 +125,5 @@ find_optimal_B = function (max_var, q, K, m, u, eps.mean, eps.sigma) {
   psi_hat.prime = - mean((K-m)/(K-e-theta_q.hat.init)^2)
   
   optimal_B = 1/max_var * sample_var.psi_hat * ( f_eps.K/F_eps.K * psi_hat + psi_hat.prime )^(-2)
-  return(optimal_B)
+  return(ceiling(optimal_B))
 }
