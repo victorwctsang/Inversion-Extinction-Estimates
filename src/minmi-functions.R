@@ -95,7 +95,7 @@ estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
   F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
-  1 - F.eps.m/F.eps.K * psi.hat - q^(1/n)
+  return(1 - F.eps.m/F.eps.K * psi.hat - q^(1/n))
 }
 
 estimating_eqn.deriv = function (theta, K, u, m, eps.mean, eps.sigma) {
@@ -107,9 +107,9 @@ estimating_eqn.deriv = function (theta, K, u, m, eps.mean, eps.sigma) {
   
   e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta)
   psi_hat = mean((m-e-theta)/(K-e-theta))
-  psi_hat.prime = - mean((K-m)/(K-e-theta)^2)
+  psi_hat.prime = mean((m-K)/(K-e-theta)^2)
 
-  - psi_hat * (F_eps.m*f_eps.K - f_eps.m*F_eps.K)/F_eps.K^2 - psi_hat.prime
+  return(F_eps.m/F_eps.K * (f_eps.K/F_eps.K * psi_hat + psi_hat.prime))
 }
 
 estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
