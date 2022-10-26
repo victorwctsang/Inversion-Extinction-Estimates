@@ -65,12 +65,12 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
 }
 
 estimate_CI.minmi = function (
-    alpha, n, K, W, u, eps.mean, eps.sigma, uniroot.interval
+    alpha, n, K, W, u, eps.mean, eps.sigma
   ) {
-  CI.lower = estimate_quantile.mc(q=alpha/2, K, W, u, eps.mean, eps.sigma, uniroot.interval)
+  CI.lower = estimate_quantile.mc(q=alpha/2, K, W, u, eps.mean, eps.sigma)
   CI.upper = CI.lower
   if (alpha != 0.5) {
-    CI.upper = estimate_quantile.mc(q=1-alpha/2, K, W, u, eps.mean, eps.sigma, uniroot.interval)
+    CI.upper = estimate_quantile.mc(q=1-alpha/2, K, W, u, eps.mean, eps.sigma)
   }
   CI = list(CI.lower = CI.lower, CI.upper = CI.upper)
   return(CI)
@@ -84,8 +84,7 @@ estimate_quantile.minmi = function (q, K, W, u=NA, eps.mean=0, eps.sigma=0) {
   if (eps.mean!=0 || eps.sigma!=0) {
     # Measurement Error case
     newton.res = pracma::newtonRaphson(fun=function(theta) estimating_eqn(theta, q, K, u, m, eps.mean, eps.sigma),
-                                       x0=theta_q.hat,
-                                       dfun=function(theta) estimating_eqn.deriv(theta, K, u, m, eps.mean, eps.sigma))
+                                       x0=theta_q.hat)
     theta_q.hat = newton.res$root
   }
   return(theta_q.hat)
@@ -96,20 +95,6 @@ estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
   return(1 - F.eps.m/F.eps.K * psi.hat - q^(1/n))
-}
-
-estimating_eqn.deriv = function (theta, K, u, m, eps.mean, eps.sigma) {
-  # pdfs and CDF evaluations (for convenience)
-  f_eps.K = dnorm(K-theta, eps.mean, eps.sigma)
-  F_eps.K = pnorm(K-theta, eps.mean, eps.sigma)
-  f_eps.m = dnorm(m-theta, eps.mean, eps.sigma)
-  F_eps.m = pnorm(m-theta, eps.mean, eps.sigma)
-  
-  e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta)
-  psi_hat = mean((m-e-theta)/(K-e-theta))
-  psi_hat.prime = mean((m-K)/(K-e-theta)^2)
-
-  return(F_eps.m/F_eps.K * (f_eps.K/F_eps.K * psi_hat + psi_hat.prime))
 }
 
 estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
