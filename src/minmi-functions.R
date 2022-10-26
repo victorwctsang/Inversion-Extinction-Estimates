@@ -47,15 +47,12 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
   if (!is.null(level)) {
     alpha = (1 - level)/2
     result$lower = estimate_quantile.minmi(q=alpha, K=K, W=W, u=mc.samples[1:B.lower],
-                                           eps.mean=0, eps.sigma=dating.sd,
-                                           uniroot.interval=uniroot.interval)
+                                           eps.mean=0, eps.sigma=dating.sd)
     result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=mc.samples[, 1:B.upper],
-                                           eps.mean=0, eps.sigma=dating.sd,
-                                           uniroot.interval=uniroot.interval)
+                                           eps.mean=0, eps.sigma=dating.sd)
   }
   result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=mc.samples[1:B.extinction],
-                                              eps.mean=0, eps.sigma=dating.sd,
-                                              uniroot.interval=uniroot.interval)
+                                              eps.mean=0, eps.sigma=dating.sd)
   
   if (time) {
     result$time = Sys.time() - start_time
