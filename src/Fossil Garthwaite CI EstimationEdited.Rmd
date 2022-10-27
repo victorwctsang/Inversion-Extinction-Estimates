@@ -41,86 +41,12 @@ n = length(fossil_dataframe$age)
 dating_error.sd = mean(fossil_dataframe$sd)
 ```
 
-
-### Functions
-
 ```{r}
 source("garthwaite-robbins-munro-functions.R")
 ```
 
-
-### Get point estimate of extinction date
-
-This is just the MLE (the age of the last recorded fossil)
-
 ```{r}
 theta.hat.y = min(fossil_dataframe$age)
-```
-
-
-### Calculate step length proportionality constant $k's$
-
-We will set $k = 2/\{ z_\alpha (t\pi)^{-1/2}\exp{(-z_\alpha^2/2)}$ where $z_\alpha$ is the upper 100 $\alpha$ % point of the standard normal distribution.
-
-```{r}
-p = calc_prop_constant(alpha)
-p
-```
-
-
-### Select stopping criteria
-
-Some dodgy stuff going on here
-
-```{r}
-max_iter = 2000
-```
-
-
-### Select starting values
-
-Generate $(2 - \alpha) / \alpha$ resamples:
-
-```{r}
-starting_estimates = get_starting_vals(method="percentile", alpha, theta.hat.y, n, K, eps.mean=0, eps.sigma=dating_error.sd)
-starting_estimates
-```
-
-We start at the $m$th iteration and set the values to the second largest and second smallest resample:
-
-```{r}
-bound_upper = bound_lower = rep(NA,max_iter)
-
-m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
-bound_lower[m] = starting_estimates[, "lower"]
-bound_upper[m] = starting_estimates[, "upper"]
-
-bound_lower[m]
-bound_upper[m]
-```
-
-### RM Process for both upper and lower CI bounds
-
-
-```{r}
-bound_lower = estimate_bound.rm(bound_lower, alpha/2, theta.hat.y, n, K, p, m, max_var=0.2*dating_error.sd, max_iter, eps.mean=0, eps.sigma=dating_error.sd)
-bound_upper = estimate_bound.rm(bound_upper, 1-alpha/2, theta.hat.y, n, K, p, m, max_var=0.2*dating_error.sd, max_iter, eps.mean=0, eps.sigma=dating_error.sd)
-
-CI = list(CI.lower=bound_lower[length(bound_lower)], CI.upper=bound_upper[length(bound_upper)])
-CI
-```
-
-
-### Plot iterations
-
-```{r}
-plot(na.omit(bound_upper), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
-     ylim=c(min(na.omit(bound_lower)), max(na.omit(bound_upper))))
-
-lines(na.omit(bound_lower), pch=4, col='blue')
-abline(h=theta.hat.y, col="black")
-
-legend("topright", legend=c("U_i", "L_i", "observed min"), col=c("red", "blue", "black"), lty=c(1,1,1))
 ```
 
 ```{r}
@@ -135,38 +61,18 @@ c(res$CI.lower, res$CI.upper)
 ```
 
 ```{r}
-plot(na.omit(res$CI.iters[, "upper"]), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
-     ylim=c(min(na.omit(res$CI.iters[, "lower"])), max(na.omit(res$CI.iters[, "upper"]))))
+plot(na.omit(res$upper.iters), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
+     xlim=c(0, max(length(res$lower.iters), length(res$upper.iters))),
+     ylim=c(min(res$lower.iters), max(res$upper.iters)))
 
-lines(na.omit(res$CI.iters[, "lower"]), pch=4, col='blue')
+lines(na.omit(res$lower.iters), pch=4, col='blue')
 abline(h=theta.hat.y, col="black")
 
-legend("topright", legend=c("U_i", "L_i", "observed min"), col=c("red", "blue", "black"), lty=c(1,1,1))
+legend("right", legend=c("U_i", "L_i", "m"), col=c("red", "blue", "black"), lty=c(1,1,1))
 ```
 
 ```{r}
-res.optimal = estimate_CI.optimal_rm(W=fossil_dataframe$age,
-                     K=18000,
-                     alpha=0.05,
-                     max_iter=2000,
-                     eps.mean=0,
-                     eps.sigma=mean(fossil_dataframe$sd),
-                     return_iters=T,
-                     theta_L=res$CI.lower,
-                     theta_U=res$CI.upper,
-                     B=500)
-c(res.optimal$CI.lower, res.optimal$CI.upper)
-res.optimal$CI.iters
+res$CI.lower
+res$CI.upper
 ```
-
-```{r}
-plot(na.omit(res.optimal$CI.iters[, "upper"]), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
-     ylim=c(min(na.omit(res.optimal$CI.iters[, "lower"])), max(na.omit(res.optimal$CI.iters[, "upper"]))))
-
-lines(na.omit(res.optimal$CI.iters[, "lower"]), pch=4, col='blue')
-abline(h=theta.hat.y, col="black")
-
-legend("topright", legend=c("U_i", "L_i", "observed min"), col=c("red", "blue", "black"), lty=c(1,1,1))
-```
-
 

@@ -14,12 +14,17 @@ estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_it
   starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
   lower.iters[m] = starting_ests[, "lower"]
   upper.iters[m] = starting_ests[, "upper"]
+  
   # estimate lower
-  lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, max_var=0.2*eps.sigma, max_iter, eps.mean, eps.sigma)
-  upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, max_var=0.2*eps.sigma, max_iter, eps.mean, eps.sigma)
+  lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
+  upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
+  lower.iters = na.omit(lower.iters)
+  upper.iters = na.omit(upper.iters)
+  
   CI = list(CI.lower=lower.iters[length(lower.iters)], CI.upper=upper.iters[length(upper.iters)])
   if (return_iters == TRUE) {
-    CI$CI.iters = cbind(lower=lower.iters, upper=upper.iters)
+    CI$lower.iters = lower.iters
+    CI$upper.iters = upper.iters
   }
   return(CI)
 }
@@ -61,9 +66,11 @@ get_starting_est.percentile = function (alpha, theta, n, K, eps.mean, eps.sigma)
                upper=theta.resamples.sorted[n.resamples-1]))
 }
 
-get_starting_est.analytic = function () {} # TODO
+get_starting_est.analytic = function () {
+  # TODO 
+}
 
-estimate_bound.rm = function (theta_q.iters, alpha.star, theta.hat, n, K, p, m, max_var=1000, max_iter, eps.mean, eps.sigma) {
+estimate_bound.rm = function (theta_q.iters, q, theta.hat, n, K, p, m, max_var=1000, max_iter, eps.mean, eps.sigma) {
   i = m
   mc.var = Inf
   while (i < max_iter && mc.var > max_var) {
@@ -71,17 +78,18 @@ estimate_bound.rm = function (theta_q.iters, alpha.star, theta.hat, n, K, p, m, 
     resamples = simulate_fossils(n, theta=theta_q.iters[i], K, eps.mean, eps.sigma)
     theta.hat.resample = estimate_theta.rm(resamples)
     # calculate step length
-    c = 2*p*abs(theta_q.iters[i] - theta.hat)
+    c = 2*p*(theta_q.iters[i] - theta.hat) * (if (q >= 0.5) 1 else -1)
     # Update
     if (theta.hat.resample <= theta.hat) {
-      theta_q.iters[i+1] = (theta_q.iters[i] + c*(alpha.star)/ i)
+      theta_q.iters[i+1] = (theta_q.iters[i] + c*q/ i)
     } else {
-      theta_q.iters[i+1] = (theta_q.iters[i] - c*(1-alpha.star) / i)
+      theta_q.iters[i+1] = (theta_q.iters[i] - c*(1-q) / i)
     }
-    mc.var = var.rm(alpha, c, i)
+    mc.var = var.rm(q, c, i)
     i = i+1
     if (i >= max_iter) {
       warning("max_iter exceeded.")
+      break
     }
   }
   return(theta_q.iters)
@@ -89,57 +97,4 @@ estimate_bound.rm = function (theta_q.iters, alpha.star, theta.hat, n, K, p, m, 
 
 var.rm = function (alpha, c, i) {
   alpha * (1-alpha) * c^2 / i
-}
-
-
-estimate_CI.optimal_rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_iters=FALSE, theta_L, theta_U, B) {
-  # estimate confidence interval using Garthwaite's Robbins-Munro process (1995)
-  n=length(W)
-  # get point estimate of theta
-  theta.hat = estimate_theta.rm(W)
-  # initialize lower and upper vecs
-  lower.iters = upper.iters = rep(NA, max_iter)
-  # calculate m
-  m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
-  # TODO compute optimal starting estimates 
-  starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
-  lower.iters[m] = starting_ests[, "lower"]
-  upper.iters[m] = starting_ests[, "upper"]
-  # estimate lower
-  lower.iters = estimate_bound.optimal_rm(lower.iters, alpha/2, theta.hat, n, K, m, max_var=0.2*eps.sigma, max_iter, eps.mean, eps.sigma, theta_q.true=theta_L, B=B)
-  upper.iters = estimate_bound.optimal_rm(upper.iters, 1-alpha/2, theta.hat, n, K, m, max_var=0.2*eps.sigma, max_iter, eps.mean, eps.sigma, theta_q.true=theta_U, B=B)
-  CI = list(CI.lower=lower.iters[length(lower.iters)], CI.upper=upper.iters[length(upper.iters)])
-  if (return_iters == TRUE) {
-    CI$CI.iters = cbind(lower=lower.iters, upper=upper.iters)
-  }
-  return(CI)
-}
-
-estimate_bound.optimal_rm = function (theta_q.iters, alpha.star, theta.hat, n, K, m, max_var=1000, max_iter, eps.mean, eps.sigma, theta_q.true, B) {
-  # optimal step length c
-  c = 1/calculate_g(m, K, theta_q.true, B, eps.mean, eps.sigma)
-  i = m
-  mc.var = Inf
-  while (i < max_iter && mc.var > max_var) {
-    # Generate resamples
-    resamples = simulate_fossils(n, theta=theta_q.iters[i], K, eps.mean, eps.sigma)
-    theta.hat.resample = estimate_theta.rm(resamples)
-    # Update
-    if (theta.hat.resample <= theta.hat) {
-      theta_q.iters[i+1] = (theta_q.iters[i] + c*(alpha.star)/ i)
-    } else {
-      theta_q.iters[i+1] = (theta_q.iters[i] - c*(1-alpha.star) / i)
-    }
-    mc.var = var.rm(alpha, c, i)
-    i = i+1
-    if (i >= max_iter) {
-      warning("max_iter exceeded.")
-    }
-  }
-  return(theta_q.iters)
-}
-
-calculate_g = function(m, K, theta, B, eps.mean, eps.sigma) {
-  e = rtnorm(B, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta)
-  (dnorm(K-theta, mean=eps.mean, sd=eps.sigma) * ( mean((K-m)/(K-e-theta)^2) ) + (mean((K-m)/(K-e-theta)) - dnorm(m-theta, mean=eps.mean, sd=eps.sigma))*pnorm(K-theta, mean=eps.mean, sd=eps.sigma))/(dnorm(K-theta, mean=eps.mean, sd=eps.sigma))^2
 }
