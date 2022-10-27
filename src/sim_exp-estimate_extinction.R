@@ -10,57 +10,40 @@ set.seed(seed)
 
 alpha = 0.05
 
-methods.point_estimates = c("MLE", "BA-MLE", "MINMI")
-methods.conf_int = c("MINMI")
+methods.point_estimates = c("MLE", "BA-MLE", "STRAUSS")
+methods.conf_int = c("SI-UGM", "GRIWM", "MINMI")
 
 # Run trials
 
 results = data.frame(
   id=integer(),
   error_factor=double(),
-  q=double(),
   method=character(),
-  estimate=double(),
-  time=double()
+  lower=double(),
+  point=double(),
+  upper=double(),
+  point_runtime=double(),
+  conf_int_runtime=double()
 )
 
 for (i in 1:nrow(datasets)) {
   iter = datasets[i,]
   W = iter$W[[1]]
+  sd = iter$error_factor*fossil.sd
   print(paste("Dataset ID:", iter$id))
   
-  # point estimates
+  print("- Point Estimates")
   for (method in methods.point_estimates) {
-    estimation = estimate_quantile(W=W, sd=iter$error_factor*fossil.sd, method=method, q=0.5, K=K, dating_error.mean=dating_error.mean)
-    results = tibble::add_row(results,
-                              id=iter$id,
-                              error_factor=iter$error_factor,
-                              q=estimation$q,
-                              method=method,
-                              estimate=estimation$estimate,
-                              time=estimation$runtime)
+    print(paste("--", method))
+    estimation = estimate_extinction(W=W, sd=sd, method=method, K=K, dating_error.mean=dating_error.mean)
+    results = tibble::add_row(results, id=iter$id, error_factor=iter$error_factor, method=method, point=estimation$point, point_runtime=estimation$point_runtime, conf_int_runtime=estimation$conf_int_runtime)
   }
   
-  # upper/lower estimates
+  print("- Confidence Intervals")
   for (method in methods.conf_int) {
-    # lower
-    estimation = estimate_quantile(W=W, sd=iter$error_factor*fossil.sd, method=method, q=alpha/2, K=K, dating_error.mean=dating_error.mean)
-    results = tibble::add_row(results,
-                              id=iter$id,
-                              error_factor=iter$error_factor,
-                              q=estimation$q,
-                              method=method,
-                              estimate=estimation$estimate,
-                              time=estimation$runtime)
-    # upper
-    estimation = estimate_quantile(W=W, sd=iter$error_factor*fossil.sd, method=method, q=1-alpha/2, K=K, dating_error.mean=dating_error.mean)
-    results = tibble::add_row(results,
-                              id=iter$id,
-                              error_factor=iter$error_factor,
-                              q=estimation$q,
-                              method=method,
-                              estimate=estimation$estimate,
-                              time=estimation$runtime)
+    print(paste("--", method))
+    estimation = estimate_conf_int(W=W, sd=sd, method=method, alpha=alpha, K=K, dating_error.mean=dating_error.mean)
+    results = tibble::add_row(results, id=iter$id, error_factor=iter$error_factor, method=method, lower=estimation$lower, point=estimation$point, upper=estimation$upper, point_runtime=estimation$point_runtime, conf_int_runtime=estimation$conf_int_runtime)
   }
 }
 
