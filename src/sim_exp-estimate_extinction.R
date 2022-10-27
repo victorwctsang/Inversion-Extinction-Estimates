@@ -11,7 +11,7 @@ set.seed(seed)
 alpha = 0.05
 
 methods.point_estimates = c("MLE", "BA-MLE", "STRAUSS")
-methods.conf_int = c("SI-UGM", "GRIWM", "MINMI")
+methods.conf_int = c("GB-RM", "SI-UGM", "GRIWM", "MINMI")
 
 # Run trials
 
