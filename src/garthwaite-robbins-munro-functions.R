@@ -96,5 +96,6 @@ estimate_bound.rm = function (theta_q.iters, q, theta.hat, n, K, p, m, max_var=1
 }
 
 var.rm = function (alpha, c, i) {
+  # TODO - pretty sure this is wrong
   alpha * (1-alpha) * c^2 / i
 }
