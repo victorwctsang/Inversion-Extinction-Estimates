@@ -6,7 +6,6 @@ load("../data/synthetic-data.RData")
 attach(synthetic.data.config)
 
 estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
-View(estimates)
 
 # Point estimates
 performance.point_estimates = estimates %>%

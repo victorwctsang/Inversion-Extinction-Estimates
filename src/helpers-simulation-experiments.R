@@ -3,6 +3,7 @@ library(readxl)
 source("minmi-functions.R")
 source("GRIWM.R")
 source("simulated-inversion.R")
+source("garthwaite-robbins-munro-functions.R")
 
 getFossilData = function (path, sheet, range, col_names, col_types) {
   read_excel(path, sheet, range, col_names, col_types)
@@ -82,7 +83,8 @@ estimate_conf_int = function (W, sd, method, alpha, K, dating_error.mean) {
   estimate = switch(method,
     GRIWM = griwm(alpha, dates=W, sd=sd),
     MINMI = minmi(alpha, W, sd, K, dating_error.mean),
-    `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(floor(min(W)-(K-min(W))/2), ceiling(min(W)+(K-min(W))/2)), dating_error.mean=0)
+    `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(floor(min(W)-(K-min(W))/2), ceiling(min(W)+(K-min(W))/2)), dating_error.mean=0),
+    `GB-RM` = GB_RM_process(alpha, W, sd, K, dating_error.mean=0)
   )
   return(estimate)
 }
@@ -162,4 +164,12 @@ SI_UGM = function (alpha, dates, sd, K, dating_error.mean=0, theta.test_vec) {
   results = simulated_inversion(alpha, dates, sd, K, theta.test_vec, dating_error.mean=0)
   runtime = calculate_tdiff(start_time, Sys.time())
   return(list(lower=results$lower, upper=results$upper, point=results$point, point_runtime=runtime, conf_int_runtime=runtime))
+}
+
+GB_RM_process = function (alpha, dates, sd, K, dating_error.mean=0) {
+  CI_start_time = Sys.time()
+  CI = estimate_CI.rm(W=dates, K=K, alpha=alpha, max_iter=1000, eps.mean=dating_error.mean, eps.sigma=mean(sd))
+  conf_int_runtime = calculate_tdiff(CI_start_time, Sys.time())
+  
+  return(list(lower=CI$CI.lower, upper=CI$CI.upper, point=NULL, point_runtime=NULL, conf_int_runtime=conf_int_runtime))
 }
