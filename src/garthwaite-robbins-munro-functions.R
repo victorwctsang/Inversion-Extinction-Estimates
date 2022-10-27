@@ -20,7 +20,7 @@ estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_it
   upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
   lower.iters = na.omit(lower.iters)
   upper.iters = na.omit(upper.iters)
-  
+
   CI = list(CI.lower=lower.iters[length(lower.iters)], CI.upper=upper.iters[length(upper.iters)])
   if (return_iters == TRUE) {
     CI$lower.iters = lower.iters
@@ -70,21 +70,27 @@ get_starting_est.analytic = function () {
   # TODO 
 }
 
-estimate_bound.rm = function (theta_q.iters, q, theta.hat, n, K, p, m, max_var=1000, max_iter, eps.mean, eps.sigma) {
+estimate_bound.rm = function (theta.iters, q, theta.hat, n, K, p, m, max_var=1000, max_iter, eps.mean, eps.sigma) {
+  # Transformation to force theta < K
+  eta = function(theta) -log(K-theta)
+  eta_q.iters = eta(theta.iters)
   i = m
   mc.var = Inf
   while (i < max_iter && mc.var > max_var) {
     # Generate resamples
-    resamples = simulate_fossils(n, theta=theta_q.iters[i], K, eps.mean, eps.sigma)
+    theta_q.hat = K - exp(-eta_q.iters[i])
+    resamples = simulate_fossils(n, theta=theta_q.hat, K, eps.mean, eps.sigma)
     theta.hat.resample = estimate_theta.rm(resamples)
     # calculate step length
-    c = 2*p*(theta_q.iters[i] - theta.hat) * (if (q >= 0.5) 1 else -1)
+    c = 2*p*abs(eta(theta_q.hat) - eta(theta.hat))
+    
     # Update
     if (theta.hat.resample <= theta.hat) {
-      theta_q.iters[i+1] = (theta_q.iters[i] + c*q/ i)
+      eta_q.iters[i+1] = (eta_q.iters[i] + c*q/ i)
     } else {
-      theta_q.iters[i+1] = (theta_q.iters[i] - c*(1-q) / i)
+      eta_q.iters[i+1] = (eta_q.iters[i] - c*(1-q) / i)
     }
+    
     mc.var = var.rm(q, c, i)
     i = i+1
     if (i >= max_iter) {
@@ -92,6 +98,7 @@ estimate_bound.rm = function (theta_q.iters, q, theta.hat, n, K, p, m, max_var=1
       break
     }
   }
+  theta_q.iters = K - exp(-eta_q.iters)
   return(theta_q.iters)
 }
 
