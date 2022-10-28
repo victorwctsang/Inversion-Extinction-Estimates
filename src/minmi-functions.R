@@ -48,7 +48,7 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
     alpha = (1 - level)/2
     result$lower = estimate_quantile.minmi(q=alpha, K=K, W=W, u=mc.samples[1:B.lower],
                                            eps.mean=0, eps.sigma=dating.sd)
-    result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=mc.samples[, 1:B.upper],
+    result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=mc.samples[1:B.upper],
                                            eps.mean=0, eps.sigma=dating.sd)
   }
   result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=mc.samples[1:B.extinction],
@@ -92,6 +92,16 @@ estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
   return(1 - F.eps.m/F.eps.K * psi.hat - q^(1/n))
+}
+
+estimating_eqn_deriv = function (theta, K, u, m, eps.mean, eps.sigma) {
+  F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
+  f.eps.K = dnorm(K-theta, mean=eps.mean, sd=eps.sigma)
+  F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
+  psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
+  psi.hat.prime = mean( (m-K)/(m-uniform_to_tnorm(u, eps.mean, eps.sigma, -Inf, b=m-theta)-theta)^2 )
+  
+  return(-F.eps.m/F.eps.K * (f.eps.K/F.eps.K * psi.hat + psi.hat.prime))
 }
 
 estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
