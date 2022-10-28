@@ -151,10 +151,10 @@ minmi = function (alpha, W, sd, K, dating_error.mean=0, .B_init=500) {
   return(list(lower=lower, point=point, upper=upper, point_runtime=point_runtime, conf_int_runtime=conf_int_runtime))
 }
 
-griwm = function(alpha, dates, sd, .iter=100) {
+griwm = function(alpha, dates, sd, K, .iter=10000) {
   df = data.frame(dates=dates, sd=sd)
   start_time = Sys.time()
-  results = GRIWM(df, alpha, .iter)
+  results = GRIWM(df, alpha, K, .iter)
   runtime = calculate_tdiff(start_time, Sys.time())
   return(list(lower=as.numeric(results$lower_ci), point=as.numeric(results$centroid), upper=as.numeric(results$upper_ci), point_runtime=runtime, conf_int_runtime=runtime))
 }
