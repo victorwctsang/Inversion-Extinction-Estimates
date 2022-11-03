@@ -7,19 +7,18 @@ source("helpers-simulation-experiments.R")
 options(nwarnings = 10000) 
 
 # Configure synthetic data generation
-
 synthetic.data.config = list(
-  seed = 2022,
+  seed = 168,
   theta.true = 10000,
   K = 20000,
   n.datasets = 1000,
   n = 20,
-  error_factors = c(1, 2, 4),
-  n.error_factors = length(error_factors),
+  error_factors = c(0, 0.5, 1, 2, 4),
   dating_error.mean = 0,
   fossil.sd = NA
 )
 
+synthetic.data.config$n.error_factors = length(synthetic.data.config$error_factors)
 synthetic.data.config$fossil.sd = getStdDevFromFossilData(
   path='../data/fossildata.xlsx',
   sheet="MammothPrimEBer", 

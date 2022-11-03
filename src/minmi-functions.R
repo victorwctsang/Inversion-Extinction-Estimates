@@ -1,7 +1,7 @@
 library(extraDistr)
 
 estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, .B_init=500) {
-  result = list(extinction=NULL)
+  result = list(point=NULL)
   n = length(W)
   m = min(W)
   dating.sd = mean(sd)
@@ -51,7 +51,7 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
     result$upper = estimate_quantile.minmi(q=1-alpha, K=K, W=W, u=mc.samples[1:B.upper],
                                            eps.mean=0, eps.sigma=dating.sd)
   }
-  result$extinction = estimate_quantile.minmi(q=0.5, K=K, W=W, u=mc.samples[1:B.extinction],
+  result$point = estimate_quantile.minmi(q=0.5, K=K, W=W, u=mc.samples[1:B.extinction],
                                               eps.mean=0, eps.sigma=dating.sd)
   
   if (time) {

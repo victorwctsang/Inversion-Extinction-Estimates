@@ -1,28 +1,26 @@
 # GRIWM implementation
 # Adapted from https://github.com/sarakahanamoku/GRIWM/blob/master/GRIWM.R
 
-library(dplyr)
-
-GRIWM = function(df, alpha, K, .n_iter=10000){
+GRIWM = function(df, alpha, K, .n_iter=10000, bias_adjusted=F){
   
   # initialize vectors
-  dates = df %>% dplyr::pull(dates)
-  sd = df %>% dplyr::pull(sd)
+  dates = dplyr::pull(df, dates)
+  sd = dplyr::pull(df, sd)
   n = length(df$dates)
   estimates.griwm = rep(0,.n_iter)
   
   for (iter in 1:.n_iter) {
-    date_samp = rep(0, n)
-    ## resampling of the standard deviation of each date from a Gaussian distribution
+    dates.resampled = rep(0, n)
+    ## Gaussian resampling step
     for (i in 1:n) {
-      date_samp[i] = round(rnorm(1, mean = as.numeric(dates[i]), sd = as.numeric(sd[i])))
+      dates.resampled[i] = dates[i] + rnorm(1, 0, mean(sd))
     }
-    date_samp = (sort(date_samp))
+    dates.resampled = (sort(dates.resampled))
     
     ## down-weighting procedure
     
     ### Calculate weights
-    last.diff = 1 / (date_samp - date_samp[1])[-1]
+    last.diff = 1 / (dates.resampled - dates.resampled[1])[-1]
     weight = last.diff / last.diff[1]
     
     if (last.diff[1] == Inf) {
@@ -32,17 +30,23 @@ GRIWM = function(df, alpha, K, .n_iter=10000){
     
     ### Calculate McInerny dates
     estimates.mcinerny = rep(0, n-1)
-    lambda = (n-1)/(K-date_samp[1])
+    
+    lambda = n/(K-dates.resampled[1])
     
     for (k in 2:n) {
-      date.recent_k = date_samp[1:k]
-      estimates.mcinerny[k-1] = date_samp[1] - log(alpha)/log(1-lambda)
+      dates.recent_k = dates.resampled[1:k]
+      theta = dates.recent_k[1] - 1
+      if (bias_adjusted == T) {
+        theta = uniroot(f=function(theta) {(1 - n/(K-theta))^(dates.recent_k[1] - theta) - alpha}, interval=c(min(dates) - (K-min(dates))/2, min(dates) + (K-min(dates))/2), extendInt="yes")$root
+      } else {
+        theta = dates.recent_k[1] - log(0.5)/log(1 - n/(K-dates.recent_k[1]))
+      }
+      estimates.mcinerny[k-1] = theta
     }
-    
+
     # Get weighted extinction date
     if (last.diff[1] == Inf) {
-      estimates.griwm[iter] =
-        round((sum(weight * estimates.mcinerny)) / sum(weight), 0)
+      estimates.griwm[iter] = round((sum(weight * estimates.mcinerny[-1])) / sum(weight), 0)
     }
     
     if (last.diff[1] != Inf) {
@@ -59,6 +63,6 @@ GRIWM = function(df, alpha, K, .n_iter=10000){
   # Upper boundary of CI
   upper_ci = round(quantile(na.omit(estimates.griwm), probs = (1 - alpha / 2)), 0)
   
-  estimate = tibble(lower_ci, centroid, upper_ci)
+  estimate = dplyr::tibble(lower_ci, centroid, upper_ci)
   return(estimate)
 }

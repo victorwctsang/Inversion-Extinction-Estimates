@@ -7,23 +7,29 @@ estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_it
   # calculate p
   p = calc_prop_constant(alpha)
   # initialize lower and upper vecs
-  lower.iters = upper.iters = rep(NA, max_iter)
+  lower.iters = upper.iters = point.iters = rep(NA, max_iter)
   # calculate m
   m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
   # compute starting estimates
   starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
   lower.iters[m] = starting_ests[, "lower"]
+  point.iters[m] = starting_ests[, "point"]
   upper.iters[m] = starting_ests[, "upper"]
   
   # estimate lower
   lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
+  point.iters = estimate_bound.rm(upper.iters, 0.5, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
   upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
   lower.iters = na.omit(lower.iters)
+  point.iters = na.omit(point.iters)
   upper.iters = na.omit(upper.iters)
 
-  CI = list(CI.lower=lower.iters[length(lower.iters)], CI.upper=upper.iters[length(upper.iters)])
+  CI = list(CI.lower=lower.iters[length(lower.iters)],
+            CI.point=point.iters[length(point.iters)],
+            CI.upper=upper.iters[length(upper.iters)])
   if (return_iters == TRUE) {
     CI$lower.iters = lower.iters
+    CI$point.iters = point.iters
     CI$upper.iters = upper.iters
   }
   return(CI)
@@ -63,6 +69,7 @@ get_starting_est.percentile = function (alpha, theta, n, K, eps.mean, eps.sigma)
   theta.resamples = apply(fossil.resamples, 2, FUN=min)
   theta.resamples.sorted = sort(theta.resamples)
   return(cbind(lower=theta.resamples.sorted[2],
+               point=median(theta.resamples.sorted),
                upper=theta.resamples.sorted[n.resamples-1]))
 }
 
@@ -76,7 +83,7 @@ estimate_bound.rm = function (theta.iters, q, theta.hat, n, K, p, m, max_var=100
   eta_q.iters = eta(theta.iters)
   i = m
   mc.var = Inf
-  while (i < max_iter && mc.var > max_var) {
+  while (i < max_iter) {
     # Generate resamples
     theta_q.hat = K - exp(-eta_q.iters[i])
     resamples = simulate_fossils(n, theta=theta_q.hat, K, eps.mean, eps.sigma)
@@ -90,13 +97,7 @@ estimate_bound.rm = function (theta.iters, q, theta.hat, n, K, p, m, max_var=100
     } else {
       eta_q.iters[i+1] = (eta_q.iters[i] - c*(1-q) / i)
     }
-    
-    mc.var = var.rm(q, c, i)
     i = i+1
-    if (i >= max_iter) {
-      warning("max_iter exceeded.")
-      break
-    }
   }
   theta_q.iters = K - exp(-eta_q.iters)
   return(theta_q.iters)

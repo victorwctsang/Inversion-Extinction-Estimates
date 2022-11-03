@@ -36,8 +36,8 @@ create_result_df = function (n.sims, method, error_factor) {
 }
 
 simulate_dataset = function (error_factor, theta.true, K, eps.mean, eps.sigma, n) {
-  X = runif(n, min=theta.true, max=K)
   eps = rnorm(n, mean=eps.mean, sd=error_factor*eps.sigma)
+  X = runif(n, min=theta.true, max=K)
   W = X + eps
   return(W)
 }
@@ -81,9 +81,10 @@ estimate_conf_int = function (W, sd, method, alpha, K, dating_error.mean) {
     conf_int_runtime=NULL
   )
   estimate = switch(method,
-    GRIWM = griwm(alpha, dates=W, sd=sd),
+    GRIWM = griwm(alpha, dates=W, sd=sd, K=K, bias_adjusted=F),
+    `GRIWM-corrected` = griwm(alpha, dates=W, sd=sd, K=K, bias_adjusted=T),
     MINMI = minmi(alpha, W, sd, K, dating_error.mean),
-    `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(floor(min(W)-(K-min(W))/2), ceiling(min(W)+(K-min(W))/2)), dating_error.mean=0),
+    `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(4000, 17000), dating_error.mean=0),
     `GB-RM` = GB_RM_process(alpha, W, sd, K, dating_error.mean=0)
   )
   return(estimate)
@@ -151,10 +152,10 @@ minmi = function (alpha, W, sd, K, dating_error.mean=0, .B_init=500) {
   return(list(lower=lower, point=point, upper=upper, point_runtime=point_runtime, conf_int_runtime=conf_int_runtime))
 }
 
-griwm = function(alpha, dates, sd, K, .iter=10000) {
+griwm = function(alpha, dates, sd, K, .iter=10000, bias_adjusted) {
   df = data.frame(dates=dates, sd=sd)
   start_time = Sys.time()
-  results = GRIWM(df, alpha, K, .iter)
+  results = GRIWM(df, alpha, K, .iter, bias_adjusted=bias_adjusted)
   runtime = calculate_tdiff(start_time, Sys.time())
   return(list(lower=as.numeric(results$lower_ci), point=as.numeric(results$centroid), upper=as.numeric(results$upper_ci), point_runtime=runtime, conf_int_runtime=runtime))
 }
@@ -171,5 +172,5 @@ GB_RM_process = function (alpha, dates, sd, K, dating_error.mean=0) {
   CI = estimate_CI.rm(W=dates, K=K, alpha=alpha, max_iter=1000, eps.mean=dating_error.mean, eps.sigma=mean(sd))
   conf_int_runtime = calculate_tdiff(CI_start_time, Sys.time())
   
-  return(list(lower=CI$CI.lower, upper=CI$CI.upper, point=NULL, point_runtime=NULL, conf_int_runtime=conf_int_runtime))
+  return(list(lower=CI$CI.lower, upper=CI$CI.upper, point=CI$CI.point, point_runtime=conf_int_runtime, conf_int_runtime=conf_int_runtime))
 }

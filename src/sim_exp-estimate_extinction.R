@@ -11,14 +11,14 @@ set.seed(seed)
 alpha = 0.05
 
 methods.point_estimates = c("MLE", "BA-MLE", "STRAUSS")
-methods.conf_int = c("GB-RM", "SI-UGM", "GRIWM", "MINMI")
+methods.conf_int = c("GRIWM", "MINMI", "SI-UGM", "GB-RM") #"GRIWM-corrected", 
 
 # Run trials
-
+# results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 results = data.frame(
   id=integer(),
   error_factor=double(),
-  method=character(),
+  method=factor(),
   lower=double(),
   point=double(),
   upper=double(),
@@ -26,10 +26,11 @@ results = data.frame(
   conf_int_runtime=double()
 )
 
+start_time = Sys.time()
 for (i in 1:nrow(datasets)) {
   iter = datasets[i,]
-  W = iter$W[[1]]
-  sd = iter$error_factor*fossil.sd
+  W = as.numeric(iter$W[[1]])
+  sd = as.numeric(iter$error_factor*fossil.sd)
   print(paste("Dataset ID:", iter$id))
   
   print("- Point Estimates")
@@ -46,6 +47,7 @@ for (i in 1:nrow(datasets)) {
     results = tibble::add_row(results, id=iter$id, error_factor=iter$error_factor, method=method, lower=estimation$lower, point=estimation$point, upper=estimation$upper, point_runtime=estimation$point_runtime, conf_int_runtime=estimation$conf_int_runtime)
   }
 }
+print(Sys.time() - start_time)
 
 View(results)
 saveRDS(results, "../data/sim_exp-estimate_extinction_results.RDS")
