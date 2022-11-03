@@ -1,0 +1,67 @@
+---
+title: "Applications of MINMI and GBRM"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    keep_tex: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load functions
+
+```{r}
+source("../src/garthwaite-robbins-munro-functions.R")
+source("../src/minmi-functions.R")
+# source("../src/GRIWM.R")
+source("../src/simulated-inversion.R")
+
+
+alpha = 0.05
+```
+
+
+## Cave Bear
+
+```{r}
+cave_bear = read_excel(path='../data/fossildata.xlsx',
+                     sheet="Ursus.spe.Eur.ext", 
+                     range="M3:N32", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+hist(cave_bear$age)
+```
+
+```{r}
+cave_bear.K = 34000
+cave_bear = cave_bear[cave_bear$age < cave_bear.K, ]
+cave_bear.thetas = seq(22000, 29000)
+
+cave_bear.SIUGM = simulated_inversion(alpha=alpha, dates=cave_bear$age, sd=cave_bear$sd, K=cave_bear.K, theta.test_vec = cave_bear.thetas)
+cave_bear.SIUGM$method = "SI-UGM"
+
+cave_bear.MINMI = estimate_extinction.minmi(W = cave_bear$age, sd=cave_bear$sd, level=alpha, K=cave_bear.K)
+cave_bear.MINMI$method = "MINMI"
+
+cave_bear.estimates = data.frame(
+  method = factor(),
+  lower = numeric(),
+  upper = numeric(),
+  point = numeric()
+)
+cave_bear.estimates = rbind(cave_bear.estimates, cave_bear.MINMI, cave_bear.SIUGM)
+cave_bear.estimates
+```
+
+
+## Mammoth
+
+## Giant Deer
+
+## Short-faced bear
+
+## Steppe bison

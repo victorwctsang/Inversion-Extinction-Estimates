@@ -36,8 +36,6 @@ fossil_dataframe = read_excel(
   col_types=c('numeric', 'numeric')
 )
 fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
-
-
 dating_error.sd = mean(fossil_dataframe$sd)
 ```
 
@@ -65,6 +63,27 @@ c(res$CI.lower, res$CI.upper, res$point)
 plot(na.omit(res$upper.iters), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
      xlim=c(0, max(length(res$lower.iters), length(res$upper.iters))),
      ylim=c(min(res$lower.iters, res$upper.iters), max(res$lower.iters, res$upper.iters)))
+
+lines(res$lower.iters, pch=4, col='blue')
+lines(res$point.iters, pch=4, col='purple')
+abline(h=theta.hat.y, lty=2, col="black")
+
+legend("right", legend=c("U_i", "L_i", "m"), col=c("red", "blue", "black"), lty=c(1,1,1))
+```
+
+```{r}
+res = estimate_CI.rm(W=dates,
+                     K=K,
+                     alpha=0.05,
+                     max_iter=1000,
+                     eps.mean=0,
+                     eps.sigma=mean(fossil_dataframe$sd),
+                     return_iters=T)
+c(res$CI.lower, res$CI.upper, res$point)
+
+plot(na.omit(res$upper.iters), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
+     xlim=c(0, max(length(res$lower.iters), length(res$upper.iters))),
+     ylim=c(min(res$lower.iters), max(res$upper.iters)))
 
 lines(res$lower.iters, pch=4, col='blue')
 lines(res$point.iters, pch=4, col='purple')

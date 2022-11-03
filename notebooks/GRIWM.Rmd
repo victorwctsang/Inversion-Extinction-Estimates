@@ -1,0 +1,64 @@
+---
+title: "GRIWM experimentation"
+author: "Victor Tsang"
+date: "08/04/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+load("../data/synthetic-data.RData")
+attach(synthetic.data.config)
+
+library(readxl)
+# Import mammoth data from fossildata.xlsx
+fossil_dataframe = read_excel(
+  path='../data/fossildata.xlsx', 
+  sheet="MammothPrimEBer", 
+  range="M3:N36", 
+  col_names=c("age", "sd"), 
+  col_types=c('numeric', 'numeric')
+)
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+
+dates = datasets[51, ]$W[[1]]
+m = min(dates)
+
+standard_errors = fossil_dataframe$sd[1:n]
+print(K)
+print(theta.true)
+```
+
+```{r}
+source("GRIWM.R")
+GRIWM(df=data.frame(dates=dates, sd=fossil.sd), alpha=0.025, K=K, bias_adjusted = F)$centroid
+GRIWM(df=data.frame(dates=dates, sd=fossil.sd), alpha=0.975, K=K, bias_adjusted = F)$centroid
+GRIWM(df=data.frame(dates=dates, sd=fossil.sd), alpha=0.05, K=K, bias_adjusted = F)
+```
+
+```{r}
+GRIWM(df=data.frame(dates=dates, sd=fossil.sd), alpha=0.025, K=K, bias_adjusted = T)$centroid
+GRIWM(df=data.frame(dates=dates, sd=fossil.sd), alpha=0.975, K=K, bias_adjusted = T)$centroid
+GRIWM(df=data.frame(dates=dates, sd=fossil.sd), alpha=0.05, K=K, bias_adjusted = T)
+```
+
+
+
+
+
+```{r}
+uniroot(f=function(theta) {(1 - n/(K-theta))^(x.1 - theta) - alpha}, interval=c(7000, 14000), extendInt="yes")
+```
+
+
+
+
+
+
+
+
+

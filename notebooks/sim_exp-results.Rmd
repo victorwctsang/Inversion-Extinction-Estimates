@@ -1,0 +1,137 @@
+---
+title: "Simulation Experiment Results"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    keep_tex: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load in the results
+
+```{r, warning=FALSE, message=FALSE}
+library(knitr)
+library(tidyverse)
+library(latex2exp)
+
+load("../data/synthetic-data.RData")
+attach(synthetic.data.config)
+
+estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
+```
+
+
+```{r}
+# Point estimates
+performance.point_estimates = estimates %>%
+  filter(!is.na(point)) %>%
+  group_by(error_factor, method) %>%
+  summarise(MSE_000 = mean((point - theta.true)^2)/1000,
+            bias = mean(point)-theta.true,
+            variance_000 = var(point)/1000,
+            avg_runtime = mean(point_runtime))
+kable(performance.point_estimates)
+
+# Confidence Intervals
+performance.conf_int_estimates = estimates %>%
+  filter(!is.na(conf_int_runtime)) %>%
+  mutate(width = upper - lower,
+         contains_theta = ifelse(theta.true > lower & theta.true < upper, 1, 0)) %>%
+  group_by(error_factor, method) %>%
+  summarise(Coverage = mean(contains_theta),
+            `Average Width` = mean(width),
+            `Average Runtime` = mean(conf_int_runtime)) %>%
+  ungroup() %>%
+  arrange(desc(Coverage), `Average Width`, `Average Runtime`) %>%
+  mutate(Coverage = scales::percent(Coverage, accuracy=0.1))
+kable(performance.conf_int_estimates)
+```
+
+### Point Estimates
+
+```{r results='asis'}
+library(kableExtra)
+for (err in error_factors) {
+  experiment.results.kbl = performance.point_estimates %>% 
+    filter(error_factor == err) %>% 
+    mutate(across(!c(method, avg_runtime), round)) %>% 
+    mutate(avg_runtime=round(avg_runtime, digits=5)) %>%
+    arrange(MSE_000) %>%
+    ungroup() %>%
+    select(-error_factor) %>%
+    kable(booktabs=T, col.names = c("", "(000's years)", "(years)", "(000's years)", "(seconds)"), format="latex") %>%
+    # kable_styling(full_width = F) %>%
+    add_header_above(c("Method" = 1, "MSE" = 1, "Bias"=1, "Variance"=1, "Average Runtime"=1))
+  
+  print(experiment.results.kbl)
+  writeLines(experiment.results.kbl, paste0("../figures/table-sim-exp-point-error", err, ".tex"))
+}
+```
+
+
+```{r}
+performance.point_estimates %>%
+  filter(!(method %in% c("GRIWM", "GRIWM-corrected"))) %>%
+  ggplot(aes(x=error_factor, y=MSE_000, colour=method)) +
+  geom_point() +
+  geom_line() +
+  theme_minimal() +
+  # guides(colour="none") +
+  # annotate("text", x=4.18, y=c(1950, 1750, 1300, 1200, 1100), label=c("BA-MLE", "Strauss", "MINMI", "SI-UGM", "MLE")) +
+  labs(x="Error Factor", y=NULL, title="MSE ('000 years) of each Method")
+  #+  scale_y_continuous(trans='log10')
+```
+
+
+### Confidence Intervals
+
+```{r results='asis'}
+options(scipen=9)
+for (metric in c("Coverage", "Average Width", "Average Runtime")) {
+  experiment.results.kbl = performance.conf_int_estimates %>%
+    select(c(method, error_factor, one_of(metric))) %>%
+    pivot_wider(id_cols = method,
+              names_from=error_factor,
+              values_from=one_of(metric),
+              names_prefix=paste(metric, "| error = sigma*")) %>%
+    arrange(!!syms(paste(metric, "| error = sigma*0"))) %>%
+    kable(booktabs=T, col.names = c("Method", paste0(c(0,1,2,4), r"{*$\sigma$}")), format="latex", escape = FALSE) %>%
+    # kable_styling(full_width = F) %>%
+    add_header_above(c(" " = 1, metric = 4))
+  
+  print(experiment.results.kbl)
+  writeLines(experiment.results.kbl, paste0("../figures/table-sim-exp-conf-int-", str_replace(tolower(metric), " ", "-"), ".tex"))
+}
+```
+
+
+```{r}
+estimates %>%
+  filter(!is.na(lower)) %>%
+  filter(error_factor==1) %>%
+  select(method, lower, upper) %>%
+  pivot_longer(cols=c(lower, upper)) %>%
+  filter(!is.na(value)) %>%
+  ggplot(aes(x=value, fill=name)) +
+  geom_density(alpha=0.25) +
+  geom_vline(aes(xintercept=theta.true)) +
+  facet_wrap(method ~ .) +
+  theme_minimal() +
+  labs()
+```
+
+```{r}
+metric="Coverage"
+performance.conf_int_estimates %>%
+    select(c(method, error_factor, one_of(metric))) %>%
+    pivot_wider(id_cols = method,
+              names_from=error_factor,
+              values_from=one_of(metric),
+              names_prefix=paste(metric, "| error = sigma*")) %>%
+    arrange(!!syms(paste(metric, "| error = sigma*0")))
+```
+
