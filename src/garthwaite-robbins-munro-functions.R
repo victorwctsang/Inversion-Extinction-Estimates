@@ -7,29 +7,25 @@ estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_it
   # calculate p
   p = calc_prop_constant(alpha)
   # initialize lower and upper vecs
-  lower.iters = upper.iters = point.iters = rep(NA, max_iter)
+  lower.iters = upper.iters = rep(NA, max_iter)
   # calculate m
   m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
   # compute starting estimates
   starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
   lower.iters[m] = starting_ests[, "lower"]
-  point.iters[m] = starting_ests[, "point"]
   upper.iters[m] = starting_ests[, "upper"]
   
   # estimate lower
   lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
-  point.iters = estimate_bound.rm(upper.iters, 0.5, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
   upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
   lower.iters = na.omit(lower.iters)
-  point.iters = na.omit(point.iters)
   upper.iters = na.omit(upper.iters)
 
-  CI = list(CI.lower=lower.iters[length(lower.iters)],
-            CI.point=point.iters[length(point.iters)],
-            CI.upper=upper.iters[length(upper.iters)])
+  CI = list(lower=lower.iters[length(lower.iters)],
+            point=theta.hat,
+            upper=upper.iters[length(upper.iters)])
   if (return_iters == TRUE) {
     CI$lower.iters = lower.iters
-    CI$point.iters = point.iters
     CI$upper.iters = upper.iters
   }
   return(CI)
