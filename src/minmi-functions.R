@@ -17,6 +17,7 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
                                   q=0.5,
                                   K=K,
                                   m=m,
+                                  n=n,
                                   u=u.init,
                                   eps.mean=0,
                                   eps.sigma=dating.sd)
@@ -26,6 +27,7 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
                                q=alpha,
                                K=K,
                                m=m,
+                               n=n,
                                u=u.init,
                                eps.mean=0,
                                eps.sigma=dating.sd)
@@ -33,6 +35,7 @@ estimate_extinction.minmi = function (W, sd, K, level = NULL, B = NULL, time=F, 
                                q=1-alpha,
                                K=K,
                                m=m,
+                               n=n,
                                u=u.init,
                                eps.mean=0,
                                eps.sigma=dating.sd)
@@ -80,14 +83,14 @@ estimate_quantile.minmi = function (q, K, W, u=NA, eps.mean=0, eps.sigma=0) {
   theta_q.hat = K - q^(-1/n) * (K-m)
   if (eps.mean!=0 || eps.sigma!=0) {
     # Measurement Error case
-    newton.res = pracma::newtonRaphson(fun=function(theta) estimating_eqn(theta, q, K, u, m, eps.mean, eps.sigma),
+    newton.res = pracma::newtonRaphson(fun=function(theta) estimating_eqn(theta, q, K, u, m, n, eps.mean, eps.sigma),
                                        x0=theta_q.hat)
     theta_q.hat = newton.res$root
   }
   return(theta_q.hat)
 }
 
-estimating_eqn = function (theta, q, K, u, m, eps.mean, eps.sigma) {
+estimating_eqn = function (theta, q, K, u, m, n, eps.mean, eps.sigma) {
   F.eps.m = pnorm(m-theta, mean=eps.mean, sd=eps.sigma)
   F.eps.K = pnorm(K-theta, mean=eps.mean, sd=eps.sigma)
   psi.hat = estimate_psi(u=u, mean=eps.mean, sd=eps.sigma, a=-Inf, b=m-theta, K=K, m=m, theta=theta)
@@ -117,9 +120,9 @@ uniform_to_tnorm = function (u, mean, sd, a, b) {
   return(mc.samples)
 }
 
-find_optimal_B = function (max_var, q, K, m, u, eps.mean, eps.sigma) {
+find_optimal_B = function (max_var, q, K, m, n, u, eps.mean, eps.sigma) {
   # Initial estimate of theta_q using no measurement error case
-  theta_q.hat.init = K - q^(-1/n)*(K-m) 
+  theta_q.hat.init = K - q^(-1/n)*(K-m)
   
   # pdfs and CDF evaluations (for convenience)
   f_eps.K = dnorm(K-theta_q.hat.init, eps.mean, eps.sigma)

@@ -132,9 +132,9 @@ minmi = function (alpha, W, sd, K, dating_error.mean=0, .B_init=500) {
     u.init = runif(.B_init, 0, 1)
     
     # Estimate optimal values for B
-    B.point = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=0.5, K=K, m=m, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
-    B.lower = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=alpha/2, K=K, m=m, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
-    B.upper = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=1-alpha/2, K=K, m=m, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
+    B.point = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=0.5, K=K, m=m, n=n, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
+    B.lower = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=alpha/2, K=K, m=m, n=n, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
+    B.upper = find_optimal_B(max_var=(0.2*dating_error.sd)^2, q=1-alpha/2, K=K, m=m, n=n, u=u.init, eps.mean=dating_error.mean, eps.sigma=dating_error.sd)
     B.max = max(B.point, B.lower, B.upper)
     
     # Confidence interval
@@ -172,5 +172,5 @@ GB_RM_process = function (alpha, dates, sd, K, dating_error.mean=0) {
   CI = estimate_CI.rm(W=dates, K=K, alpha=alpha, max_iter=1000, eps.mean=dating_error.mean, eps.sigma=mean(sd))
   conf_int_runtime = calculate_tdiff(CI_start_time, Sys.time())
   
-  return(list(lower=CI$CI.lower, upper=CI$CI.upper, point=CI$CI.point, point_runtime=conf_int_runtime, conf_int_runtime=conf_int_runtime))
+  return(list(lower=CI$lower, upper=CI$upper, point=CI$point, point_runtime=conf_int_runtime, conf_int_runtime=conf_int_runtime))
 }
