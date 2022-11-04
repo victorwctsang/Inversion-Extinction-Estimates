@@ -14,54 +14,270 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Load functions
 
 ```{r}
+library(tidyverse)
+library(readxl)
+
 source("../src/garthwaite-robbins-munro-functions.R")
 source("../src/minmi-functions.R")
 # source("../src/GRIWM.R")
 source("../src/simulated-inversion.R")
 
+theme_set(theme_bw())
 
 alpha = 0.05
 ```
 
-
-## Cave Bear
+## Import Data
 
 ```{r}
 cave_bear = read_excel(path='../data/fossildata.xlsx',
                      sheet="Ursus.spe.Eur.ext", 
-                     range="M3:N32", 
+                     range="M3:N33", 
                      col_names=c("age", "sd"), 
                      col_types=c('numeric', 'numeric'))
 
-hist(cave_bear$age)
+mammoth = read_excel(path='../data/fossildata.xlsx',
+                     sheet="Mammoths Eurasian", 
+                     range="M3:N205", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+megaloceros = read_excel(path='../data/fossildata.xlsx',
+                     sheet="Megaloceros", 
+                     range="M3:N48", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+neanderthal = read_excel(path='../data/fossildata.xlsx',
+                     sheet="NeandertalEur", 
+                     range="M3:N147", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+bison = read_excel(path='../data/fossildata.xlsx',
+                     sheet="BisPriscus.ext", 
+                     range="M3:N15", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+jelephant = read_excel(path='../data/fossildata.xlsx',
+                     sheet="Paleolox.Japan", 
+                     range="M3:N13", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+cave_hyena = read_excel(path='../data/fossildata.xlsx',
+                     sheet="CrocCroc.Eur", 
+                     range="M3:N81", 
+                     col_names=c("age", "sd"), 
+                     col_types=c('numeric', 'numeric'))
+
+tmp = rbind(data.frame(age=cave_bear$age, dataset="Cave Bear"),
+            data.frame(age=bison$age, dataset="Steppe Bison"),
+            data.frame(age=mammoth$age, dataset="Eurasian Mammoth"),
+            data.frame(age=cave_hyena$age, dataset="Cave Hyena"))
 ```
+
+## Histograms
+
+```{r fig.height=3, fig.width=12}
+p = tmp %>% ggplot(aes(x=age)) +
+  geom_histogram(position="identity", color="black", fill="grey", bins=7) +
+  facet_wrap(dataset ~ ., scale="free", nrow=1)
+
+p
+ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
+```
+
+```{r}
+estimate_extinction = function (dates, sd, K, theta.test_vec, alpha=0.05, label) {
+  SIUGM = simulated_inversion(alpha=alpha, dates=dates, sd=sd, K=K, theta.test_vec = theta.test_vec)
+  SIUGM$method = "SI-UGM"
+  
+  MINMI = estimate_extinction.minmi(W = dates, sd=sd, level=1-alpha, K=K)
+  MINMI$method = "MINMI"
+  
+  SIMP = estimate_CI.rm(W = dates, K=K, alpha=alpha, max_iter=3000, eps.mean=0, eps.sigma=mean(sd))
+  SIMP$method = "SI-RM"
+  
+  estimates = data.frame(
+    method = factor(),
+    lower = numeric(),
+    upper = numeric(),
+    point = numeric(),
+    n = numeric(),
+    sigma = numeric(),
+    dataset = factor()
+  )
+  estimates = rbind(estimates, MINMI, SIUGM, SIMP)
+  estimates$n = length(dates)
+  estimates$sigma = mean(sd)
+  estimates$dataset = paste0(label, " (n=", length(dates), ")")
+  return(estimates)
+} 
+```
+
+## Cave Bear
 
 ```{r}
 cave_bear.K = 34000
 cave_bear = cave_bear[cave_bear$age < cave_bear.K, ]
 cave_bear.thetas = seq(22000, 29000)
 
-cave_bear.SIUGM = simulated_inversion(alpha=alpha, dates=cave_bear$age, sd=cave_bear$sd, K=cave_bear.K, theta.test_vec = cave_bear.thetas)
-cave_bear.SIUGM$method = "SI-UGM"
-
-cave_bear.MINMI = estimate_extinction.minmi(W = cave_bear$age, sd=cave_bear$sd, level=alpha, K=cave_bear.K)
-cave_bear.MINMI$method = "MINMI"
-
-cave_bear.estimates = data.frame(
-  method = factor(),
-  lower = numeric(),
-  upper = numeric(),
-  point = numeric()
-)
-cave_bear.estimates = rbind(cave_bear.estimates, cave_bear.MINMI, cave_bear.SIUGM)
+cave_bear.estimates = estimate_extinction(dates=cave_bear$age, sd=cave_bear$sd, K=cave_bear.K, theta.test_vec = cave_bear.thetas, label="Cave Bear")
 cave_bear.estimates
+
+ggplot(data=cave_bear.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  geom_hline(yintercept=min(cave_bear$age)) +
+  guides(colour="none") +
+  labs(x=NULL, y="Years BP", title="Cave Bear Extinction (Ursus.spe.Eur.ext)")
 ```
 
+## Eurasian Mammoth
 
-## Mammoth
+
+```{r}
+mammoth.K = 25000
+mammoth = mammoth[mammoth$age < mammoth.K, ]
+mammoth.thetas = seq(4000, 14000)
+
+mammoth.estimates = estimate_extinction(dates=mammoth$age, sd=mammoth$sd, K=mammoth.K, theta.test_vec = mammoth.thetas, label="Eurasian Mammoth")
+mammoth.estimates
+
+ggplot(data=mammoth.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  geom_hline(yintercept=min(mammoth$age)) +
+  labs(x=NULL, y="Years BP", title="Mammoth Extinction (MammothPrimEBer)")
+```
 
 ## Giant Deer
 
-## Short-faced bear
 
-## Steppe bison
+```{r}
+megaloceros.K = 14000
+megaloceros = megaloceros[megaloceros$age < megaloceros.K, ]
+megaloceros.thetas = seq(8000, 13000)
+
+megaloceros.estimates = estimate_extinction(dates=megaloceros$age, sd=megaloceros$sd, K=megaloceros.K, theta.test_vec = megaloceros.thetas, label="Giant Deer")
+megaloceros.estimates
+
+ggplot(data=megaloceros.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  geom_hline(yintercept=min(megaloceros$age)) +
+  labs(x=NULL, y="Years BP", title="Giant Deer Extinction (megaloceros)")
+```
+
+## Neanderthal
+
+```{r}
+neanderthal.K = 48000
+neanderthal = neanderthal[neanderthal$age < neanderthal.K, ]
+neanderthal.thetas = seq(38000, 44000)
+
+neanderthal.estimates = estimate_extinction(dates=neanderthal$age, sd=neanderthal$sd, K=neanderthal.K, theta.test_vec = neanderthal.thetas, label="Neanderthal")
+neanderthal.estimates
+
+ggplot(data=neanderthal.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  geom_hline(yintercept=min(neanderthal$age)) +
+  labs(x=NULL, y="Years BP", title="Neanderthal Extinction")
+```
+
+## Steppe Bison
+
+
+```{r}
+bison.K = 55000
+bison = bison[bison$age < bison.K, ]
+bison.thetas = seq(25000, 35000)
+
+bison.estimates = estimate_extinction(dates=bison$age, sd=bison$sd, K=bison.K, theta.test_vec = bison.thetas, label="Steppe Bison")
+bison.estimates
+
+ggplot(data=bison.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  geom_hline(yintercept=min(bison$age)) +
+  labs(x=NULL, y="Years BP", title="Steppe Bison Extinction")
+```
+
+## Japanese Elephant
+
+```{r}
+jelephant.K = 40000
+jelephant = jelephant[jelephant$age < jelephant.K, ]
+jelephant.thetas = seq(25000, 35000)
+
+jelephant.estimates = estimate_extinction(dates=jelephant$age, sd=jelephant$sd, K=jelephant.K, theta.test_vec = jelephant.thetas, label="Japanese Elephant")
+jelephant.estimates
+
+ggplot(data=jelephant.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  geom_hline(yintercept=min(jelephant$age), linetype="dashed") +
+  annotate(geom="text", label=paste("Obs. Min.", min(jelephant$age)), x=0, y=min(jelephant$age)+250, hjust=0, fontface = 'italic') +
+  labs(x=NULL, y="Years BP", title="Japanese Elephant Extinction")
+```
+
+## Cave Hyena
+
+```{r}
+cave_hyena.K = 55000
+cave_hyena = cave_hyena[cave_hyena$age < cave_hyena.K, ]
+cave_hyena.thetas = seq(20000, 30000)
+
+cave_hyena.estimates = estimate_extinction(dates=cave_hyena$age, sd=cave_hyena$sd, K=cave_hyena.K, theta.test_vec = cave_hyena.thetas, label="Cave Hyena")
+cave_hyena.estimates
+
+ggplot(data=cave_hyena.estimates, aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  geom_hline(yintercept=min(cave_hyena$age), linetype="dashed") +
+  annotate(geom="text", label=paste("Obs. Min.", min(cave_hyena$age)), x=0, y=min(cave_hyena$age)+150, hjust=0, fontface = 'italic') +
+  labs(x=NULL, y="Years BP", title="Cave Hyena Extinction")
+```
+
+
+## Combined
+
+```{r fig.width=12, fig.height=3}
+all_results = rbind(cave_bear.estimates, mammoth.estimates, bison.estimates, cave_hyena.estimates)#, mammoth.estimates, megaloceros.estimates)
+
+p = all_results %>%
+  ggplot(aes(colour=method)) +
+  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
+  geom_point(aes(x=method, y=point)) +
+  guides(colour="none") +
+  labs(x=NULL, y="Years (BP)") +
+  facet_wrap(fct_reorder(dataset, n) ~ ., nrow=1, dir='v')
+
+p
+
+ggsave(file="../figures/applications.svg", plot=p, width=12, height=3)
+```
+
+```{r}
+library(knitr)
+
+all_results %>%
+  mutate(Extinction = paste0(scales::label_comma()(round(point, 1)), " (", scales::label_comma()(round(lower, 1)), " - ", scales::label_comma()(round(upper, 1)), ")"),
+         Method = method) %>%
+  select(Method, dataset, Extinction) %>%
+  pivot_wider(names_from=dataset, values_from=Extinction) %>%
+  kable(booktabs=T, format="latex") %>%
+  writeLines("../figures/table-applications-CIs.tex")
+```
+
+
+
