@@ -46,8 +46,8 @@ performance.conf_int_estimates = estimates %>%
             `Average Width` = mean(width),
             `Average Runtime` = mean(conf_int_runtime)) %>%
   ungroup() %>%
-  arrange(desc(Coverage), `Average Width`, `Average Runtime`) %>%
-  mutate(Coverage = scales::percent(Coverage, accuracy=0.1))
+  arrange(desc(Coverage), `Average Width`, `Average Runtime`)# %>%
+  # mutate(Coverage = scales::percent(Coverage, accuracy=0.1))
 kable(performance.conf_int_estimates)
 ```
 
@@ -64,26 +64,23 @@ for (err in error_factors) {
     ungroup() %>%
     select(-error_factor) %>%
     kable(booktabs=T, col.names = c("", "(000's years)", "(years)", "(000's years)", "(seconds)"), format="latex") %>%
-    # kable_styling(full_width = F) %>%
     add_header_above(c("Method" = 1, "MSE" = 1, "Bias"=1, "Variance"=1, "Average Runtime"=1))
-  
-  print(experiment.results.kbl)
   writeLines(experiment.results.kbl, paste0("../figures/table-sim-exp-point-error", err, ".tex"))
+  print(experiment.results.kbl)
 }
 ```
 
 
 ```{r}
 performance.point_estimates %>%
-  filter(!(method %in% c("GRIWM", "GRIWM-corrected"))) %>%
   ggplot(aes(x=error_factor, y=MSE_000, colour=method)) +
   geom_point() +
   geom_line() +
-  theme_minimal() +
+  theme_bw() +
   # guides(colour="none") +
   # annotate("text", x=4.18, y=c(1950, 1750, 1300, 1200, 1100), label=c("BA-MLE", "Strauss", "MINMI", "SI-UGM", "MLE")) +
-  labs(x="Error Factor", y=NULL, title="MSE ('000 years) of each Method")
-  #+  scale_y_continuous(trans='log10')
+  labs(x="Error Factor", y=NULL, title="MSE ('000 years) of each Method") +
+  scale_y_continuous(trans='log10')
 ```
 
 
@@ -99,7 +96,7 @@ for (metric in c("Coverage", "Average Width", "Average Runtime")) {
               values_from=one_of(metric),
               names_prefix=paste(metric, "| error = sigma*")) %>%
     arrange(!!syms(paste(metric, "| error = sigma*0"))) %>%
-    kable(booktabs=T, col.names = c("Method", paste0(c(0,1,2,4), r"{*$\sigma$}")), format="latex", escape = FALSE) %>%
+    kable(booktabs=T, col.names = c("Method", paste0(c(0,0.5,1,2,4), r"{*$\sigma$}")), format="latex", escape = FALSE) %>%
     # kable_styling(full_width = F) %>%
     add_header_above(c(" " = 1, metric = 4))
   
@@ -112,7 +109,6 @@ for (metric in c("Coverage", "Average Width", "Average Runtime")) {
 ```{r}
 estimates %>%
   filter(!is.na(lower)) %>%
-  filter(error_factor==1) %>%
   select(method, lower, upper) %>%
   pivot_longer(cols=c(lower, upper)) %>%
   filter(!is.na(value)) %>%

@@ -129,7 +129,7 @@
 
 \title{Simulation Experiment Results}
 \author{Victor Tsang (z5209633)}
-\date{2022-11-02}
+\date{2022-11-04}
 
 \begin{document}
 \maketitle
@@ -175,12 +175,12 @@
 \end{Shaded}
 
 \begin{longtable}[]{@{}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1711}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2105}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1316}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1579}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1711}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1579}}@{}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1857}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1143}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1429}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2000}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1857}}
+  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1714}}@{}}
 \toprule()
 \begin{minipage}[b]{\linewidth}\raggedleft
 error\_factor
@@ -197,35 +197,36 @@ avg\_runtime
 \end{minipage} \\
 \midrule()
 \endhead
-0 & BA-MLE & 264.2727 & 35.26247 & 264.0856 & 0.0000241 \\
-0 & GRIWM & 1143.9442 & -910.24400 & 316.6667 & 2.2955959 \\
-0 & GRIWM-corrected & 1676.6301 & -1160.42400 & 331.3718 & 14.2799933 \\
-0 & MINMI & 286.3593 & 175.10167 & 256.7256 & 0.0000101 \\
-0 & MLE & 498.4446 & 509.77378 & 239.5334 & 0.0000130 \\
-0 & SI-UGM & 290.4109 & 186.47845 & 256.6634 & 4.4242394 \\
-0 & STRAUSS & 265.4449 & 36.50031 & 265.1733 & 0.0000146 \\
-1 & BA-MLE & 284.0751 & -60.31354 & 281.5636 & 0.0000450 \\
-1 & GRIWM & 1482.8898 & -1076.41600 & 325.5205 & 2.3225908 \\
-1 & GRIWM-corrected & 2108.6852 & -1330.35200 & 340.2096 & 14.3278799 \\
-1 & MINMI & 287.6329 & 85.15322 & 281.5078 & 0.0005012 \\
-1 & MLE & 429.7157 & 418.74901 & 255.3865 & 0.0000191 \\
-1 & SI-UGM & 285.9112 & 97.26159 & 277.5616 & 2.0293313 \\
-1 & STRAUSS & 286.9027 & -64.59601 & 283.8655 & 0.0000387 \\
-2 & BA-MLE & 635.8984 & -317.77076 & 537.0684 & 0.0000158 \\
-2 & GRIWM & 2751.9844 & -1476.72400 & 573.5649 & 2.3258716 \\
-2 & GRIWM-corrected & 3622.3498 & -1739.66000 & 598.3262 & 14.2027869 \\
-2 & MINMI & 560.5955 & -61.69559 & 559.0253 & 0.0005218 \\
-2 & MLE & 515.3085 & 173.55166 & 487.1369 & 0.0000134 \\
-2 & SI-UGM & 542.4839 & -19.65905 & 544.2745 & 1.7308850 \\
-2 & STRAUSS & 645.4422 & -328.56985 & 539.6426 & 0.0000142 \\
-4 & BA-MLE & 1788.2467 & -820.60440 & 1119.3325 & 0.0000153 \\
-4 & GRIWM & 6706.9604 & -2381.60800 & 1039.0600 & 2.3208188 \\
-4 & GRIWM-corrected & 8182.1955 & -2662.92800 & 1095.3915 &
-14.2912016 \\
-4 & MINMI & 1285.9511 & -185.59998 & 1256.5299 & 0.0004930 \\
-4 & MLE & 1104.4375 & -305.33752 & 1015.2676 & 0.0000137 \\
-4 & SI-UGM & 1215.1789 & -29.28444 & 1219.1981 & 1.3886812 \\
-4 & STRAUSS & 1875.1304 & -865.57457 & 1130.4328 & 0.0000144 \\
+0.0 & BA-MLE & 234.5607 & -0.9379571 & 234.7946 & 0.0000219 \\
+0.0 & GRIWM & 248.9280 & 145.5280000 & 227.9776 & 2.3971124 \\
+0.0 & MINMI & 247.4576 & 139.4092643 & 228.2509 & 0.0000109 \\
+0.0 & MLE & 438.6601 & 475.2971837 & 212.9656 & 0.0000173 \\
+0.0 & SI-UGM & 248.9648 & 150.6138962 & 226.5068 & 4.7065676 \\
+0.0 & STRAUSS & 234.8453 & -0.7152842 & 235.0799 & 0.0000196 \\
+0.5 & BA-MLE & 244.0353 & -22.0990141 & 243.7908 & 0.0000253 \\
+0.5 & GRIWM & 246.6816 & 107.0420000 & 235.4590 & 2.4313070 \\
+0.5 & MINMI & 250.6573 & 116.6643007 & 237.2840 & 0.0004708 \\
+0.5 & MLE & 428.0602 & 455.1437961 & 221.1254 & 0.0000192 \\
+0.5 & SI-UGM & 250.7756 & 117.2579537 & 237.2634 & 2.3305912 \\
+0.5 & STRAUSS & 245.5802 & -22.8493286 & 245.3034 & 0.0000251 \\
+1.0 & BA-MLE & 365.6242 & -45.7554617 & 363.8946 & 0.0000216 \\
+1.0 & GRIWM & 345.5350 & 46.5880000 & 343.7083 & 2.4390745 \\
+1.0 & MINMI & 373.1166 & 104.2616256 & 362.6088 & 0.0005133 \\
+1.0 & MLE & 516.8878 & 432.6138460 & 330.0631 & 0.0000176 \\
+1.0 & SI-UGM & 371.3002 & 115.2129004 & 358.3845 & 1.9374115 \\
+1.0 & STRAUSS & 366.4727 & -50.5383309 & 364.2829 & 0.0000206 \\
+2.0 & BA-MLE & 542.9867 & -233.5215118 & 488.9434 & 0.0000210 \\
+2.0 & GRIWM & 496.9831 & -265.7930000 & 426.7639 & 2.4381696 \\
+2.0 & MINMI & 508.2312 & 21.2383726 & 508.2884 & 0.0005367 \\
+2.0 & MLE & 507.4514 & 253.7890364 & 443.4860 & 0.0000176 \\
+2.0 & SI-UGM & 501.5358 & 65.3780494 & 497.7593 & 1.6800792 \\
+2.0 & STRAUSS & 553.8156 & -247.9251968 & 492.8416 & 0.0000199 \\
+4.0 & BA-MLE & 1712.8705 & -817.7749246 & 1045.1599 & 0.0000204 \\
+4.0 & GRIWM & 2112.6249 & -1159.8510000 & 768.1387 & 2.4349672 \\
+4.0 & MINMI & 1157.0951 & -174.3894207 & 1127.8112 & 0.0005682 \\
+4.0 & MLE & 1038.6355 & -302.6427854 & 947.9908 & 0.0000176 \\
+4.0 & SI-UGM & 1130.9207 & -28.3481103 & 1131.2483 & 1.3896884 \\
+4.0 & STRAUSS & 1789.1141 & -862.4420005 & 1046.3543 & 0.0000199 \\
 \bottomrule()
 \end{longtable}
 
@@ -237,9 +238,11 @@ avg\_runtime
   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{width =}\NormalTok{ upper }\SpecialCharTok{{-}}\NormalTok{ lower,}
          \AttributeTok{contains\_theta =} \FunctionTok{ifelse}\NormalTok{(theta.true }\SpecialCharTok{\textgreater{}}\NormalTok{ lower }\SpecialCharTok{\&}\NormalTok{ theta.true }\SpecialCharTok{\textless{}}\NormalTok{ upper, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{group\_by}\NormalTok{(error\_factor, method) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{coverage =} \FunctionTok{mean}\NormalTok{(contains\_theta),}
-            \AttributeTok{avg\_width =} \FunctionTok{mean}\NormalTok{(width),}
-            \AttributeTok{avg\_runtime =} \FunctionTok{mean}\NormalTok{(conf\_int\_runtime))}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{Coverage =} \FunctionTok{mean}\NormalTok{(contains\_theta),}
+            \StringTok{\textasciigrave{}}\AttributeTok{Average Width}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{mean}\NormalTok{(width),}
+            \StringTok{\textasciigrave{}}\AttributeTok{Average Runtime}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{mean}\NormalTok{(conf\_int\_runtime)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{arrange}\NormalTok{(}\FunctionTok{desc}\NormalTok{(Coverage), }\StringTok{\textasciigrave{}}\AttributeTok{Average Width}\StringTok{\textasciigrave{}}\NormalTok{, }\StringTok{\textasciigrave{}}\AttributeTok{Average Runtime}\StringTok{\textasciigrave{}}\NormalTok{)}\CommentTok{\# \%\textgreater{}\%}
 \end{Highlighting}
 \end{Shaded}
 
@@ -250,62 +253,36 @@ avg\_runtime
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{kable}\NormalTok{(performance.point\_estimates)}
+  \CommentTok{\# mutate(Coverage = scales::percent(Coverage, accuracy=0.1))}
+\FunctionTok{kable}\NormalTok{(performance.conf\_int\_estimates)}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{longtable}[]{@{}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1711}}
-  >{\raggedright\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.2105}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1316}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1579}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1711}}
-  >{\raggedleft\arraybackslash}p{(\columnwidth - 10\tabcolsep) * \real{0.1579}}@{}}
+\begin{longtable}[]{@{}rlrrr@{}}
 \toprule()
-\begin{minipage}[b]{\linewidth}\raggedleft
-error\_factor
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
-method
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-MSE\_000
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-bias
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-variance\_000
-\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedleft
-avg\_runtime
-\end{minipage} \\
+error\_factor & method & Coverage & Average Width & Average Runtime \\
 \midrule()
 \endhead
-0 & BA-MLE & 264.2727 & 35.26247 & 264.0856 & 0.0000241 \\
-0 & GRIWM & 1143.9442 & -910.24400 & 316.6667 & 2.2955959 \\
-0 & GRIWM-corrected & 1676.6301 & -1160.42400 & 331.3718 & 14.2799933 \\
-0 & MINMI & 286.3593 & 175.10167 & 256.7256 & 0.0000101 \\
-0 & MLE & 498.4446 & 509.77378 & 239.5334 & 0.0000130 \\
-0 & SI-UGM & 290.4109 & 186.47845 & 256.6634 & 4.4242394 \\
-0 & STRAUSS & 265.4449 & 36.50031 & 265.1733 & 0.0000146 \\
-1 & BA-MLE & 284.0751 & -60.31354 & 281.5636 & 0.0000450 \\
-1 & GRIWM & 1482.8898 & -1076.41600 & 325.5205 & 2.3225908 \\
-1 & GRIWM-corrected & 2108.6852 & -1330.35200 & 340.2096 & 14.3278799 \\
-1 & MINMI & 287.6329 & 85.15322 & 281.5078 & 0.0005012 \\
-1 & MLE & 429.7157 & 418.74901 & 255.3865 & 0.0000191 \\
-1 & SI-UGM & 285.9112 & 97.26159 & 277.5616 & 2.0293313 \\
-1 & STRAUSS & 286.9027 & -64.59601 & 283.8655 & 0.0000387 \\
-2 & BA-MLE & 635.8984 & -317.77076 & 537.0684 & 0.0000158 \\
-2 & GRIWM & 2751.9844 & -1476.72400 & 573.5649 & 2.3258716 \\
-2 & GRIWM-corrected & 3622.3498 & -1739.66000 & 598.3262 & 14.2027869 \\
-2 & MINMI & 560.5955 & -61.69559 & 559.0253 & 0.0005218 \\
-2 & MLE & 515.3085 & 173.55166 & 487.1369 & 0.0000134 \\
-2 & SI-UGM & 542.4839 & -19.65905 & 544.2745 & 1.7308850 \\
-2 & STRAUSS & 645.4422 & -328.56985 & 539.6426 & 0.0000142 \\
-4 & BA-MLE & 1788.2467 & -820.60440 & 1119.3325 & 0.0000153 \\
-4 & GRIWM & 6706.9604 & -2381.60800 & 1039.0600 & 2.3208188 \\
-4 & GRIWM-corrected & 8182.1955 & -2662.92800 & 1095.3915 &
-14.2912016 \\
-4 & MINMI & 1285.9511 & -185.59998 & 1256.5299 & 0.0004930 \\
-4 & MLE & 1104.4375 & -305.33752 & 1015.2676 & 0.0000137 \\
-4 & SI-UGM & 1215.1789 & -29.28444 & 1219.1981 & 1.3886812 \\
-4 & STRAUSS & 1875.1304 & -865.57457 & 1130.4328 & 0.0000144 \\
+0.0 & SI-UGM & 0.973 & 1961.144 & 4.7065676 \\
+0.5 & SI-UGM & 0.962 & 2091.093 & 2.3305912 \\
+0.5 & MINMI & 0.959 & 2077.084 & 0.0012776 \\
+2.0 & SI-UGM & 0.949 & 2964.298 & 1.6800792 \\
+4.0 & SI-UGM & 0.949 & 4405.261 & 1.3896884 \\
+2.0 & MINMI & 0.947 & 2936.889 & 0.0013949 \\
+4.0 & MINMI & 0.947 & 4337.389 & 0.0014173 \\
+0.0 & MINMI & 0.945 & 1917.160 & 0.0000319 \\
+1.0 & SI-UGM & 0.937 & 2351.533 & 1.9374115 \\
+1.0 & MINMI & 0.933 & 2326.753 & 0.0012473 \\
+2.0 & GRIWM & 0.811 & 1947.517 & 2.4381696 \\
+4.0 & GRIWM & 0.707 & 3643.956 & 2.4349672 \\
+1.0 & GRIWM & 0.699 & 1046.012 & 2.4390745 \\
+0.5 & GRIWM & 0.507 & 547.268 & 2.4313070 \\
+0.0 & GRIWM & 0.000 & 0.000 & 2.3971124 \\
+0.0 & GB-RM & NA & NA & 0.0207461 \\
+4.0 & GB-RM & NA & NA & 0.0223523 \\
+1.0 & GB-RM & NA & NA & 0.0226802 \\
+2.0 & GB-RM & NA & NA & 0.0228241 \\
+0.5 & GB-RM & NA & NA & 0.0235220 \\
 \bottomrule()
 \end{longtable}
 
@@ -336,123 +313,98 @@ avg\_runtime
 \begin{Shaded}
 \begin{Highlighting}[]
 \ControlFlowTok{for}\NormalTok{ (err }\ControlFlowTok{in}\NormalTok{ error\_factors) \{}
-  \FunctionTok{print}\NormalTok{(}\FunctionTok{kable}\NormalTok{(performance.point\_estimates }\SpecialCharTok{\%\textgreater{}\%} 
-            \FunctionTok{filter}\NormalTok{(error\_factor }\SpecialCharTok{==}\NormalTok{ err) }\SpecialCharTok{\%\textgreater{}\%} 
-            \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{c}\NormalTok{(method, avg\_runtime), round)) }\SpecialCharTok{\%\textgreater{}\%} 
-            \FunctionTok{mutate}\NormalTok{(}\AttributeTok{avg\_runtime=}\FunctionTok{round}\NormalTok{(avg\_runtime, }\AttributeTok{digits=}\DecValTok{5}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-            \FunctionTok{arrange}\NormalTok{(MSE\_000)))}
+\NormalTok{  experiment.results.kbl }\OtherTok{=}\NormalTok{ performance.point\_estimates }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{filter}\NormalTok{(error\_factor }\SpecialCharTok{==}\NormalTok{ err) }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{c}\NormalTok{(method, avg\_runtime), round)) }\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{avg\_runtime=}\FunctionTok{round}\NormalTok{(avg\_runtime, }\AttributeTok{digits=}\DecValTok{5}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{arrange}\NormalTok{(MSE\_000) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{error\_factor) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{kable}\NormalTok{(}\AttributeTok{booktabs=}\NormalTok{T, }\AttributeTok{col.names =} \FunctionTok{c}\NormalTok{(}\StringTok{""}\NormalTok{, }\StringTok{"(000\textquotesingle{}s years)"}\NormalTok{, }\StringTok{"(years)"}\NormalTok{, }\StringTok{"(000\textquotesingle{}s years)"}\NormalTok{, }\StringTok{"(seconds)"}\NormalTok{), }\AttributeTok{format=}\StringTok{"latex"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{add\_header\_above}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{"Method"} \OtherTok{=} \DecValTok{1}\NormalTok{, }\StringTok{"MSE"} \OtherTok{=} \DecValTok{1}\NormalTok{, }\StringTok{"Bias"}\OtherTok{=}\DecValTok{1}\NormalTok{, }\StringTok{"Variance"}\OtherTok{=}\DecValTok{1}\NormalTok{, }\StringTok{"Average Runtime"}\OtherTok{=}\DecValTok{1}\NormalTok{))}
+  \FunctionTok{writeLines}\NormalTok{(experiment.results.kbl, }\FunctionTok{paste0}\NormalTok{(}\StringTok{"../figures/table{-}sim{-}exp{-}point{-}error"}\NormalTok{, err, }\StringTok{".tex"}\NormalTok{))}
+  \FunctionTok{print}\NormalTok{(experiment.results.kbl)}
 \NormalTok{\}}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{tabular}{r|l|r|r|r|r}
-\hline
-error\_factor & method & MSE\_000 & bias & variance\_000 & avg\_runtime\\
-\hline
-0 & BA-MLE & 264 & 35 & 264 & 0.00002\\
-\hline
-0 & STRAUSS & 265 & 37 & 265 & 0.00001\\
-\hline
-0 & MINMI & 286 & 175 & 257 & 0.00001\\
-\hline
-0 & SI-UGM & 290 & 186 & 257 & 4.42424\\
-\hline
-0 & MLE & 498 & 510 & 240 & 0.00001\\
-\hline
-0 & GRIWM & 1144 & -910 & 317 & 2.29560\\
-\hline
-0 & GRIWM-corrected & 1677 & -1160 & 331 & 14.27999\\
-\hline
-\end{tabular}
-
-\begin{tabular}{r|l|r|r|r|r}
-\hline
-error\_factor & method & MSE\_000 & bias & variance\_000 & avg\_runtime\\
-\hline
-1 & BA-MLE & 284 & -60 & 282 & 0.00004\\
-\hline
-1 & SI-UGM & 286 & 97 & 278 & 2.02933\\
-\hline
-1 & STRAUSS & 287 & -65 & 284 & 0.00004\\
-\hline
-1 & MINMI & 288 & 85 & 282 & 0.00050\\
-\hline
-1 & MLE & 430 & 419 & 255 & 0.00002\\
-\hline
-1 & GRIWM & 1483 & -1076 & 326 & 2.32259\\
-\hline
-1 & GRIWM-corrected & 2109 & -1330 & 340 & 14.32788\\
-\hline
-\end{tabular}
-
-\begin{tabular}{r|l|r|r|r|r}
-\hline
-error\_factor & method & MSE\_000 & bias & variance\_000 & avg\_runtime\\
-\hline
-2 & MLE & 515 & 174 & 487 & 0.00001\\
-\hline
-2 & SI-UGM & 542 & -20 & 544 & 1.73088\\
-\hline
-2 & MINMI & 561 & -62 & 559 & 0.00052\\
-\hline
-2 & BA-MLE & 636 & -318 & 537 & 0.00002\\
-\hline
-2 & STRAUSS & 645 & -329 & 540 & 0.00001\\
-\hline
-2 & GRIWM & 2752 & -1477 & 574 & 2.32587\\
-\hline
-2 & GRIWM-corrected & 3622 & -1740 & 598 & 14.20279\\
-\hline
-\end{tabular}
-
-\begin{tabular}{r|l|r|r|r|r}
-\hline
-error\_factor & method & MSE\_000 & bias & variance\_000 & avg\_runtime\\
-\hline
-4 & MLE & 1104 & -305 & 1015 & 0.00001\\
-\hline
-4 & SI-UGM & 1215 & -29 & 1219 & 1.38868\\
-\hline
-4 & MINMI & 1286 & -186 & 1257 & 0.00049\\
-\hline
-4 & BA-MLE & 1788 & -821 & 1119 & 0.00002\\
-\hline
-4 & STRAUSS & 1875 & -866 & 1130 & 0.00001\\
-\hline
-4 & GRIWM & 6707 & -2382 & 1039 & 2.32082\\
-\hline
-4 & GRIWM-corrected & 8182 & -2663 & 1095 & 14.29120\\
-\hline
-\end{tabular}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{performance.point\_estimates }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{filter}\NormalTok{(error\_factor }\SpecialCharTok{==} \DecValTok{1}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{c}\NormalTok{(method, avg\_runtime), round)) }\SpecialCharTok{\%\textgreater{}\%} 
-  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{avg\_runtime=}\FunctionTok{round}\NormalTok{(avg\_runtime, }\AttributeTok{digits=}\DecValTok{5}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{arrange}\NormalTok{(MSE\_000) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{ungroup}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{error\_factor) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{kable}\NormalTok{(}\AttributeTok{booktabs=}\NormalTok{T, }\AttributeTok{col.names =} \FunctionTok{c}\NormalTok{(}\StringTok{"Method"}\NormalTok{, }\StringTok{"MSE}\SpecialCharTok{\textbackslash{}n}\StringTok{(000\textquotesingle{}s years)"}\NormalTok{, }\StringTok{"Bias (years)"}\NormalTok{, }\StringTok{"Variance}\SpecialCharTok{\textbackslash{}n}\StringTok{(000\textquotesingle{}s years)"}\NormalTok{, }\StringTok{"Average Runtime}\SpecialCharTok{\textbackslash{}n}\StringTok{(seconds)"}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{tabular}{lrrrr}
 \toprule
-Method & MSE
-(000's years) & Bias (years) & Variance
-(000's years) & Average Runtime
-(seconds)\\
+\multicolumn{1}{c}{Method} & \multicolumn{1}{c}{MSE} & \multicolumn{1}{c}{Bias} & \multicolumn{1}{c}{Variance} & \multicolumn{1}{c}{Average Runtime} \\
+\cmidrule(l{3pt}r{3pt}){1-1} \cmidrule(l{3pt}r{3pt}){2-2} \cmidrule(l{3pt}r{3pt}){3-3} \cmidrule(l{3pt}r{3pt}){4-4} \cmidrule(l{3pt}r{3pt}){5-5}
+ & (000's years) & (years) & (000's years) & (seconds)\\
 \midrule
-BA-MLE & 284 & -60 & 282 & 0.00004\\
-SI-UGM & 286 & 97 & 278 & 2.02933\\
-STRAUSS & 287 & -65 & 284 & 0.00004\\
-MINMI & 288 & 85 & 282 & 0.00050\\
-MLE & 430 & 419 & 255 & 0.00002\\
+BA-MLE & 235 & -1 & 235 & 0.00002\\
+STRAUSS & 235 & -1 & 235 & 0.00002\\
+MINMI & 247 & 139 & 228 & 0.00001\\
+GRIWM & 249 & 146 & 228 & 2.39711\\
+SI-UGM & 249 & 151 & 227 & 4.70657\\
 \addlinespace
-GRIWM & 1483 & -1076 & 326 & 2.32259\\
-GRIWM-corrected & 2109 & -1330 & 340 & 14.32788\\
+MLE & 439 & 475 & 213 & 0.00002\\
+\bottomrule
+\end{tabular}
+
+\begin{tabular}{lrrrr}
+\toprule
+\multicolumn{1}{c}{Method} & \multicolumn{1}{c}{MSE} & \multicolumn{1}{c}{Bias} & \multicolumn{1}{c}{Variance} & \multicolumn{1}{c}{Average Runtime} \\
+\cmidrule(l{3pt}r{3pt}){1-1} \cmidrule(l{3pt}r{3pt}){2-2} \cmidrule(l{3pt}r{3pt}){3-3} \cmidrule(l{3pt}r{3pt}){4-4} \cmidrule(l{3pt}r{3pt}){5-5}
+ & (000's years) & (years) & (000's years) & (seconds)\\
+\midrule
+BA-MLE & 244 & -22 & 244 & 0.00003\\
+STRAUSS & 246 & -23 & 245 & 0.00003\\
+GRIWM & 247 & 107 & 235 & 2.43131\\
+MINMI & 251 & 117 & 237 & 0.00047\\
+SI-UGM & 251 & 117 & 237 & 2.33059\\
+\addlinespace
+MLE & 428 & 455 & 221 & 0.00002\\
+\bottomrule
+\end{tabular}
+
+\begin{tabular}{lrrrr}
+\toprule
+\multicolumn{1}{c}{Method} & \multicolumn{1}{c}{MSE} & \multicolumn{1}{c}{Bias} & \multicolumn{1}{c}{Variance} & \multicolumn{1}{c}{Average Runtime} \\
+\cmidrule(l{3pt}r{3pt}){1-1} \cmidrule(l{3pt}r{3pt}){2-2} \cmidrule(l{3pt}r{3pt}){3-3} \cmidrule(l{3pt}r{3pt}){4-4} \cmidrule(l{3pt}r{3pt}){5-5}
+ & (000's years) & (years) & (000's years) & (seconds)\\
+\midrule
+GRIWM & 346 & 47 & 344 & 2.43907\\
+BA-MLE & 366 & -46 & 364 & 0.00002\\
+STRAUSS & 366 & -51 & 364 & 0.00002\\
+SI-UGM & 371 & 115 & 358 & 1.93741\\
+MINMI & 373 & 104 & 363 & 0.00051\\
+\addlinespace
+MLE & 517 & 433 & 330 & 0.00002\\
+\bottomrule
+\end{tabular}
+
+\begin{tabular}{lrrrr}
+\toprule
+\multicolumn{1}{c}{Method} & \multicolumn{1}{c}{MSE} & \multicolumn{1}{c}{Bias} & \multicolumn{1}{c}{Variance} & \multicolumn{1}{c}{Average Runtime} \\
+\cmidrule(l{3pt}r{3pt}){1-1} \cmidrule(l{3pt}r{3pt}){2-2} \cmidrule(l{3pt}r{3pt}){3-3} \cmidrule(l{3pt}r{3pt}){4-4} \cmidrule(l{3pt}r{3pt}){5-5}
+ & (000's years) & (years) & (000's years) & (seconds)\\
+\midrule
+GRIWM & 497 & -266 & 427 & 2.43817\\
+SI-UGM & 502 & 65 & 498 & 1.68008\\
+MLE & 507 & 254 & 443 & 0.00002\\
+MINMI & 508 & 21 & 508 & 0.00054\\
+BA-MLE & 543 & -234 & 489 & 0.00002\\
+\addlinespace
+STRAUSS & 554 & -248 & 493 & 0.00002\\
+\bottomrule
+\end{tabular}
+
+\begin{tabular}{lrrrr}
+\toprule
+\multicolumn{1}{c}{Method} & \multicolumn{1}{c}{MSE} & \multicolumn{1}{c}{Bias} & \multicolumn{1}{c}{Variance} & \multicolumn{1}{c}{Average Runtime} \\
+\cmidrule(l{3pt}r{3pt}){1-1} \cmidrule(l{3pt}r{3pt}){2-2} \cmidrule(l{3pt}r{3pt}){3-3} \cmidrule(l{3pt}r{3pt}){4-4} \cmidrule(l{3pt}r{3pt}){5-5}
+ & (000's years) & (years) & (000's years) & (seconds)\\
+\midrule
+MLE & 1039 & -303 & 948 & 0.00002\\
+SI-UGM & 1131 & -28 & 1131 & 1.38969\\
+MINMI & 1157 & -174 & 1128 & 0.00057\\
+BA-MLE & 1713 & -818 & 1045 & 0.00002\\
+STRAUSS & 1789 & -862 & 1046 & 0.00002\\
+\addlinespace
+GRIWM & 2113 & -1160 & 768 & 2.43497\\
 \bottomrule
 \end{tabular}
 
@@ -463,13 +415,20 @@ GRIWM-corrected & 2109 & -1330 & 340 & 14.32788\\
   \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{error\_factor, }\AttributeTok{y=}\NormalTok{MSE\_000, }\AttributeTok{colour=}\NormalTok{method)) }\SpecialCharTok{+}
   \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+}
   \FunctionTok{geom\_line}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{guides}\NormalTok{(}\AttributeTok{colour=}\StringTok{"none"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{annotate}\NormalTok{(}\StringTok{"text"}\NormalTok{, }\AttributeTok{x=}\FloatTok{4.18}\NormalTok{, }\AttributeTok{y=}\FunctionTok{c}\NormalTok{(}\DecValTok{1950}\NormalTok{, }\DecValTok{1750}\NormalTok{, }\DecValTok{1300}\NormalTok{, }\DecValTok{1200}\NormalTok{, }\DecValTok{1100}\NormalTok{), }\AttributeTok{label=}\FunctionTok{c}\NormalTok{(}\StringTok{"BA{-}MLE"}\NormalTok{, }\StringTok{"Strauss"}\NormalTok{, }\StringTok{"MINMI"}\NormalTok{, }\StringTok{"SI{-}UGM"}\NormalTok{, }\StringTok{"MLE"}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \CommentTok{\# guides(colour="none") +}
+  \CommentTok{\# annotate("text", x=4.18, y=c(1950, 1750, 1300, 1200, 1100), label=c("BA{-}MLE", "Strauss", "MINMI", "SI{-}UGM", "MLE")) +}
   \FunctionTok{labs}\NormalTok{(}\AttributeTok{x=}\StringTok{"Error Factor"}\NormalTok{, }\AttributeTok{y=}\ConstantTok{NULL}\NormalTok{, }\AttributeTok{title=}\StringTok{"MSE (\textquotesingle{}000 years) of each Method"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{sim_exp-results_files/figure-latex/unnamed-chunk-5-1.pdf}
+\includegraphics{sim_exp-results_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+  \CommentTok{\#+  scale\_y\_continuous(trans=\textquotesingle{}log10\textquotesingle{})}
+\end{Highlighting}
+\end{Shaded}
 
 \hypertarget{confidence-intervals}{%
 \subsubsection{Confidence Intervals}\label{confidence-intervals}}
@@ -477,97 +436,106 @@ GRIWM-corrected & 2109 & -1330 & 340 & 14.32788\\
 \begin{Shaded}
 \begin{Highlighting}[]
 \FunctionTok{options}\NormalTok{(}\AttributeTok{scipen=}\DecValTok{9}\NormalTok{)}
-\ControlFlowTok{for}\NormalTok{ (metric }\ControlFlowTok{in} \FunctionTok{c}\NormalTok{(}\StringTok{"coverage"}\NormalTok{, }\StringTok{"avg\_width"}\NormalTok{, }\StringTok{"avg\_runtime"}\NormalTok{)) \{}
-  \FunctionTok{print}\NormalTok{(}\FunctionTok{kable}\NormalTok{(}
-\NormalTok{    performance.conf\_int\_estimates }\SpecialCharTok{\%\textgreater{}\%}
-      \FunctionTok{select}\NormalTok{(}\FunctionTok{c}\NormalTok{(method, error\_factor, }\FunctionTok{one\_of}\NormalTok{(metric))) }\SpecialCharTok{\%\textgreater{}\%}
-      \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{id\_cols =}\NormalTok{ method,}
-                \AttributeTok{names\_from=}\NormalTok{error\_factor,}
-                \AttributeTok{values\_from=}\FunctionTok{one\_of}\NormalTok{(metric),}
-                \AttributeTok{names\_prefix=}\FunctionTok{paste}\NormalTok{(metric, }\StringTok{"| error = sigma*"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-      \FunctionTok{arrange}\NormalTok{(}\SpecialCharTok{!!}\FunctionTok{sym}\NormalTok{(}\FunctionTok{paste}\NormalTok{(metric, }\StringTok{"| error = sigma*0"}\NormalTok{)))}
-\NormalTok{  ))}
+\ControlFlowTok{for}\NormalTok{ (metric }\ControlFlowTok{in} \FunctionTok{c}\NormalTok{(}\StringTok{"Coverage"}\NormalTok{, }\StringTok{"Average Width"}\NormalTok{, }\StringTok{"Average Runtime"}\NormalTok{)) \{}
+\NormalTok{  experiment.results.kbl }\OtherTok{=}\NormalTok{ performance.conf\_int\_estimates }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\FunctionTok{c}\NormalTok{(method, error\_factor, }\FunctionTok{one\_of}\NormalTok{(metric))) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{id\_cols =}\NormalTok{ method,}
+              \AttributeTok{names\_from=}\NormalTok{error\_factor,}
+              \AttributeTok{values\_from=}\FunctionTok{one\_of}\NormalTok{(metric),}
+              \AttributeTok{names\_prefix=}\FunctionTok{paste}\NormalTok{(metric, }\StringTok{"| error = sigma*"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{arrange}\NormalTok{(}\SpecialCharTok{!!}\FunctionTok{syms}\NormalTok{(}\FunctionTok{paste}\NormalTok{(metric, }\StringTok{"| error = sigma*0"}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{kable}\NormalTok{(}\AttributeTok{booktabs=}\NormalTok{T, }\AttributeTok{col.names =} \FunctionTok{c}\NormalTok{(}\StringTok{"Method"}\NormalTok{, }\FunctionTok{paste0}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\FloatTok{0.5}\NormalTok{,}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{4}\NormalTok{), r}\StringTok{"\{*$\textbackslash{}sigma$\}"}\NormalTok{)), }\AttributeTok{format=}\StringTok{"latex"}\NormalTok{, }\AttributeTok{escape =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \CommentTok{\# kable\_styling(full\_width = F) \%\textgreater{}\%}
+    \FunctionTok{add\_header\_above}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{" "} \OtherTok{=} \DecValTok{1}\NormalTok{, }\AttributeTok{metric =} \DecValTok{4}\NormalTok{))}
+  
+  \FunctionTok{print}\NormalTok{(experiment.results.kbl)}
+  \FunctionTok{writeLines}\NormalTok{(experiment.results.kbl, }\FunctionTok{paste0}\NormalTok{(}\StringTok{"../figures/table{-}sim{-}exp{-}conf{-}int{-}"}\NormalTok{, }\FunctionTok{str\_replace}\NormalTok{(}\FunctionTok{tolower}\NormalTok{(metric), }\StringTok{" "}\NormalTok{, }\StringTok{"{-}"}\NormalTok{), }\StringTok{".tex"}\NormalTok{))}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{tabular}{l|r|r|r|r}
-\hline
-method & coverage | error = sigma*0 & coverage | error = sigma*1 & coverage | error = sigma*2 & coverage | error = sigma*4\\
-\hline
-GRIWM & 0.000 & 0.156 & 0.212 & 0.260\\
-\hline
-GRIWM-corrected & 0.000 & 0.096 & 0.120 & 0.196\\
-\hline
-MINMI & 0.936 & 0.956 & 0.940 & 0.948\\
-\hline
-SI-UGM & 0.952 & 0.956 & 0.940 & 0.956\\
-\hline
-GB-RM & 0.956 & 0.948 & 0.948 & 0.952\\
-\hline
+\begin{tabular}{lrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{metric} \\
+\cmidrule(l{3pt}r{3pt}){2-5}
+Method & 0*$\sigma$ & 0.5*$\sigma$ & 1*$\sigma$ & 2*$\sigma$ & 4*$\sigma$\\
+\midrule
+SI-UGM & 0.973 & 0.962 & 0.949 & 0.949 & 0.937\\
+MINMI & 0.945 & 0.959 & 0.947 & 0.947 & 0.933\\
+GRIWM & 0.000 & 0.507 & 0.811 & 0.707 & 0.699\\
+GB-RM & NA & NA & NA & NA & NA\\
+\bottomrule
 \end{tabular}
 
-\begin{tabular}{l|r|r|r|r}
-\hline
-method & avg\_width | error = sigma*0 & avg\_width | error = sigma*1 & avg\_width | error = sigma*2 & avg\_width | error = sigma*4\\
-\hline
-GRIWM & 0.000 & 1161.740 & 2191.180 & 4070.620\\
-\hline
-GRIWM-corrected & 0.000 & 1190.240 & 2242.436 & 4162.476\\
-\hline
-MINMI & 1910.220 & 2331.017 & 2948.932 & 4315.484\\
-\hline
-SI-UGM & 1949.626 & 2350.378 & 2972.823 & 4409.469\\
-\hline
-GB-RM & 2040.898 & 2361.442 & 3003.598 & 4420.989\\
-\hline
+\begin{tabular}{lrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{metric} \\
+\cmidrule(l{3pt}r{3pt}){2-5}
+Method & 0*$\sigma$ & 0.5*$\sigma$ & 1*$\sigma$ & 2*$\sigma$ & 4*$\sigma$\\
+\midrule
+SI-UGM & 1961.144 & 2091.093 & 2964.298 & 4405.261 & 2351.533\\
+MINMI & 1917.160 & 2077.084 & 2936.889 & 4337.389 & 2326.753\\
+GRIWM & 0.000 & 547.268 & 1947.517 & 3643.956 & 1046.012\\
+GB-RM & NA & NA & NA & NA & NA\\
+\bottomrule
 \end{tabular}
 
-\begin{tabular}{l|r|r|r|r}
-\hline
-method & avg\_runtime | error = sigma*0 & avg\_runtime | error = sigma*1 & avg\_runtime | error = sigma*2 & avg\_runtime | error = sigma*4\\
-\hline
-MINMI & 0.0000671 & 0.0014753 & 0.0018413 & 0.0012475\\
-\hline
-GB-RM & 0.0202166 & 0.0235130 & 0.0230765 & 0.0203415\\
-\hline
-GRIWM & 2.2955959 & 2.3225908 & 2.3258716 & 2.3208188\\
-\hline
-SI-UGM & 4.4242394 & 2.0293313 & 1.7308850 & 1.3886812\\
-\hline
-GRIWM-corrected & 14.2799933 & 14.3278799 & 14.2027869 & 14.2912016\\
-\hline
+\begin{tabular}{lrrrrr}
+\toprule
+\multicolumn{1}{c}{ } & \multicolumn{4}{c}{metric} \\
+\cmidrule(l{3pt}r{3pt}){2-5}
+Method & 0*$\sigma$ & 0.5*$\sigma$ & 1*$\sigma$ & 2*$\sigma$ & 4*$\sigma$\\
+\midrule
+SI-UGM & 4.7065676 & 2.3305912 & 1.6800792 & 1.3896884 & 1.9374115\\
+MINMI & 0.0000319 & 0.0012776 & 0.0013949 & 0.0014173 & 0.0012473\\
+GRIWM & 2.3971124 & 2.4313070 & 2.4381696 & 2.4349672 & 2.4390745\\
+GB-RM & 0.0207461 & 0.0235220 & 0.0228241 & 0.0223523 & 0.0226802\\
+\bottomrule
 \end{tabular}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{performance.conf\_int\_estimates }\SpecialCharTok{\%\textgreater{}\%}
-  
-  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\FunctionTok{reorder}\NormalTok{(method, coverage, }\AttributeTok{descending=}\ConstantTok{TRUE}\NormalTok{), }\AttributeTok{y=}\NormalTok{coverage)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_col}\NormalTok{() }\SpecialCharTok{+}
-  \FunctionTok{geom\_text}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{label=}\NormalTok{scales}\SpecialCharTok{::}\FunctionTok{percent}\NormalTok{(coverage)), }\AttributeTok{position =} \FunctionTok{position\_dodge}\NormalTok{(.}\DecValTok{9}\NormalTok{), }\AttributeTok{vjust =} \FloatTok{1.5}\NormalTok{, }\AttributeTok{colour=}\StringTok{"white"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x=}\ConstantTok{NULL}\NormalTok{, }\AttributeTok{y=}\StringTok{"\%"}\NormalTok{, }\AttributeTok{title=}\StringTok{"Coverage Probabilities"}\NormalTok{) }\SpecialCharTok{+}
-  \FunctionTok{facet\_wrap}\NormalTok{(error\_factor }\SpecialCharTok{\textasciitilde{}}\NormalTok{.) }\SpecialCharTok{+}
-  \FunctionTok{scale\_y\_continuous}\NormalTok{(}\AttributeTok{labels =}\NormalTok{ scales}\SpecialCharTok{::}\NormalTok{percent)}
-\end{Highlighting}
-\end{Shaded}
-
-\includegraphics{sim_exp-results_files/figure-latex/unnamed-chunk-7-1.pdf}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{estimates }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(lower)) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{select}\NormalTok{(method, lower, point, upper) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols=}\FunctionTok{c}\NormalTok{(lower, point, upper)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(error\_factor}\SpecialCharTok{==}\DecValTok{1}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(method, lower, upper) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols=}\FunctionTok{c}\NormalTok{(lower, upper)) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(value)) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{value, }\AttributeTok{fill=}\NormalTok{name)) }\SpecialCharTok{+}
   \FunctionTok{geom\_density}\NormalTok{(}\AttributeTok{alpha=}\FloatTok{0.25}\NormalTok{) }\SpecialCharTok{+}
   \FunctionTok{geom\_vline}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{xintercept=}\NormalTok{theta.true)) }\SpecialCharTok{+}
-  \FunctionTok{facet\_wrap}\NormalTok{(method }\SpecialCharTok{\textasciitilde{}}\NormalTok{ .)}
+  \FunctionTok{facet\_wrap}\NormalTok{(method }\SpecialCharTok{\textasciitilde{}}\NormalTok{ .) }\SpecialCharTok{+}
+  \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
 
-\includegraphics{sim_exp-results_files/figure-latex/unnamed-chunk-8-1.pdf}
+\includegraphics{sim_exp-results_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{metric}\OtherTok{=}\StringTok{"Coverage"}
+\NormalTok{performance.conf\_int\_estimates }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{select}\NormalTok{(}\FunctionTok{c}\NormalTok{(method, error\_factor, }\FunctionTok{one\_of}\NormalTok{(metric))) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{pivot\_wider}\NormalTok{(}\AttributeTok{id\_cols =}\NormalTok{ method,}
+              \AttributeTok{names\_from=}\NormalTok{error\_factor,}
+              \AttributeTok{values\_from=}\FunctionTok{one\_of}\NormalTok{(metric),}
+              \AttributeTok{names\_prefix=}\FunctionTok{paste}\NormalTok{(metric, }\StringTok{"| error = sigma*"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{arrange}\NormalTok{(}\SpecialCharTok{!!}\FunctionTok{syms}\NormalTok{(}\FunctionTok{paste}\NormalTok{(metric, }\StringTok{"| error = sigma*0"}\NormalTok{)))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 4 x 6
+##   method `Coverage | error = sigma*0` Coverage | error~1 Cover~2 Cover~3 Cover~4
+##   <chr>                         <dbl>              <dbl>   <dbl>   <dbl>   <dbl>
+## 1 SI-UGM                        0.973              0.962   0.949   0.949   0.937
+## 2 MINMI                         0.945              0.959   0.947   0.947   0.933
+## 3 GRIWM                         0                  0.507   0.811   0.707   0.699
+## 4 GB-RM                        NA                 NA      NA      NA      NA    
+## # ... with abbreviated variable names 1: `Coverage | error = sigma*0.5`,
+## #   2: `Coverage | error = sigma*2`, 3: `Coverage | error = sigma*4`,
+## #   4: `Coverage | error = sigma*1`
+\end{verbatim}
 
 \end{document}
