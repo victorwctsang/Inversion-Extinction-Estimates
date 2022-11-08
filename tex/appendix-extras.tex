@@ -1,0 +1,21 @@
+% \begin{figure}[ht]
+%     \centering
+%     \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-lower.tex}}
+%     \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-upper.tex}}
+%     \caption{Sample variance of $\hat\theta_q$ (shown in \textcolor{red}{red}) plotted against the expected variance according to the asymptotic approximation (shown in \textcolor{blue}{blue}) on log-scales for both the $x$ and $y$ axes. The approximate variance obtained from the delta method approaches the sample variance as $B$ grows large; although the approximate variance tends to underestimate the variance (as indicated by the sample variance) for small $B$. Note the differences in the $x$ and $y$ axes; $\Var(\hat\theta_q)$ tends to grow disproportionately as $q$ becomes small.}
+%     \label{fig:asymptotics-plots}
+% \end{figure}
+
+\begin{table}[ht]
+    \centering
+    \caption{Point estimator performance, ordered by MSE (error = $0.5*\sigma$)}
+    \include{figures/table-sim-exp-point-error0.5.tex}
+    \label{tab:table-sim-exp-point-error0.5}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Point estimator performance, ordered by MSE (error = $4*\sigma$)}
+    \include{figures/table-sim-exp-point-error4.tex}
+    \label{tab:table-sim-exp-point-error4}
+\end{table}
