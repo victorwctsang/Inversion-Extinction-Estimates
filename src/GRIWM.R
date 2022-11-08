@@ -1,7 +1,7 @@
 # GRIWM implementation
 # Adapted from https://github.com/sarakahanamoku/GRIWM/blob/master/GRIWM.R
 
-GRIWM = function(df, alpha, K, .n_iter=10000, bias_adjusted=F){
+GRIWM = function(df, alpha, K, p_t, .n_iter=10000, bias_adjusted=F){
   
   # initialize vectors
   dates = dplyr::pull(df, dates)
@@ -37,9 +37,9 @@ GRIWM = function(df, alpha, K, .n_iter=10000, bias_adjusted=F){
       dates.recent_k = dates.resampled[1:k]
       theta = dates.recent_k[1] - 1
       if (bias_adjusted == T) {
-        theta = uniroot(f=function(theta) {(1 - n/(K-theta))^(dates.recent_k[1] - theta) - alpha}, interval=c(min(dates) - (K-min(dates))/2, min(dates) + (K-min(dates))/2), extendInt="yes")$root
+        theta = uniroot(f=function(theta) {(1 - n/(K-theta))^(dates.recent_k[1] - theta) - p_t}, interval=c(min(dates) - (K-min(dates))/2, min(dates) + (K-min(dates))/2), extendInt="yes")$root
       } else {
-        theta = dates.recent_k[1] - log(0.5)/log(1 - n/(K-dates.recent_k[1]))
+        theta = dates.recent_k[1] - log(p_t)/log(1 - n/(K-dates.recent_k[1]))
       }
       estimates.mcinerny[k-1] = theta
     }

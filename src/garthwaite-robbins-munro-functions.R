@@ -1,23 +1,34 @@
 
-estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, return_iters=FALSE) {
+estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, .model, .CI_estimates, return_iters=FALSE, .starting_vals=NULL) {
   # estimate confidence interval using Garthwaite's Robbins-Munro process (1995)
   n=length(W)
   # get point estimate of theta
   theta.hat = estimate_theta.rm(W)
-  # calculate p
+  # calculate proportionality constant
   p = calc_prop_constant(alpha)
+  
+  # Get estimates of gradients at CI end points
+  g = estimate_g(alpha, .model, .CI_estimates)
+  
   # initialize lower and upper vecs
   lower.iters = upper.iters = rep(NA, max_iter)
+  
   # calculate m
   m = ceiling(min(50, 0.3 * (2-alpha)/alpha))
-  # compute starting estimates
-  starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
-  lower.iters[m] = starting_ests[, "lower"]
-  upper.iters[m] = starting_ests[, "upper"]
   
-  # estimate lower
-  lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
-  upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
+  # compute starting estimates
+  if (is.null(.starting_vals)) {
+    starting_ests = get_starting_vals(method="percentile", alpha, theta.hat, n, K, eps.mean, eps.sigma)
+    lower.iters[m] = starting_ests[, "lower"]
+    upper.iters[m] = starting_ests[, "upper"]
+  } else {
+    lower.iters[m] = .starting_vals[0]
+    upper.iters[m] = .starting_vals[1]
+  }
+  
+  # Apply RM process
+  lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, g$lower, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
+  upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, g$upper, max_var=(0.2*eps.sigma)^2, max_iter, eps.mean, eps.sigma)
   lower.iters = na.omit(lower.iters)
   upper.iters = na.omit(upper.iters)
 
@@ -73,33 +84,56 @@ get_starting_est.analytic = function () {
   # TODO 
 }
 
-estimate_bound.rm = function (theta.iters, q, theta.hat, n, K, p, m, max_var=1000, max_iter, eps.mean, eps.sigma) {
-  # Transformation to force theta < K
+estimate_bound.rm = function (theta.iters, q, theta.hat, n, K, p, m, g, max_var, max_iter, eps.mean, eps.sigma) {
+  # Transformation to enforce theta < K
   eta = function(theta) -log(K-theta)
   eta_q.iters = eta(theta.iters)
+  
+  # Start RM process
   i = m
   mc.var = Inf
-  while (i < max_iter) {
+  while (i < max_iter & mc.var > max_var) {
     # Generate resamples
     theta_q.hat = K - exp(-eta_q.iters[i])
     resamples = simulate_fossils(n, theta=theta_q.hat, K, eps.mean, eps.sigma)
     theta.hat.resample = estimate_theta.rm(resamples)
+    
     # calculate step length
-    c = 2*p*abs(eta(theta_q.hat) - eta(theta.hat))
+    c.eta = 2*p*abs(eta(theta_q.hat) - eta(theta.hat))
     
     # Update
     if (theta.hat.resample <= theta.hat) {
-      eta_q.iters[i+1] = (eta_q.iters[i] + c*q/ i)
+      eta_q.iters[i+1] = (eta_q.iters[i] + c.eta*q/ i)
     } else {
-      eta_q.iters[i+1] = (eta_q.iters[i] - c*(1-q) / i)
+      eta_q.iters[i+1] = (eta_q.iters[i] - c.eta*(1-q) / i)
     }
+    
+    # Calculate RM variance
+    c.theta = 2*p*abs(theta_q.hat - theta.hat)
+    mc.var = calculate_rm_var(q, c.theta, i, g)
+    
+    # Iterate
     i = i+1
   }
   theta_q.iters = K - exp(-eta_q.iters)
   return(theta_q.iters)
 }
 
-var.rm = function (alpha, c, i) {
-  # TODO - pretty sure this is wrong
-  alpha * (1-alpha) * c^2 / i
+estimate_g = function (alpha, model, CI.estimates, .delta=0.0001) {
+  g = list(lower=NA, upper=NA)
+  
+  perturbs.lower = predict(model, newdata=data.frame(theta.test_vec=c(CI.estimates$lower-.delta, CI.estimates$lower+.delta)))
+  g$lower = (perturbs.lower[2] - perturbs.lower[1])/(2*.delta)
+  
+  perturbs.upper = predict(model, newdata=data.frame(theta.test_vec=c(CI.estimates$upper-.delta, CI.estimates$upper+.delta)))
+  g$upper = (perturbs.upper[2] - perturbs.upper[1])/(2*.delta)
+  return(g)
+}
+
+calculate_rm_var = function (q, c, i, g) {
+  rm_var = Inf
+  if (g*c > 0.5) {
+    rm_var = q * (1 - q) * c^2 / (i * (2*g*c - 1))
+  }
+  return(rm_var)
 }

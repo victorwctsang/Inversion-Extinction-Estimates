@@ -91,14 +91,17 @@ ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
 
 ```{r}
 estimate_extinction = function (dates, sd, K, theta.test_vec, alpha=0.05, label) {
-  SIUGM = simulated_inversion(alpha=alpha, dates=dates, sd=sd, K=K, theta.test_vec = theta.test_vec)
-  SIUGM$method = "SI-UGM"
+  SIUGM.results = simulated_inversion(alpha=alpha, dates=dates, sd=sd, K=K, theta.test_vec = theta.test_vec, return_model=T)
+  SIUGM = list(lower = SIUGM.results$lower,
+               point = SIUGM.results$point,
+               upper = SIUGM.results$upper,
+               method = "SI-UGM")
   
   MINMI = estimate_extinction.minmi(W = dates, sd=sd, level=1-alpha, K=K)
   MINMI$method = "MINMI"
   
-  SIMP = estimate_CI.rm(W = dates, K=K, alpha=alpha, max_iter=3000, eps.mean=0, eps.sigma=mean(sd))
-  SIMP$method = "SI-RM"
+  SIRM = estimate_CI.rm(W = dates, K=K, alpha=alpha, max_iter=3000, eps.mean=0, eps.sigma=mean(sd), .model = SIUGM.results$model, .CI_estimates = list(lower=SIUGM.results$lower, upper=SIUGM.results$upper))
+  SIRM$method = "SI-RM"
   
   estimates = data.frame(
     method = factor(),
@@ -109,7 +112,7 @@ estimate_extinction = function (dates, sd, K, theta.test_vec, alpha=0.05, label)
     sigma = numeric(),
     dataset = factor()
   )
-  estimates = rbind(estimates, MINMI, SIUGM, SIMP)
+  estimates = rbind(estimates, MINMI, SIUGM, SIRM)
   estimates$n = length(dates)
   estimates$sigma = mean(sd)
   estimates$dataset = paste0(label, " (n=", length(dates), ")")

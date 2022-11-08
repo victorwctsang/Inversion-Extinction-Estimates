@@ -51,7 +51,7 @@ options(tikzMetricsDictionary="../tikzMetrics") # speeds tikz up
 Source our helper functions and set our parameters.
 
 ```{r}
-source("minmi-functions.R")
+source("../src/minmi-functions.R")
 
 set.seed(2022)
 
@@ -136,7 +136,7 @@ Compute sample and expected variances for a set of values of $B$
 ```{r}
 n = 30
 
-B = unique(round(pracma::logseq(2, 5000, 40)))
+B = unique(round(pracma::logseq(2, 2000, 40)))
 num.B = length(B)
 
 num.estimates = 250
@@ -202,9 +202,9 @@ Our expected variance from the delta method is approximately:
 
 ### Plotting Sample Variances against Expected Variances
 
-```{r fig.width=12, fig.height=5, dev='tikz'}
+```{r fig.width=8, fig.height=5, dev='tikz'}
 options(scipen=9)
-tikz("../figures/minmi-asymptotics-lower.tex")
+
 plot(B, sample_var.theta_q$lower, log="xy",
      type="b",
      main="Sample Var vs. Asymptotic Var (q=0.025)", col="blue",
@@ -216,11 +216,11 @@ legend("topright",
        lty=c(1,1),
        pch=c(1,1),
        col=c("blue","red"))
-dev.off()
+
 ```
 
-```{r fig.width=12, fig.height=5, dev='tikz'}
-tikz("../figures/minmi-asymptotics-upper.tex")
+```{r fig.width=8, fig.height=5, dev='tikz'}
+# tikz("../figures/minmi-asymptotics-upper.tex")
 
 plot(B, sample_var.theta_q$upper, log="xy",
      type="b",
@@ -233,7 +233,7 @@ legend("topright",
        lty=c(1,1),
        pch=c(1,1),
        col=c("blue","red"))
-dev.off()
+
 ```
 
 
@@ -242,30 +242,34 @@ dev.off()
 - The right-most plot is the expected and sample variances for $q=0.975$ using $\hat\theta_q = K - q^{-1/n} * (K-m)$ as per our no measurement error case, instead of `theta.hat.upper.gold`. Sample is larger than expected by a factor of ~1.6
 
 ```{r dev='tikz'}
-tikz("../figures/minmi-asymptotics-ratios.tex")
+# tikz("../figures/minmi-asymptotics-ratios.tex")
 options(scipen=9)
 
-plot(B, res.df$expctd_var.lower/res.df$sample_var.lower, col="blue",
-     type="b", main="Ratio of Delta Method Estimate and Sample Variances", log="x",
+plot(B, res.df$expctd_var.upper/res.df$sample_var.upper, col="black",
+     type="b", main="Delta Method Variance : Sample Variances | q=0.975", log="x",
      ylab=NA, ylim=c(min(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper)), max(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper))))
 
-lines(B, res.df$expctd_var.upper/res.df$sample_var.upper, type="b", col="red", ylab=NA)
+# lines(B, res.df$expctd_var.lower/res.df$sample_var.lower, type="b", col="red", ylab=NA)
 
-abline(h=mean(res.df$expctd_var.lower/res.df$sample_var.lower), lty=3, col="blue")
-abline(h=mean((res.df$expctd_var.upper)/res.df$sample_var.upper), lty=3, col="red")
+# lines(lowess(x=B, y=res.df$expctd_var.lower/res.df$sample_var.lower), lty=3, col="blue")
+lines(lowess(x=B, y=res.df$expctd_var.upper/res.df$sample_var.upper), lty=3, col="black")
+# abline(h=mean(res.df$expctd_var.lower/res.df$sample_var.lower), lty=3, col="blue")
+# abline(h=mean((res.df$expctd_var.upper)/res.df$sample_var.upper), lty=3, col="red")
 
-mtext(round(mean(res.df$expctd_var.lower/res.df$sample_var.lower), 3), side=4, las=2, at=mean(res.df$expctd_var.lower/res.df$sample_var.lower), col="blue")
-mtext(round(mean(res.df$expctd_var.upper/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper/res.df$sample_var.upper), col="red")
+# mtext(round(mean(res.df$expctd_var.lower/res.df$sample_var.lower), 3), side=4, las=2, at=mean(res.df$expctd_var.lower/res.df$sample_var.lower), col="blue")
+# mtext(round(mean(res.df$expctd_var.upper/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper/res.df$sample_var.upper), col="black")
 
+# abline(h=1.05)
+# abline(h=0.95)
 legend("topright",
-       legend=c("q=0.975","q=0.025"),
-       lty=c(1,1),
-       pch=c(1,1),
-       col=c("red","blue"))
-dev.off()
+       legend=c("Ratio","Lowess Smooth"),
+       lty=c(1,2),
+       pch=c(1,NA),
+       col=c("blue","blue"))
+
 ```
 
 ```{r}
-
+B[abs(res.df$expctd_var.upper/res.df$sample_var.upper - 1) < 0.05]
 ```
 

@@ -81,11 +81,11 @@ estimate_conf_int = function (W, sd, method, alpha, K, dating_error.mean) {
     conf_int_runtime=NULL
   )
   estimate = switch(method,
-    GRIWM = griwm(alpha, dates=W, sd=sd, K=K, bias_adjusted=F),
-    `GRIWM-corrected` = griwm(alpha, dates=W, sd=sd, K=K, bias_adjusted=T),
+    GRIWM = griwm(alpha, dates=W, sd=sd, K=K, p_t=alpha, bias_adjusted=F),
+    `GRIWM-corrected` = griwm(alpha, dates=W, sd=sd, K=K, p_t=0.5, bias_adjusted=T),
     MINMI = minmi(alpha, W, sd, K, dating_error.mean),
     `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(4000, 17000), dating_error.mean=0),
-    `GB-RM` = GB_RM_process(alpha, W, sd, K, dating_error.mean=0)
+    `SI-RM-corrected` = SI_RM_process(alpha, W, sd, K, dating_error.mean=0, theta.test_vec = seq(4000, 17000))
   )
   return(estimate)
 }
@@ -152,10 +152,10 @@ minmi = function (alpha, W, sd, K, dating_error.mean=0, .B_init=500) {
   return(list(lower=lower, point=point, upper=upper, point_runtime=point_runtime, conf_int_runtime=conf_int_runtime))
 }
 
-griwm = function(alpha, dates, sd, K, .iter=10000, bias_adjusted) {
+griwm = function(alpha, dates, sd, K, p_t, .iter=10000, bias_adjusted) {
   df = data.frame(dates=dates, sd=sd)
   start_time = Sys.time()
-  results = GRIWM(df, alpha, K, .iter, bias_adjusted=bias_adjusted)
+  results = GRIWM(df, alpha, K, p_t, .iter, bias_adjusted=bias_adjusted)
   runtime = calculate_tdiff(start_time, Sys.time())
   return(list(lower=as.numeric(results$lower_ci), point=as.numeric(results$centroid), upper=as.numeric(results$upper_ci), point_runtime=runtime, conf_int_runtime=runtime))
 }
@@ -167,9 +167,12 @@ SI_UGM = function (alpha, dates, sd, K, dating_error.mean=0, theta.test_vec) {
   return(list(lower=results$lower, upper=results$upper, point=results$point, point_runtime=runtime, conf_int_runtime=runtime))
 }
 
-GB_RM_process = function (alpha, dates, sd, K, dating_error.mean=0) {
+SI_RM_process = function (alpha, dates, sd, K, dating_error.mean=0, theta.test_vec) {
+  # use SI-UGM to estimate a model to get the gradient.
+  SI_results = simulated_inversion(alpha, dates, sd, K, theta.test_vec, dating_error.mean=0, return_model = T)
+  
   CI_start_time = Sys.time()
-  CI = estimate_CI.rm(W=dates, K=K, alpha=alpha, max_iter=1000, eps.mean=dating_error.mean, eps.sigma=mean(sd))
+  CI = estimate_CI.rm(W=dates, K=K, alpha=alpha, max_iter=1000, eps.mean=dating_error.mean, eps.sigma=mean(sd), .model=SI_results$model, .CI_estimates = SI_results)
   conf_int_runtime = calculate_tdiff(CI_start_time, Sys.time())
   
   return(list(lower=CI$lower, upper=CI$upper, point=CI$point, point_runtime=conf_int_runtime, conf_int_runtime=conf_int_runtime))

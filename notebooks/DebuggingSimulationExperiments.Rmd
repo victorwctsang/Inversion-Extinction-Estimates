@@ -38,7 +38,7 @@ knitr::opts_chunk$set(
 library(readxl)
 library(tidyverse)
 library(latex2exp)
-source("helpers.R")
+source("../src/minmi-functions.R")
 ```
 
 
@@ -62,7 +62,7 @@ K = 18000
 theta.range = seq(10000, 17500, by=50)
 nThetas = length(theta.range)
 
-B=10000
+B=500
 n=30
 
 eps.mean = 0
@@ -75,34 +75,14 @@ set.seed(2022)
 
 u = matrix(runif(1*B, 0, 1), ncol=B)
 
+theta.true = 12000
+
 m = theta.true+10 ##min(fossil_dataframe$age)
 
+q = 0.025
+
 for (i in 1:nThetas) {
-  A1[i] = .calcA1(theta=theta.range[i],
-                  K=K,
-                  m=m,
-                  eps.mean=eps.mean,
-                  eps.sigma=eps.sigma)
-  phi.hat[i] = .calcPhiHat(u=u,
-                           mean=eps.mean,
-                           sd=eps.sigma,
-                           a=-Inf,
-                           b=m-theta.range[i],
-                           K=K,
-                           m=m,
-                           theta=theta.range[i])
-  A2[i] = .calcA2(theta=theta.range[i],
-                  K=K,
-                  u=u,
-                  m=m,
-                  eps.mean=eps.mean,
-                  eps.sigma=eps.sigma)
-  P[i] = getP(theta=theta.range[i],
-              K=K,
-              u=u,
-              m=m,
-              eps.mean=eps.mean,
-              eps.sigma=eps.sigma)
+  P[i] = estimating_eqn(theta = theta.range[i], q=q, K = K, u=u, m=m, n=n, eps.mean = eps.mean, eps.sigma = eps.sigma) +q^(1/n)
 }
 
 res.df = data.frame(theta=theta.range,
@@ -120,12 +100,16 @@ res.df %>%
 ```
 
 ```{r}
-res.df %>%
+p = res.df %>%
   ggplot(aes(x=theta, y=P)) +
   geom_line() +
-  labs(title=TeX("$P_\\theta (X + \\epsilon > m)$ for increasing theta"),
+  labs(title=TeX("$P_\\theta (X + \\epsilon > m)$ for increasing \\theta"),
        x=TeX("\\theta"),
-       y=TeX("P"))
+       y=TeX("P")) +
+  theme_bw()
+
+p
+ggsave(plot=p, filename="../figures/minmi-stochastically-increasing.png", width=6, height=4)
 ```
 
 ```{r}

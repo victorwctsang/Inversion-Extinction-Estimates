@@ -15,14 +15,6 @@ knitr::opts_chunk$set(echo = TRUE)
 -   Normally distributed measurement error
 -   Have an initial point estimate (observed minimum)
 
-### Set parameters
-
-```{r}
-set.seed(22)
-alpha = 0.05
-K = 20000 # upper bound for dates we can get fossils in
-```
-
 ### Import data
 
 ```{r}
@@ -35,181 +27,87 @@ fossil_dataframe = read_excel(
   col_names=c("age", "sd"), 
   col_types=c('numeric', 'numeric')
 )
-fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
-dating_error.sd = mean(fossil_dataframe$sd)
-```
-
-```{r}
-source("../src/garthwaite-robbins-munro-functions.R")
 ```
 
 ```{r}
 load("../data/synthetic-data.RData")
-dates = datasets[1, ]$W[[1]]
+dates = datasets[datasets$error_factor == 1, ][1, ]$W[[1]]
 n = length(dates)
 theta.hat.y = min(dates)
-```
 
-```{r}
-res = estimate_CI.rm(W=dates,
-                     K=K,
-                     alpha=0.05,
-                     max_iter=1000,
-                     eps.mean=0,
-                     eps.sigma=0*mean(fossil_dataframe$sd),
-                     return_iters=T)
-c(res$CI.lower, res$CI.upper, res$CI.point)
-
-plot(na.omit(res$upper.iters), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
-     xlim=c(0, max(length(res$lower.iters), length(res$upper.iters))),
-     ylim=c(min(res$lower.iters, res$upper.iters), max(res$lower.iters, res$upper.iters)))
-
-lines(res$lower.iters, pch=4, col='blue')
-lines(res$point.iters, pch=4, col='purple')
-abline(h=theta.hat.y, lty=2, col="black")
-
-legend("right", legend=c("U_i", "L_i", "m"), col=c("red", "blue", "black"), lty=c(1,1,1))
-```
-
-```{r}
-res = estimate_CI.rm(W=dates,
-                     K=K,
-                     alpha=0.05,
-                     max_iter=1000,
-                     eps.mean=0,
-                     eps.sigma=mean(fossil_dataframe$sd),
-                     return_iters=T)
-c(res$CI.lower, res$CI.upper, res$CI.point)
-
-plot(na.omit(res$upper.iters), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
-     xlim=c(0, max(length(res$lower.iters), length(res$upper.iters))),
-     ylim=c(min(res$lower.iters), max(res$upper.iters)))
-
-lines(res$lower.iters, pch=4, col='blue')
-lines(res$point.iters, pch=4, col='purple')
-abline(h=theta.hat.y, lty=2, col="black")
-
-legend("right", legend=c("U_i", "L_i", "m"), col=c("red", "blue", "black"), lty=c(1,1,1))
-```
-
-```{r}
-res = estimate_CI.rm(W=dates,
-                     K=K,
-                     alpha=0.05,
-                     max_iter=1000,
-                     eps.mean=0,
-                     eps.sigma=mean(fossil_dataframe$sd),
-                     return_iters=T)
-c(res$CI.lower, res$CI.upper, res$CI.point)
-
-plot(na.omit(res$upper.iters), pch=4, type="l", xlab="i", col='red', ylab=NA, main="CI Convergence",
-     xlim=c(0, max(length(res$lower.iters), length(res$upper.iters))),
-     ylim=c(min(res$lower.iters), max(res$upper.iters)))
-
-lines(res$lower.iters, pch=4, col='blue')
-lines(res$point.iters, pch=4, col='purple')
-abline(h=theta.hat.y, lty=2, col="black")
-
-legend("right", legend=c("U_i", "L_i", "m"), col=c("red", "blue", "black"), lty=c(1,1,1))
-```
-
-## Stopping Criteria
-
-We need to be have a defensible stopping rule.
-
-Suppose we do this empirically by:
-
-1.  Brute force estimating our quantile function $P_{\theta} ( S(\mathbf{X}) > S(\mathbf{x}))$ via a regression (a la Arthur)
-2.  At each iteration of the RM process, compute the monte carlo error
-
-#### Step 1
-
-We estimate our model using a smooth regression
-
-$$P_{\theta} ( S(\mathbf{X}) > S(\mathbf{x}))$$
-
-```{r}
 set.seed(22)
+alpha = 0.05
+K = 20000 # upper bound for dates we can get fossils in
+
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+dating_error.sd = mean(fossil_dataframe$sd)
+```
+
+### Perform Simulated Inversion
+
+```{r}
 library(mgcv)
+theta.test_vec = seq(5000, 14000)
+n.theta.test_vec = length(theta.test_vec)
 
-# Simulate statistics for a range of possible $\theta$
-theta.test_vec = 5000:15000
-S_star = rep(NA, length(theta.test_vec))
-for (i in 1:length(theta.test_vec)) {
-  S_star[i] = min(runif(n, theta.test_vec[i], K) + rnorm(n, dating_error.mean, dating_error.sd))
+# Calculate S_star
+S_star = rep(NA, n.theta.test_vec)
+for (i in 1:n.theta.test_vec) {
+  fossil.resamples = runif(n, theta.test_vec[i], K) + rnorm(n, 0, dating_error.sd)
+  S_star[i] = min(fossil.resamples)
 }
 
-# Create indicators for modelling
-indicators = ifelse(S_star > min(dates), 1, 0)
+# Create indicators
+m = min(dates)
+indicator_vec = sapply(S_star, function(x) ifelse(x > m, 1, 0))
 
-# Estimate model using a smooth regression
-model_gam = gam(indicators ~ s(theta.test_vec), data=data.frame(theta.test_vec, indicators), family=binomial)
-```
+# Estimate model using smooth regression
+model_gam = gam(indicator_vec ~ s(theta.test_vec),
+                data=data.frame(theta.test_vec, indicator_vec),
+                family=binomial)
 
-#### Step 2
-
-$$
-\mathrm{Var}(U_{i+1}) = \frac{\alpha/2(1-\alpha/2)c^2}{i(2gc-1)} \implies i = \frac{\alpha/2(1-\alpha/2)c^2}{\mathrm{Var}(U_{i+1})(2gc-1)}
-$$
-
-```{r}
-simp = function (theta.iters, q, theta.hat, n, K, p, m, max_iter, eps.mean, eps.sigma, model_gam) {
-  # Transformation to force theta < K
-  eta = function(theta) -log(K-theta)
-  eta_q.iters = eta(theta.iters)
-  i = m
-  mc.var = Inf
-  while (i < max_iter) {
-    # Generate resamples
-    theta_q.hat = K - exp(-eta_q.iters[i])
-    
-    # Calculate mc error
-    delta = 0.0001
-    perturbs = predict(model_gam, newdata=data.frame(theta.test_vec = theta_q.hat + c(1, -1)*delta), type="response")
-    g = (perturbs[1] - perturbs[2])/(2*delta)
-    mc.var = q * (1 - q) * c^2 / (i * (2*g*c - 1))
-    # print(mc.var)
-    
-    resamples = simulate_fossils(n, theta=theta_q.hat, K, eps.mean, eps.sigma)
-    theta.hat.resample = estimate_theta.rm(resamples)
-    # calculate step length
-    c = 2*p*abs(eta(theta_q.hat) - eta(theta.hat))
-    
-    # Update
-    if (theta.hat.resample <= theta.hat) {
-      eta_q.iters[i+1] = (eta_q.iters[i] + c*q/ i)
-    } else {
-      eta_q.iters[i+1] = (eta_q.iters[i] - c*(1-q) / i)
-    }
-    
-    i = i+1
+# Use inversion
+get_min_est <- function (theta.test_vec , model_gam, q){
+  prediction <- function (theta.test_vec , model_gam ){
+    yval <- predict ( model_gam , newdata = data.frame ( theta.test_vec = theta.test_vec ), type = "response")
+    return ( yval - q )
   }
-  theta_q.iters = K - exp(-eta_q.iters)
-  return(theta_q.iters)
+  theta_est <- uniroot ( prediction , lower = 5000 , upper = 15000, extendInt = "yes", model_gam = model_gam, maxiter = 2000)$root
+  return ( theta_est )
 }
+
+lower = get_min_est(theta.test_vec, model_gam, q=alpha/2)
+upper = get_min_est(theta.test_vec, model_gam, q=1-alpha/2)
+point = get_min_est(theta.test_vec, model_gam, q=0.5)
+c(lower, point, upper)
+```
+
+### Run RM process
+
+```{r}
+source("../src/garthwaite-robbins-munro-functions.R")
+
+results.si_rm = estimate_CI.rm(W=dates,
+                               K=K,
+                               alpha=0.05,
+                               max_iter=10000,
+                               eps.mean=0,
+                               eps.sigma=dating_error.sd,
+                               .model=model_gam,
+                               .CI_estimates = list(lower=lower, upper=upper),
+                               return_iters=T)
+
+names(results.si_rm)
 ```
 
 ```{r}
-p = calc_prop_constant(alpha)
-iters = rep(NA, 50)
-m = ceiling(min(50, 0.3*(2-alpha)/alpha))
-starting_ests = get_starting_vals(method="percentile", alpha, theta.hat.y, n, K, dating_error.mean, dating_error.sd)
-iters[m] = starting_ests[, "lower"]
-iters = simp(iters, alpha/2, theta.hat.y, n, K, p, m, max_iter, dating_error.mean, dating_error.sd, model_gam)
-
-plot(iters, type="l")
+c(results.si_rm$lower, results.si_rm$point, results.si_rm$upper)
 ```
 
 
 ```{r}
-plot(theta.test_vec, predict(model_gam, newdata=data.frame(theta.test_vec=theta.test_vec), type="response"))
-abline(v=iters[m], lty=2, col="red")
-```
-
-
-```{r}
-delta = 0.0001
-tmp = predict(model_gam, newdata=data.frame(theta.test_vec=c(iters[m]-delta, iters[m]+delta)), type="response")
-(tmp[2] - tmp[1])/(2*delta)
+plot(results.si_rm$lower.iters, type="b", col="red", ylim=c(min(results.si_rm$lower.iters, results.si_rm$upper.iters), max(results.si_rm$lower.iters, results.si_rm$upper.iters)))
+lines(results.si_rm$upper.iters, type="b", col="blue")
+abline(h=10000, lty=2)
 ```
 

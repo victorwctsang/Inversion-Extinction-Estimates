@@ -1,7 +1,7 @@
 
 library(mgcv)
 
-simulated_inversion = function (alpha, dates, sd, K, theta.test_vec, dating_error.mean=0) {
+simulated_inversion = function (alpha, dates, sd, K, theta.test_vec, dating_error.mean=0, return_model=F) {
   n.fossils = length(dates)
   n.theta.test_vec = length(theta.test_vec)
   dating_error.sd = mean(sd)
@@ -26,7 +26,11 @@ simulated_inversion = function (alpha, dates, sd, K, theta.test_vec, dating_erro
   lower = get_min_est(theta.test_vec, model_gam, q=alpha/2)
   upper = get_min_est(theta.test_vec, model_gam, q=1-alpha/2)
   point = get_min_est(theta.test_vec, model_gam, q=0.5)
-  return(list(lower=lower, upper=upper, point=point))
+  results = list(lower=lower, upper=upper, point=point)
+  if (return_model) {
+    results$model = model_gam
+  }
+  return(results)
 }
 
 get_min_est <- function (theta.test_vec , model_gam, q){

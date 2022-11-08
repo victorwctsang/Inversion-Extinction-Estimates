@@ -10,22 +10,21 @@ set.seed(seed)
 
 alpha = 0.05
 
-methods.point_estimates = c("STRAUSS", "MLE", "BA-MLE", )
-methods.conf_int = c("MINMI", "GB-RM", "GRIWM", , "SI-UGM") #"GRIWM-corrected", 
+methods.point_estimates = c()#"STRAUSS", "MLE", "BA-MLE")
+methods.conf_int = c("SI-RM-corrected")#"GRIWM", "GRIWM-corrected", "MINMI", "SI-RM", "GRIWM", "SI-UGM")
 
 # Run trials
-# results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
-# results = results[results$method != "STRAUSS" & results$method != "MINMI", ]
-results = data.frame(
-  id=integer(),
-  error_factor=double(),
-  method=factor(),
-  lower=double(),
-  point=double(),
-  upper=double(),
-  point_runtime=double(),
-  conf_int_runtime=double()
-)
+results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
+# results = data.frame(
+#   id=integer(),
+#   error_factor=double(),
+#   method=factor(),
+#   lower=double(),
+#   point=double(),
+#   upper=double(),
+#   point_runtime=double(),
+#   conf_int_runtime=double()
+# )
 
 start_time = Sys.time()
 for (i in 1:nrow(datasets)) {
@@ -48,7 +47,8 @@ for (i in 1:nrow(datasets)) {
     results = tibble::add_row(results, id=iter$id, error_factor=iter$error_factor, method=method, lower=estimation$lower, point=estimation$point, upper=estimation$upper, point_runtime=estimation$point_runtime, conf_int_runtime=estimation$conf_int_runtime)
   }
 }
-print(Sys.time() - start_time)
+sims.time = Sys.time() - start_time
+print(sims.time)
 
 View(results)
 saveRDS(results, "../data/sim_exp-estimate_extinction_results.RDS")
