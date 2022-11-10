@@ -25,6 +25,7 @@ estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 estimates = estimates %>% filter(!(method %in% c("SI-RM", "GB-RM")))
 estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'))
 estimates = estimates %>% mutate(method_cat = ifelse(method %in% c("SI-RM", "MINMI"), "Proposed", "Existing"))
+estimates = estimates %>% filter(error_factor != 4)
 head(estimates)
 ```
 
@@ -37,7 +38,7 @@ performance.point_estimates = estimates %>%
   summarise(MSE_000 = mean((point - theta.true)^2)/1000,
             bias = mean(point)-theta.true,
             variance_000 = var(point)/1000,
-            avg_runtime = mean(point_runtime))
+            avg_runtime = round(mean(point_runtime), 5))
 kable(performance.point_estimates)
 
 # Confidence Intervals
@@ -46,9 +47,9 @@ performance.conf_int_estimates = estimates %>%
   mutate(width = upper - lower,
          contains_theta = ifelse(theta.true > lower & theta.true < upper, 1, 0)) %>%
   group_by(error_factor, method, method_cat) %>%
-  summarise(Coverage = mean(contains_theta) * 100,
-            `Average Width` = mean(width),
-            `Average Runtime` = mean(conf_int_runtime)) %>%
+  summarise(Coverage = round(mean(contains_theta) * 100, 1),
+            `Average Width` = round(mean(width), 2),
+            `Average Runtime` = round(mean(conf_int_runtime), 4)) %>%
   ungroup() %>%
   arrange(desc(Coverage), `Average Width`, `Average Runtime`)
 kable(performance.conf_int_estimates)
@@ -67,7 +68,7 @@ for (err in error_factors) {
     arrange(MSE_000) %>%
     select(-c(error_factor, method_cat)) %>%
     kable(booktabs=T, col.names = c("", "(000's years)", "(years)", "(000's years)", "(seconds)"), format="latex") %>%
-    add_header_above(c("Method" = 1, "MSE" = 1, "Bias"=1, "Variance"=1, "Average Runtime"=1))
+    add_header_above(c("Method" = 1, "MSE" = 1, "Bias"=1, "Variance"=1, "Average Runtime"=1), line=F, align=c("l", "c", "c", "c", "c"))
   writeLines(experiment.results.kbl, paste0("../figures/table-sim-exp-point-error", err, ".tex"))
   print(experiment.results.kbl)
 }
@@ -98,10 +99,9 @@ for (metric in c("Coverage", "Average Width", "Average Runtime")) {
               values_from=one_of(metric),
               names_prefix=paste(metric, "| error = sigma*")) %>%
     arrange(!!syms(paste(metric, "| error = sigma*0"))) %>%
-    kable(booktabs=T, col.names = c("Method", paste0(c(0,0.5,1,2,4), r"{*$\sigma$}")), format="latex", escape = FALSE) %>%
-    # kable_styling(full_width = F) %>%
-    add_header_above(c(" " = 1, metric = 4))
-  
+    kable(col.names = c("", paste0(c(0,0.5,1,2), r"{*$\sigma$}")), booktabs=T, format="latex", escape = FALSE) %>%
+    add_header_above(unlist(lst("Method" = 1, !!metric := 4)), line=F)
+    
   print(experiment.results.kbl)
   writeLines(experiment.results.kbl, paste0("../figures/table-sim-exp-conf-int-", str_replace(tolower(metric), " ", "-"), ".tex"))
 }
@@ -124,7 +124,7 @@ estimates %>%
 
 
 ```{r}
-estimates %>%
+p = estimates %>%
   filter(!is.na(lower) & error_factor == 1) %>%
   group_by(method_cat, method) %>%
   summarise(lower = mean(lower), upper=mean(upper)) %>%
@@ -132,9 +132,11 @@ estimates %>%
   mutate(method_cat_int = ifelse(method_cat == "Existing", 0, 1)) %>%
   ggplot(aes(y=reorder(method, method_cat_int), colour=method_cat)) +
   geom_errorbarh(aes(xmin=lower, xmax=upper)) +
-  # geom_text(aes(y=method, x=(upper+lower)/2, label=round(width, 2)), vjust = -0.5) +
   guides(color = guide_legend(reverse=TRUE)) +
   labs(x=NULL, y="Years (BP)", title="Simulation Experiment Confidence Intervals", colour=NULL) +
   theme_bw()
+
+p
+ggsave(filename="../figures/sim-exp-intervals.svg", plot=p)
 ```
 
