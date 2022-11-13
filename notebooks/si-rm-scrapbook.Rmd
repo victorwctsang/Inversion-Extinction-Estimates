@@ -20,7 +20,7 @@ set.seed(3)
 alpha = 0.05
 
 datasets.err1 = datasets %>% filter(error_factor == 2)
-datasets.err1_sample = datasets.err1[sample(1:nrow(datasets.err1), 100, ), ]
+datasets.err1_sample = datasets.err1[sample(1:nrow(datasets.err1), 50, ), ]
 head(datasets.err1_sample)
 ```
 
