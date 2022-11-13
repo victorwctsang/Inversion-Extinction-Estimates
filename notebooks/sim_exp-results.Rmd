@@ -23,8 +23,15 @@ attach(synthetic.data.config)
 
 estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 estimates = estimates %>% filter(!(method %in% c("SI-RM", "GB-RM")))
-estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'))
-estimates = estimates %>% mutate(method_cat = ifelse(method %in% c("SI-RM", "MINMI"), "Proposed", "Existing"))
+estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'),
+                                 method_cat = ifelse(method %in% c("SI-RM", "MINMI"),
+                                                     "Proposed",
+                                                     "Existing"),
+                                 method = ifelse(method == "GRIWM",
+                                                 "GRIWM (q=0.05)",
+                                                 ifelse(method == "GRIWM-corrected",
+                                                        "GRIWM-BA (q=0.5)",
+                                                        method)))
 estimates = estimates %>% filter(error_factor != 4)
 head(estimates)
 ```
@@ -154,13 +161,13 @@ B.minmi = readRDS("../data/sim_exp-B-minmi.RDS")
 B.minmi = B.minmi %>% arrange(error_factor) %>% mutate(error_factor = paste0(error_factor, r"{*$\sigma$}"))
 
 B.minmi.kbl = B.minmi %>%
-  kable(col.names = c("", "q = 0.025", "q = 0.5", "q = 0.975"),
+  filter(error_factor != 0) %>%
+  kable(col.names = c("Variation", "$q = 0.025$", "$q = 0.5$", "$q = 0.975$"),
         booktabs=T, format="latex", escape = FALSE) %>%
-  add_header_above(c(`Measurement Error Variation`=1, B=3), line=F)
+  add_header_above(c(`Measurement Error`=1, `$B$`=3), line=F)
 
 print(B.minmi.kbl)
 
-writeLines(B.minmi.kbl, 
-           "../figures/table-sim-exp-minmi-Bs.tex")
+writeLines(B.minmi.kbl, "../figures/table-sim-exp-minmi-Bs.tex")
 ```
 

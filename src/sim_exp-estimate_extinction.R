@@ -12,11 +12,11 @@ set.seed(seed)
 alpha = 0.05
 
 methods.point_estimates = c()#"STRAUSS", "MLE", "BA-MLE")
-methods.conf_int = c("MINMI")#"GRIWM", "GRIWM-corrected", "SI-RM", "GRIWM", "SI-UGM", "SI-RM-corrected")
+methods.conf_int = c("SI-RM")#"GRIWM", "GRIWM-corrected", "GRIWM", "MINMI", "SI-UGM", "SI-RM-corrected")
 
 # Run trials
 results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
-results = results[results$method != "MINMI", ]
+results = results[results$method != "SI-RM", ]
 # results = data.frame(
 #   id=integer(),
 #   error_factor=double(),
