@@ -27,7 +27,6 @@ knitr::knit_hooks$set(timeit = local({
     }
   }})
 )
-
 library(tikzDevice)
 
 options(
@@ -44,6 +43,9 @@ options(
 )
 
 options(tikzMetricsDictionary="../tikzMetrics") # speeds tikz up
+
+library(tidyverse)
+theme_set(theme_bw())
 ```
 
 #### Setup
@@ -136,7 +138,7 @@ Compute sample and expected variances for a set of values of $B$
 ```{r}
 n = 30
 
-B = unique(round(pracma::logseq(2, 2000, 40)))
+B = unique(round(pracma::logseq(2, 5000, 40)))
 num.B = length(B)
 
 num.estimates = 250
@@ -189,8 +191,6 @@ res.df = data.frame(
   expctd_var.lower = expctd_var.theta_q$lower
 )
 
-res.df[sample(nrow(res.df), 5), ]
-
 lapply(list(ratio_lower=res.df$sample_var.lower/res.df$expctd_var.lower), FUN=function(x) c(min=min(x), max=max(x)))
 lapply(list(ratio_upper=res.df$sample_var.upper/res.df$expctd_var.upper), FUN=function(x) c(min=min(x), max=max(x)))
 ```
@@ -241,35 +241,27 @@ legend("topright",
 - The middle plot is the expected and sample variances for $q = 0.975$. Our sample is larger than our expected by a constant factor of ~3
 - The right-most plot is the expected and sample variances for $q=0.975$ using $\hat\theta_q = K - q^{-1/n} * (K-m)$ as per our no measurement error case, instead of `theta.hat.upper.gold`. Sample is larger than expected by a factor of ~1.6
 
-```{r dev='tikz'}
-# tikz("../figures/minmi-asymptotics-ratios.tex")
-options(scipen=9)
+```{r fig.width=8, fig.height=5}
+ratio_df.lower = data.frame(
+  B = res.df$B,
+  pct_diff = 1 - res.df$expctd_var.lower/res.df$sample_var.lower
+)
 
-plot(B, res.df$expctd_var.upper/res.df$sample_var.upper, col="black",
-     type="b", main="Delta Method Variance : Sample Variances | q=0.975", log="x",
-     ylab=NA, ylim=c(min(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper)), max(c(res.df$expctd_var.lower/res.df$sample_var.lower, res.df$expctd_var.upper/res.df$sample_var.upper))))
-
-# lines(B, res.df$expctd_var.lower/res.df$sample_var.lower, type="b", col="red", ylab=NA)
-
-# lines(lowess(x=B, y=res.df$expctd_var.lower/res.df$sample_var.lower), lty=3, col="blue")
-lines(lowess(x=B, y=res.df$expctd_var.upper/res.df$sample_var.upper), lty=3, col="black")
-# abline(h=mean(res.df$expctd_var.lower/res.df$sample_var.lower), lty=3, col="blue")
-# abline(h=mean((res.df$expctd_var.upper)/res.df$sample_var.upper), lty=3, col="red")
-
-# mtext(round(mean(res.df$expctd_var.lower/res.df$sample_var.lower), 3), side=4, las=2, at=mean(res.df$expctd_var.lower/res.df$sample_var.lower), col="blue")
-# mtext(round(mean(res.df$expctd_var.upper/res.df$sample_var.upper), 3), side=4, las=2, at=mean(res.df$expctd_var.upper/res.df$sample_var.upper), col="black")
-
-# abline(h=1.05)
-# abline(h=0.95)
-legend("topright",
-       legend=c("Ratio","Lowess Smooth"),
-       lty=c(1,2),
-       pch=c(1,NA),
-       col=c("blue","blue"))
-
+p.delta_method_variance_diff = ratio_df.lower %>%
+  ggplot(aes(x=B, y=pct_diff)) +
+  geom_point(size=1) +
+  geom_line()+
+  scale_x_log10(breaks=c(10, 100, 1000, 2000, 3000))+
+  scale_y_continuous(breaks=seq(-0.2, 0.8, by=0.1), labels = scales::percent) +
+  annotate(geom="rect", xmin=1, xmax=10000, ymin=-0.15, ymax=0.15, alpha=0.2, fill="green") +
+  geom_vline(xintercept=100, linetype="dashed") +
+  labs(y=NULL, title="Percentage Difference of Delta Method Variance and Empirical Variance",
+       subtitle = "q = 0.025") +
+  coord_cartesian(xlim=c(1.7, 3500), ylim=c(-0.25, 0.75), expand=FALSE)
+p.delta_method_variance_diff
 ```
 
 ```{r}
-B[abs(res.df$expctd_var.upper/res.df$sample_var.upper - 1) < 0.05]
+ggsave(filename = "../figures/minmi-delta-method_variance.svg", plot=p.delta_method_variance_diff, width=8, height=5, dpi=320)
 ```
 
