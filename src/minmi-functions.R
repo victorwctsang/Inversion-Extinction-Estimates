@@ -127,7 +127,6 @@ find_optimal_B = function (max_var, q, K, m, n, u, eps.mean, eps.sigma) {
   # pdfs and CDF evaluations (for convenience)
   f_eps.K = dnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
   F_eps.K = pnorm(K-theta_q.hat.init, eps.mean, eps.sigma)
-  
   # Estimate sigma^2_var
   B = length(u)
   e = uniform_to_tnorm(u, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat.init)

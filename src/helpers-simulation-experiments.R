@@ -1,4 +1,5 @@
 
+
 library(readxl)
 source("../src/minmi-functions.R")
 source("../src/GRIWM.R")
@@ -10,7 +11,7 @@ getFossilData = function (path, sheet, range, col_names, col_types) {
 }
 
 boundFossilData = function (fossil.df, K) {
-  return(fossil.df[fossil.df$age < K,])
+  return(fossil.df[fossil.df$age < K, ])
 }
 
 getStdDevFromFossilData = function (path, K, n, ...) {
@@ -90,14 +91,15 @@ calculate_tdiff = function(start, end) {
   as.numeric(difftime(end, start), units = "secs")
 }
 
-estimate_conf_int = function (W, sd, method, alpha, K, dating_error.mean) {
-  estimate = list(
-    lower = NULL,
-    point = NULL,
-    upper = NULL,
-    point_runtime = NULL,
-    conf_int_runtime = NULL
-  )
+estimate_conf_int = function (W,
+                              sd,
+                              method,
+                              alpha,
+                              K,
+                              dating_error.mean,
+                              B.point,
+                              B.lower,
+                              B.upper) {
   estimate = switch(
     method,
     GRIWM = griwm(
@@ -116,7 +118,16 @@ estimate_conf_int = function (W, sd, method, alpha, K, dating_error.mean) {
       p_t = 0.5,
       bias_adjusted = T
     ),
-    MINMI = minmi(alpha, W, sd, K, dating_error.mean),
+    MINMI = minmi(
+      alpha,
+      W,
+      sd,
+      K,
+      dating_error.mean,
+      B.point = B.point,
+      B.lower = B.lower,
+      B.upper = B.upper
+    ),
     `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(4000, 17000), dating_error.mean = 0),
     `SI-RM-corrected` = SI_RM_process(
       alpha,
@@ -149,7 +160,10 @@ minmi = function (alpha,
                   sd,
                   K,
                   dating_error.mean = 0,
-                  .B_init = 500) {
+                  .B_init = 500,
+                  B.point,
+                  B.lower,
+                  B.upper) {
   m = min(W)
   n = length(W)
   dating_error.sd = mean(sd)
@@ -175,40 +189,6 @@ minmi = function (alpha,
     point_runtime = calculate_tdiff(point.start_time, Sys.time())
     
   } else {
-    # Generate initial MC samples
-    u.init = runif(.B_init, 0, 1)
-    
-    # Estimate optimal values for B
-    B.point = find_optimal_B(
-      max_var = (0.2 * dating_error.sd) ^ 2,
-      q = 0.5,
-      K = K,
-      m = m,
-      n = n,
-      u = u.init,
-      eps.mean = dating_error.mean,
-      eps.sigma = dating_error.sd
-    )
-    B.lower = find_optimal_B(
-      max_var = (0.2 * dating_error.sd) ^ 2,
-      q = alpha / 2,
-      K = K,
-      m = m,
-      n = n,
-      u = u.init,
-      eps.mean = dating_error.mean,
-      eps.sigma = dating_error.sd
-    )
-    B.upper = find_optimal_B(
-      max_var = (0.2 * dating_error.sd) ^ 2,
-      q = 1 - alpha / 2,
-      K = K,
-      m = m,
-      n = n,
-      u = u.init,
-      eps.mean = dating_error.mean,
-      eps.sigma = dating_error.sd
-    )
     B.max = max(B.point, B.lower, B.upper)
     
     # Confidence interval
@@ -250,7 +230,10 @@ minmi = function (alpha,
       point = point,
       upper = upper,
       point_runtime = point_runtime,
-      conf_int_runtime = conf_int_runtime
+      conf_int_runtime = conf_int_runtime,
+      B.point = B.point,
+      B.lower = B.lower,
+      B.upper = B.upper
     )
   )
 }
