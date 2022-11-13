@@ -39,11 +39,16 @@ print(theta.true)
 ```
 
 ```{r}
-source("minmi-functions.R")
+source("../src/minmi-functions.R")
 estimate_extinction.minmi(W=dates, sd=standard_errors, K=K, level=0.05, time=T)
 ```
 
 ```{r}
 estimate_extinction.minmi(W=dates, sd=standard_errors, K=K, level=0.05, time=T)
 ```
+
+```{r}
+
+```
+
 

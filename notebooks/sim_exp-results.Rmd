@@ -123,20 +123,44 @@ estimates %>%
 ```
 
 
-```{r}
+```{r fig.width=8, fig.height=5}
 p = estimates %>%
   filter(!is.na(lower) & error_factor == 1) %>%
   group_by(method_cat, method) %>%
-  summarise(lower = mean(lower), upper=mean(upper)) %>%
+  summarise(lower = mean(lower), upper=mean(upper), point=mean(point)) %>%
   mutate(width=upper-lower) %>%
   mutate(method_cat_int = ifelse(method_cat == "Existing", 0, 1)) %>%
-  ggplot(aes(y=reorder(method, method_cat_int), colour=method_cat)) +
-  geom_errorbarh(aes(xmin=lower, xmax=upper)) +
-  guides(color = guide_legend(reverse=TRUE)) +
-  labs(x=NULL, y="Years (BP)", title="Simulation Experiment Confidence Intervals", colour=NULL) +
+  ggplot(aes(colour=method_cat)) +
+  geom_pointrange(aes(xmin=lower, xmax=upper, x=point, y=reorder(method, method_cat_int))) +
+  guides(colour = guide_legend(reverse=TRUE)) +
+  labs(y=NULL, x="Years (BP)",
+       title="Simulation Experiment Confidence Intervals",
+       colour="Method",
+       subtitle="(Average of Interval Endpoints and Point Estimates)") +
+  scale_x_continuous(breaks = seq(from=8000, to=11500, by=500)) +
   theme_bw()
-
 p
-ggsave(filename="../figures/sim-exp-intervals.svg", plot=p)
+```
+
+
+```{r}
+ggsave(filename="../figures/sim-exp-intervals.svg", plot=p, height=5, width=8)
+```
+
+## Monte Carlo Samples for MINMI
+
+```{r}
+B.minmi = readRDS("../data/sim_exp-B-minmi.RDS")
+B.minmi = B.minmi %>% arrange(error_factor) %>% mutate(error_factor = paste0(error_factor, r"{*$\sigma$}"))
+
+B.minmi.kbl = B.minmi %>%
+  kable(col.names = c("", "q = 0.025", "q = 0.5", "q = 0.975"),
+        booktabs=T, format="latex", escape = FALSE) %>%
+  add_header_above(c(`Measurement Error Variation`=1, B=3), line=F)
+
+print(B.minmi.kbl)
+
+writeLines(B.minmi.kbl, 
+           "../figures/table-sim-exp-minmi-Bs.tex")
 ```
 

@@ -19,7 +19,7 @@ library(readxl)
 
 source("../src/garthwaite-robbins-munro-functions.R")
 source("../src/minmi-functions.R")
-# source("../src/GRIWM.R")
+source("../src/GRIWM.R")
 source("../src/simulated-inversion.R")
 
 theme_set(theme_bw())
@@ -89,20 +89,101 @@ p
 ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
 ```
 
+### SI-UGM Setup
+
 ```{r}
-estimate_extinction = function (dates, sd, K, theta.test_vec, alpha=0.05, label) {
-  SIUGM.results = simulated_inversion(alpha=alpha, dates=dates, sd=sd, K=K, theta.test_vec = theta.test_vec, return_model=T)
-  SIUGM = list(lower = SIUGM.results$lower,
-               point = SIUGM.results$point,
-               upper = SIUGM.results$upper,
-               method = "SI-UGM")
+cave_bear.thetas = seq(22000, 29000)
+mammoth.thetas = seq(4000, 14000)
+megaloceros.thetas = seq(8000, 13000)
+neanderthal.thetas = seq(38000, 44000)
+bison.thetas = seq(25000, 35000)
+jelephant.thetas = seq(25000, 35000)
+cave_hyena.thetas = seq(20000, 30000)
+```
+
+## Driver Function
+
+```{r}
+
+estimate_extinction = function (data, theta.test_vec, alpha = 0.05, label) {
+  K = max(data$age)
+  data = data[data$age < K,]
   
-  MINMI = estimate_extinction.minmi(W = dates, sd=sd, level=1-alpha, K=K)
+  dates = data$age
+  sd = data$sd
+  
+  # SI-UGM
+  SIUGM.results = simulated_inversion(
+    alpha = alpha,
+    dates = dates,
+    sd = sd,
+    K = K,
+    theta.test_vec = theta.test_vec,
+    return_model = T
+  )
+  SIUGM = list(
+    lower = SIUGM.results$lower,
+    point = SIUGM.results$point,
+    upper = SIUGM.results$upper,
+    method = "SI-UGM"
+  )
+  
+  # GRIWM - uncorrected
+  griwm.uncorrected = GRIWM(
+    df = data.frame(dates = dates, sd = sd),
+    alpha = 0.05,
+    K = K,
+    p_t = 0.05,
+    .n_iter = 10000,
+    bias_adjusted = F
+  )
+  griwm.uncorrected.results = list(
+    lower = griwm.uncorrected$lower_ci,
+    point = griwm.uncorrected$centroid,
+    upper = griwm.uncorrected$upper_ci,
+    method = "GRIWM (q=0.05)"
+  )
+  
+  # GRIWM - corrected
+  griwm.corrected = GRIWM(
+    df = data.frame(dates = dates, sd = sd),
+    alpha = 0.05,
+    K = K,
+    p_t = 0.5,
+    .n_iter = 10000,
+    bias_adjusted = T
+  )
+  griwm.corrected.results = list(
+    lower = griwm.corrected$lower_ci,
+    point = griwm.corrected$centroid,
+    upper = griwm.corrected$upper_ci,
+    method = "GRIWM (q=0.5, bias adjusted)"
+  )
+  
+  
+  # MINMI
+  MINMI = estimate_extinction.minmi(
+    W = dates,
+    sd = sd,
+    level = 1 - alpha,
+    K = K
+  )
   MINMI$method = "MINMI"
   
-  SIRM = estimate_CI.rm(W = dates, K=K, alpha=alpha, max_iter=3000, eps.mean=0, eps.sigma=mean(sd), .model = SIUGM.results$model, .CI_estimates = list(lower=SIUGM.results$lower, upper=SIUGM.results$upper))
+  # SIRM
+  SIRM = estimate_CI.rm(
+    W = dates,
+    K = K,
+    alpha = alpha,
+    max_iter = 3000,
+    eps.mean = 0,
+    eps.sigma = mean(sd),
+    .model = SIUGM.results$model,
+    .CI_estimates = list(lower = SIUGM.results$lower, upper = SIUGM.results$upper)
+  )
   SIRM$method = "SI-RM"
   
+  # Collate and return results
   estimates = data.frame(
     method = factor(),
     lower = numeric(),
@@ -112,7 +193,7 @@ estimate_extinction = function (dates, sd, K, theta.test_vec, alpha=0.05, label)
     sigma = numeric(),
     dataset = factor()
   )
-  estimates = rbind(estimates, MINMI, SIUGM, SIRM)
+  estimates = rbind(estimates, MINMI, SIUGM, SIRM, griwm.uncorrected.results, griwm.corrected.results)
   estimates$n = length(dates)
   estimates$sigma = mean(sd)
   estimates$dataset = paste0(label, " (n=", length(dates), ")")
@@ -120,155 +201,67 @@ estimate_extinction = function (dates, sd, K, theta.test_vec, alpha=0.05, label)
 } 
 ```
 
-## Cave Bear
+
+
+
+## Estimations
 
 ```{r}
-cave_bear.K = 34000
-cave_bear = cave_bear[cave_bear$age < cave_bear.K, ]
-cave_bear.thetas = seq(22000, 29000)
 
-cave_bear.estimates = estimate_extinction(dates=cave_bear$age, sd=cave_bear$sd, K=cave_bear.K, theta.test_vec = cave_bear.thetas, label="Cave Bear")
-cave_bear.estimates
+cave_bear.estimates = estimate_extinction(data = cave_bear, 
+                                          theta.test_vec = cave_bear.thetas,
+                                          label = "Cave Bear")
 
-ggplot(data=cave_bear.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  geom_hline(yintercept=min(cave_bear$age)) +
-  guides(colour="none") +
-  labs(x=NULL, y="Years BP", title="Cave Bear Extinction (Ursus.spe.Eur.ext)")
-```
+mammoth.estimates = estimate_extinction(data = mammoth, 
+                                        theta.test_vec = mammoth.thetas,
+                                        label = "Eurasian Mammoth")
 
-## Eurasian Mammoth
+# megaloceros.estimates = estimate_extinction(data = megaloceros,
+#                                             theta.test_vec = megaloceros.thetas,
+#                                             label="Giant Deer")
 
 
-```{r}
-mammoth.K = 25000
-mammoth = mammoth[mammoth$age < mammoth.K, ]
-mammoth.thetas = seq(4000, 14000)
-
-mammoth.estimates = estimate_extinction(dates=mammoth$age, sd=mammoth$sd, K=mammoth.K, theta.test_vec = mammoth.thetas, label="Eurasian Mammoth")
-mammoth.estimates
-
-ggplot(data=mammoth.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  guides(colour="none") +
-  geom_hline(yintercept=min(mammoth$age)) +
-  labs(x=NULL, y="Years BP", title="Mammoth Extinction (MammothPrimEBer)")
-```
-
-## Giant Deer
+# neanderthal.estimates = estimate_extinction(data = neanderthal,
+#                                             theta.test_vec = neanderthal.thetas,
+#                                             label="Neanderthal")
 
 
-```{r}
-megaloceros.K = 14000
-megaloceros = megaloceros[megaloceros$age < megaloceros.K, ]
-megaloceros.thetas = seq(8000, 13000)
-
-megaloceros.estimates = estimate_extinction(dates=megaloceros$age, sd=megaloceros$sd, K=megaloceros.K, theta.test_vec = megaloceros.thetas, label="Giant Deer")
-megaloceros.estimates
-
-ggplot(data=megaloceros.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  guides(colour="none") +
-  geom_hline(yintercept=min(megaloceros$age)) +
-  labs(x=NULL, y="Years BP", title="Giant Deer Extinction (megaloceros)")
-```
-
-## Neanderthal
-
-```{r}
-neanderthal.K = 48000
-neanderthal = neanderthal[neanderthal$age < neanderthal.K, ]
-neanderthal.thetas = seq(38000, 44000)
-
-neanderthal.estimates = estimate_extinction(dates=neanderthal$age, sd=neanderthal$sd, K=neanderthal.K, theta.test_vec = neanderthal.thetas, label="Neanderthal")
-neanderthal.estimates
-
-ggplot(data=neanderthal.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  guides(colour="none") +
-  geom_hline(yintercept=min(neanderthal$age)) +
-  labs(x=NULL, y="Years BP", title="Neanderthal Extinction")
-```
-
-## Steppe Bison
+bison.estimates = estimate_extinction(data=bison,
+                                      theta.test_vec = bison.thetas,
+                                      label="Steppe Bison")
 
 
-```{r}
-bison.K = 55000
-bison = bison[bison$age < bison.K, ]
-bison.thetas = seq(25000, 35000)
+# jelephant.estimates = estimate_extinction(data=jelephant,
+#                                           theta.test_vec = jelephant.thetas,
+#                                           label="Japanese Elephant")
 
-bison.estimates = estimate_extinction(dates=bison$age, sd=bison$sd, K=bison.K, theta.test_vec = bison.thetas, label="Steppe Bison")
-bison.estimates
 
-ggplot(data=bison.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  guides(colour="none") +
-  geom_hline(yintercept=min(bison$age)) +
-  labs(x=NULL, y="Years BP", title="Steppe Bison Extinction")
-```
+cave_hyena.estimates = estimate_extinction(data=cave_hyena,
+                                           theta.test_vec = cave_hyena.thetas,
+                                           label="Cave Hyena")
 
-## Japanese Elephant
-
-```{r}
-jelephant.K = 40000
-jelephant = jelephant[jelephant$age < jelephant.K, ]
-jelephant.thetas = seq(25000, 35000)
-
-jelephant.estimates = estimate_extinction(dates=jelephant$age, sd=jelephant$sd, K=jelephant.K, theta.test_vec = jelephant.thetas, label="Japanese Elephant")
-jelephant.estimates
-
-ggplot(data=jelephant.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  guides(colour="none") +
-  geom_hline(yintercept=min(jelephant$age), linetype="dashed") +
-  annotate(geom="text", label=paste("Obs. Min.", min(jelephant$age)), x=0, y=min(jelephant$age)+250, hjust=0, fontface = 'italic') +
-  labs(x=NULL, y="Years BP", title="Japanese Elephant Extinction")
-```
-
-## Cave Hyena
-
-```{r}
-cave_hyena.K = 55000
-cave_hyena = cave_hyena[cave_hyena$age < cave_hyena.K, ]
-cave_hyena.thetas = seq(20000, 30000)
-
-cave_hyena.estimates = estimate_extinction(dates=cave_hyena$age, sd=cave_hyena$sd, K=cave_hyena.K, theta.test_vec = cave_hyena.thetas, label="Cave Hyena")
-cave_hyena.estimates
-
-ggplot(data=cave_hyena.estimates, aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
-  guides(colour="none") +
-  geom_hline(yintercept=min(cave_hyena$age), linetype="dashed") +
-  annotate(geom="text", label=paste("Obs. Min.", min(cave_hyena$age)), x=0, y=min(cave_hyena$age)+150, hjust=0, fontface = 'italic') +
-  labs(x=NULL, y="Years BP", title="Cave Hyena Extinction")
+all_results = rbind(cave_bear.estimates, mammoth.estimates, bison.estimates, cave_hyena.estimates)
 ```
 
 
 ## Combined
 
-```{r fig.width=12, fig.height=3}
-all_results = rbind(cave_bear.estimates, mammoth.estimates, bison.estimates, cave_hyena.estimates)#, mammoth.estimates, megaloceros.estimates)
 
+```{r fig.height=5, fig.width=8}
 p = all_results %>%
+  mutate(method_cat = ifelse(method == "MINMI", 2, ifelse(method == "SI-RM", 1, 0))) %>%
   ggplot(aes(colour=method)) +
-  geom_errorbar(aes(x=method, ymin=lower, ymax=upper)) + 
-  geom_point(aes(x=method, y=point)) +
+  geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
   guides(colour="none") +
-  labs(x=NULL, y="Years (BP)") +
-  facet_wrap(fct_reorder(dataset, n) ~ ., nrow=1, dir='v')
-
+  labs(x="Years (BP)", y=NULL) +
+  facet_wrap(fct_reorder(dataset, n) ~ ., ncol=2, dir='v', scale="free_x")
 p
-
-ggsave(file="../figures/applications.svg", plot=p, width=12, height=3)
 ```
+
+```{r}
+ggsave(file="../figures/applications.svg", plot=p, height=5, width=8)
+```
+
 
 ```{r}
 library(knitr)

@@ -129,7 +129,7 @@
 
 \title{Simulation Experiment Results}
 \author{Victor Tsang (z5209633)}
-\date{2022-11-09}
+\date{2022-11-13}
 
 \begin{document}
 \maketitle
@@ -163,13 +163,13 @@
 ## 4  2          0.5    MLE        NA  9871.056       NA  1.279831e-03
 ## 5  2          0.5 BA-MLE        NA  9364.609       NA  4.145861e-03
 ## 6  2          0.5 SI-UGM  7789.998  9518.421 10035.51  2.695084e+00
-##   conf_int_runtime method_cat
-## 1               NA   Existing
-## 2               NA   Existing
-## 3         3.777524   Existing
-## 4               NA   Existing
-## 5               NA   Existing
-## 6         2.695084   Existing
+##   conf_int_runtime B.point B.lower B.upper method_cat
+## 1               NA      NA      NA      NA   Existing
+## 2               NA      NA      NA      NA   Existing
+## 3         3.777524      NA      NA      NA   Existing
+## 4               NA      NA      NA      NA   Existing
+## 5               NA      NA      NA      NA   Existing
+## 6         2.695084      NA      NA      NA   Existing
 \end{verbatim}
 
 \begin{Shaded}
@@ -229,7 +229,7 @@ avg\_runtime
 13.89881 \\
 0.0 & MINMI & Proposed & 247.4576 & 139.4092643 & 228.2509 & 0.00001 \\
 0.0 & MLE & Existing & 438.6601 & 475.2971837 & 212.9656 & 0.00002 \\
-0.0 & SI-RM & Proposed & 438.6601 & 475.2971837 & 212.9656 & 0.03103 \\
+0.0 & SI-RM & Proposed & 438.6601 & 475.2971837 & 212.9656 & 0.05641 \\
 0.0 & SI-UGM & Existing & 248.9648 & 150.6138962 & 226.5068 & 4.70657 \\
 0.0 & STRAUSS & Existing & 234.8453 & -0.7152842 & 235.0799 & 0.00002 \\
 0.5 & BA-MLE & Existing & 244.0353 & -22.0990141 & 243.7908 & 0.00003 \\
@@ -237,9 +237,9 @@ avg\_runtime
 2.35887 \\
 0.5 & GRIWM-corrected & Existing & 244.7798 & 95.1730000 & 235.9578 &
 13.88254 \\
-0.5 & MINMI & Proposed & 250.5532 & 115.4530742 & 237.4612 & 0.00049 \\
+0.5 & MINMI & Proposed & 253.0606 & 118.8454210 & 239.1755 & 0.00047 \\
 0.5 & MLE & Existing & 428.0602 & 455.1437961 & 221.1254 & 0.00002 \\
-0.5 & SI-RM & Proposed & 428.0602 & 455.1437961 & 221.1254 & 0.00970 \\
+0.5 & SI-RM & Proposed & 428.0602 & 455.1437961 & 221.1254 & 0.06072 \\
 0.5 & SI-UGM & Existing & 250.7756 & 117.2579537 & 237.2634 & 2.33059 \\
 0.5 & STRAUSS & Existing & 245.5802 & -22.8493286 & 245.3034 &
 0.00002 \\
@@ -248,9 +248,9 @@ avg\_runtime
 18.10725 \\
 1.0 & GRIWM-corrected & Existing & 345.2420 & 34.4120000 & 344.4022 &
 13.90095 \\
-1.0 & MINMI & Proposed & 368.4990 & 100.8350222 & 358.6900 & 0.00055 \\
+1.0 & MINMI & Proposed & 373.3208 & 103.7670782 & 362.9161 & 0.00057 \\
 1.0 & MLE & Existing & 516.8878 & 432.6138460 & 330.0631 & 0.00002 \\
-1.0 & SI-RM & Proposed & 516.8878 & 432.6138460 & 330.0631 & 0.00627 \\
+1.0 & SI-RM & Proposed & 516.8878 & 432.6138460 & 330.0631 & 0.05992 \\
 1.0 & SI-UGM & Existing & 371.3002 & 115.2129004 & 358.3845 & 1.93741 \\
 1.0 & STRAUSS & Existing & 366.4727 & -50.5383309 & 364.2829 &
 0.00002 \\
@@ -260,9 +260,9 @@ avg\_runtime
 2.36410 \\
 2.0 & GRIWM-corrected & Existing & 504.9335 & -278.4774775 & 427.8120 &
 13.94220 \\
-2.0 & MINMI & Proposed & 508.3236 & 20.6641924 & 508.4050 & 0.00051 \\
+2.0 & MINMI & Proposed & 491.9000 & 27.3303294 & 491.6447 & 0.00071 \\
 2.0 & MLE & Existing & 507.4514 & 253.7890364 & 443.4860 & 0.00002 \\
-2.0 & SI-RM & Proposed & 507.4514 & 253.7890364 & 443.4860 & 0.00566 \\
+2.0 & SI-RM & Proposed & 507.4514 & 253.7890364 & 443.4860 & 0.05993 \\
 2.0 & SI-UGM & Existing & 501.5358 & 65.3780494 & 497.7593 & 1.68008 \\
 2.0 & STRAUSS & Existing & 553.8156 & -247.9251968 & 492.8416 &
 0.00002 \\
@@ -319,19 +319,19 @@ Average Runtime
 \end{minipage} \\
 \midrule()
 \endhead
-0.0 & SI-RM & Proposed & 97.6 & 2054.55 & 0.0310 \\
+0.0 & SI-RM & Proposed & 97.4 & 2005.35 & 0.0564 \\
 0.0 & SI-UGM & Existing & 97.3 & 1961.14 & 4.7066 \\
+0.5 & SI-RM & Proposed & 96.3 & 2097.43 & 0.0607 \\
 0.5 & SI-UGM & Existing & 96.2 & 2091.09 & 2.3306 \\
-0.5 & MINMI & Proposed & 95.9 & 2077.86 & 0.0012 \\
+0.5 & MINMI & Proposed & 95.2 & 2066.21 & 0.0013 \\
+2.0 & SI-RM & Proposed & 95.1 & 2960.26 & 0.0599 \\
+2.0 & MINMI & Proposed & 95.0 & 2945.03 & 0.0021 \\
 2.0 & SI-UGM & Existing & 94.9 & 2964.30 & 1.6801 \\
-2.0 & MINMI & Proposed & 94.7 & 2932.73 & 0.0014 \\
 0.0 & MINMI & Proposed & 94.5 & 1917.16 & 0.0000 \\
+1.0 & SI-RM & Proposed & 93.8 & 2346.11 & 0.0599 \\
 1.0 & SI-UGM & Existing & 93.7 & 2351.53 & 1.9374 \\
-1.0 & MINMI & Proposed & 93.6 & 2329.95 & 0.0013 \\
-2.0 & SI-RM & Proposed & 83.7 & 2500.86 & 0.0057 \\
+1.0 & MINMI & Proposed & 93.0 & 2325.84 & 0.0014 \\
 2.0 & GRIWM-corrected & Existing & 80.6 & 1949.67 & 13.9422 \\
-0.5 & SI-RM & Proposed & 80.3 & 2375.39 & 0.0097 \\
-1.0 & SI-RM & Proposed & 79.4 & 2459.19 & 0.0063 \\
 1.0 & GRIWM-corrected & Existing & 69.5 & 1047.99 & 13.9010 \\
 0.5 & GRIWM-corrected & Existing & 49.9 & 548.08 & 13.8825 \\
 2.0 & GRIWM & Existing & 22.6 & 2163.50 & 2.3641 \\
@@ -396,7 +396,7 @@ MINMI & 247 & 139 & 228 & 0.00001\\
 SI-UGM & 249 & 151 & 227 & 4.70657\\
 \addlinespace
 MLE & 439 & 475 & 213 & 0.00002\\
-SI-RM & 439 & 475 & 213 & 0.03103\\
+SI-RM & 439 & 475 & 213 & 0.05641\\
 GRIWM & 1184 & -950 & 282 & 2.33548\\
 \bottomrule
 \end{tabular}
@@ -409,11 +409,11 @@ GRIWM & 1184 & -950 & 282 & 2.33548\\
 BA-MLE & 244 & -22 & 244 & 0.00003\\
 GRIWM-corrected & 245 & 95 & 236 & 13.88254\\
 STRAUSS & 246 & -23 & 245 & 0.00002\\
-MINMI & 251 & 115 & 237 & 0.00049\\
 SI-UGM & 251 & 117 & 237 & 2.33059\\
+MINMI & 253 & 119 & 239 & 0.00047\\
 \addlinespace
 MLE & 428 & 455 & 221 & 0.00002\\
-SI-RM & 428 & 455 & 221 & 0.00970\\
+SI-RM & 428 & 455 & 221 & 0.06072\\
 GRIWM & 1276 & -993 & 291 & 2.35887\\
 \bottomrule
 \end{tabular}
@@ -426,11 +426,11 @@ GRIWM & 1276 & -993 & 291 & 2.35887\\
 GRIWM-corrected & 345 & 34 & 344 & 13.90095\\
 BA-MLE & 366 & -46 & 364 & 0.00002\\
 STRAUSS & 366 & -51 & 364 & 0.00002\\
-MINMI & 368 & 101 & 359 & 0.00055\\
 SI-UGM & 371 & 115 & 358 & 1.93741\\
+MINMI & 373 & 104 & 363 & 0.00057\\
 \addlinespace
 MLE & 517 & 433 & 330 & 0.00002\\
-SI-RM & 517 & 433 & 330 & 0.00627\\
+SI-RM & 517 & 433 & 330 & 0.05992\\
 GRIWM & 1548 & -1060 & 425 & 18.10725\\
 \bottomrule
 \end{tabular}
@@ -440,11 +440,11 @@ GRIWM & 1548 & -1060 & 425 & 18.10725\\
 \multicolumn{1}{l}{Method} & \multicolumn{1}{c}{MSE} & \multicolumn{1}{c}{Bias} & \multicolumn{1}{c}{Variance} & \multicolumn{1}{c}{Average Runtime} \\
  & (000's years) & (years) & (000's years) & (seconds)\\
 \midrule
+MINMI & 492 & 27 & 492 & 0.00071\\
 SI-UGM & 502 & 65 & 498 & 1.68008\\
 GRIWM-corrected & 505 & -278 & 428 & 13.94220\\
 MLE & 507 & 254 & 443 & 0.00002\\
-SI-RM & 507 & 254 & 443 & 0.00566\\
-MINMI & 508 & 21 & 508 & 0.00051\\
+SI-RM & 507 & 254 & 443 & 0.05993\\
 \addlinespace
 BA-MLE & 543 & -234 & 489 & 0.00002\\
 STRAUSS & 554 & -248 & 493 & 0.00002\\
@@ -504,9 +504,9 @@ GRIWM & 2507 & -1408 & 526 & 2.36410\\
 \multicolumn{1}{c}{Method} & \multicolumn{4}{c}{Coverage} \\
  & 0*$\sigma$ & 0.5*$\sigma$ & 1*$\sigma$ & 2*$\sigma$\\
 \midrule
-SI-RM & 97.6 & 80.3 & 83.7 & 79.4\\
+SI-RM & 97.4 & 96.3 & 95.1 & 93.8\\
 SI-UGM & 97.3 & 96.2 & 94.9 & 93.7\\
-MINMI & 94.5 & 95.9 & 94.7 & 93.6\\
+MINMI & 94.5 & 95.2 & 95.0 & 93.0\\
 GRIWM-corrected & 0.0 & 49.9 & 80.6 & 69.5\\
 GRIWM & 0.0 & 7.0 & 22.6 & 13.9\\
 \bottomrule
@@ -517,9 +517,9 @@ GRIWM & 0.0 & 7.0 & 22.6 & 13.9\\
 \multicolumn{1}{c}{Method} & \multicolumn{4}{c}{Average Width} \\
  & 0*$\sigma$ & 0.5*$\sigma$ & 1*$\sigma$ & 2*$\sigma$\\
 \midrule
-SI-RM & 2054.55 & 2375.39 & 2500.86 & 2459.19\\
+SI-RM & 2005.35 & 2097.43 & 2960.26 & 2346.11\\
 SI-UGM & 1961.14 & 2091.09 & 2964.30 & 2351.53\\
-MINMI & 1917.16 & 2077.86 & 2932.73 & 2329.95\\
+MINMI & 1917.16 & 2066.21 & 2945.03 & 2325.84\\
 GRIWM-corrected & 0.00 & 548.08 & 1949.67 & 1047.99\\
 GRIWM & 0.00 & 608.33 & 2163.50 & 1162.65\\
 \bottomrule
@@ -530,9 +530,9 @@ GRIWM & 0.00 & 608.33 & 2163.50 & 1162.65\\
 \multicolumn{1}{c}{Method} & \multicolumn{4}{c}{Average Runtime} \\
  & 0*$\sigma$ & 0.5*$\sigma$ & 1*$\sigma$ & 2*$\sigma$\\
 \midrule
-SI-RM & 0.0310 & 0.0097 & 0.0057 & 0.0063\\
+SI-RM & 0.0564 & 0.0607 & 0.0599 & 0.0599\\
 SI-UGM & 4.7066 & 2.3306 & 1.6801 & 1.9374\\
-MINMI & 0.0000 & 0.0012 & 0.0014 & 0.0013\\
+MINMI & 0.0000 & 0.0013 & 0.0021 & 0.0014\\
 GRIWM-corrected & 13.8988 & 13.8825 & 13.9422 & 13.9010\\
 GRIWM & 2.3355 & 2.3589 & 2.3641 & 18.1072\\
 \bottomrule
@@ -561,13 +561,17 @@ GRIWM & 2.3355 & 2.3589 & 2.3641 & 18.1072\\
 \NormalTok{p }\OtherTok{=}\NormalTok{ estimates }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(lower) }\SpecialCharTok{\&}\NormalTok{ error\_factor }\SpecialCharTok{==} \DecValTok{1}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{group\_by}\NormalTok{(method\_cat, method) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{lower =} \FunctionTok{mean}\NormalTok{(lower), }\AttributeTok{upper=}\FunctionTok{mean}\NormalTok{(upper)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{lower =} \FunctionTok{mean}\NormalTok{(lower), }\AttributeTok{upper=}\FunctionTok{mean}\NormalTok{(upper), }\AttributeTok{point=}\FunctionTok{mean}\NormalTok{(point)) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{width=}\NormalTok{upper}\SpecialCharTok{{-}}\NormalTok{lower) }\SpecialCharTok{\%\textgreater{}\%}
   \FunctionTok{mutate}\NormalTok{(}\AttributeTok{method\_cat\_int =} \FunctionTok{ifelse}\NormalTok{(method\_cat }\SpecialCharTok{==} \StringTok{"Existing"}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
-  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{y=}\FunctionTok{reorder}\NormalTok{(method, method\_cat\_int), }\AttributeTok{colour=}\NormalTok{method\_cat)) }\SpecialCharTok{+}
-  \FunctionTok{geom\_errorbarh}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{xmin=}\NormalTok{lower, }\AttributeTok{xmax=}\NormalTok{upper)) }\SpecialCharTok{+}
-  \FunctionTok{guides}\NormalTok{(}\AttributeTok{color =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{reverse=}\ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{+}
-  \FunctionTok{labs}\NormalTok{(}\AttributeTok{x=}\ConstantTok{NULL}\NormalTok{, }\AttributeTok{y=}\StringTok{"Years (BP)"}\NormalTok{, }\AttributeTok{title=}\StringTok{"Simulation Experiment Confidence Intervals"}\NormalTok{, }\AttributeTok{colour=}\ConstantTok{NULL}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{colour=}\NormalTok{method\_cat)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_pointrange}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{xmin=}\NormalTok{lower, }\AttributeTok{xmax=}\NormalTok{upper, }\AttributeTok{x=}\NormalTok{point, }\AttributeTok{y=}\FunctionTok{reorder}\NormalTok{(method, method\_cat\_int))) }\SpecialCharTok{+}
+  \FunctionTok{guides}\NormalTok{(}\AttributeTok{colour =} \FunctionTok{guide\_legend}\NormalTok{(}\AttributeTok{reverse=}\ConstantTok{TRUE}\NormalTok{)) }\SpecialCharTok{+}
+  \FunctionTok{labs}\NormalTok{(}\AttributeTok{y=}\ConstantTok{NULL}\NormalTok{, }\AttributeTok{x=}\StringTok{"Years (BP)"}\NormalTok{,}
+       \AttributeTok{title=}\StringTok{"Simulation Experiment Confidence Intervals"}\NormalTok{,}
+       \AttributeTok{colour=}\StringTok{"Method"}\NormalTok{,}
+       \AttributeTok{subtitle=}\StringTok{"(Average of Interval Endpoints and Point Estimates)"}\NormalTok{) }\SpecialCharTok{+}
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\AttributeTok{from=}\DecValTok{8000}\NormalTok{, }\AttributeTok{to=}\DecValTok{11500}\NormalTok{, }\AttributeTok{by=}\DecValTok{500}\NormalTok{)) }\SpecialCharTok{+}
   \FunctionTok{theme\_bw}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
@@ -587,12 +591,49 @@ GRIWM & 2.3355 & 2.3589 & 2.3641 & 18.1072\\
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{ggsave}\NormalTok{(}\AttributeTok{filename=}\StringTok{"../figures/sim{-}exp{-}intervals.svg"}\NormalTok{, }\AttributeTok{plot=}\NormalTok{p)}
+\FunctionTok{ggsave}\NormalTok{(}\AttributeTok{filename=}\StringTok{"../figures/sim{-}exp{-}intervals.svg"}\NormalTok{, }\AttributeTok{plot=}\NormalTok{p, }\AttributeTok{height=}\DecValTok{5}\NormalTok{, }\AttributeTok{width=}\DecValTok{8}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{monte-carlo-samples-for-minmi}{%
+\subsection{Monte Carlo Samples for
+MINMI}\label{monte-carlo-samples-for-minmi}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{B.minmi }\OtherTok{=} \FunctionTok{readRDS}\NormalTok{(}\StringTok{"../data/sim\_exp{-}B{-}minmi.RDS"}\NormalTok{)}
+  
+\NormalTok{B.minmi.kbl }\OtherTok{=}\NormalTok{ B.minmi }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{kable}\NormalTok{(}\AttributeTok{col.names =} \FunctionTok{c}\NormalTok{(}\StringTok{""}\NormalTok{, }\StringTok{"q = 0.025"}\NormalTok{, }\StringTok{"q = 0.5"}\NormalTok{, }\StringTok{"q = 0.975"}\NormalTok{),}
+        \AttributeTok{booktabs=}\NormalTok{T, }\AttributeTok{format=}\StringTok{"latex"}\NormalTok{, }\AttributeTok{escape =} \ConstantTok{FALSE}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{add\_header\_above}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Measurement Error Variation}\StringTok{\textasciigrave{}}\OtherTok{=}\DecValTok{1}\NormalTok{, }\AttributeTok{B=}\DecValTok{3}\NormalTok{), }\AttributeTok{line=}\NormalTok{F)}
+
+\FunctionTok{print}\NormalTok{(B.minmi.kbl)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## Saving 6.5 x 4.5 in image
+## 
+## \begin{tabular}{rrrr}
+## \toprule
+## \multicolumn{1}{c}{Measurement Error Variation} & \multicolumn{3}{c}{B} \\
+##  & q = 0.025 & q = 0.5 & q = 0.975\\
+## \midrule
+## 0.5 & 5 & 6 & 3\\
+## 1.0 & 14 & 24 & 9\\
+## 2.0 & 42 & 91 & 33\\
+## 4.0 & 136 & 243 & 119\\
+## 0.0 & 2 & 2 & 2\\
+## \bottomrule
+## \end{tabular}
 \end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{writeLines}\NormalTok{(B.minmi.kbl, }
+           \StringTok{"../figures/table{-}sim{-}exp{-}minmi{-}Bs.tex"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
 
 \end{document}

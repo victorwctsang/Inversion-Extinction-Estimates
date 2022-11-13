@@ -62,7 +62,7 @@ theta.true = 10000                 # True extinction date
 K = 20000                          # Upper bound for fossil ages
  
 dating_error.mean = 0              # True mean of radiocarbon dating error
-dating_error.sd = 272              # True Standard deviation
+dating_error.sd = 2*272              # True Standard deviation
  
 alpha = 0.05                       # 95% confidence interval
 
@@ -138,7 +138,7 @@ Compute sample and expected variances for a set of values of $B$
 ```{r}
 n = 30
 
-B = unique(round(pracma::logseq(2, 5000, 40)))
+B = unique(round(pracma::logseq(2, 1000, 20)))
 num.B = length(B)
 
 num.estimates = 250
@@ -236,10 +236,6 @@ legend("topright",
 
 ```
 
-
-- The left-most plot is the expected and sample variances for $q = 0.025$. This is pretty close to correct.
-- The middle plot is the expected and sample variances for $q = 0.975$. Our sample is larger than our expected by a constant factor of ~3
-- The right-most plot is the expected and sample variances for $q=0.975$ using $\hat\theta_q = K - q^{-1/n} * (K-m)$ as per our no measurement error case, instead of `theta.hat.upper.gold`. Sample is larger than expected by a factor of ~1.6
 
 ```{r fig.width=8, fig.height=5}
 ratio_df.lower = data.frame(

@@ -19,8 +19,8 @@ set.seed(3)
 
 alpha = 0.05
 
-datasets.err1 = datasets %>% filter(error_factor == 1)
-datasets.err1_sample = datasets.err1#datasets.err1[sample(1:nrow(datasets.err1), 100, ), ]
+datasets.err1 = datasets %>% filter(error_factor == 2)
+datasets.err1_sample = datasets.err1[sample(1:nrow(datasets.err1), 100, ), ]
 head(datasets.err1_sample)
 ```
 
@@ -107,6 +107,8 @@ for (level in unique(tmp$Endpoint)) {
 ## Performance with "bad" estimates and fixed number of iterations
 
 ```{r}
+max_iter = 1000
+
 tmp.data = datasets.err1_sample[1, ]
 tmp.W = as.numeric(tmp.data$W[[1]])
 tmp.sd = as.numeric(tmp.data$error_factor*fossil.sd)
@@ -114,70 +116,91 @@ tmp.sd = as.numeric(tmp.data$error_factor*fossil.sd)
 tmp.SI_results = simulated_inversion(alpha, tmp.W, tmp.sd, K, theta.test_vec,
                                  dating_error.mean=0, return_model = T)
 
-
 tmp.SIRM_results.GB_start = estimate_CI.rm(
-  W=tmp.W, K=K, alpha=alpha, max_iter=2000, eps.mean=dating_error.mean,
+  W=tmp.W, K=K, alpha=alpha, max_iter=max_iter, eps.mean=dating_error.mean,
   eps.sigma=mean(tmp.sd), .CI_estimates=tmp.SI_results,
   .model=tmp.SI_results$model, return_iters = T, max_var=-1
 )
-
-tmp.SIRM_results.SIUGM_start = estimate_CI.rm(
-  W=tmp.W, K=K, alpha=alpha, max_iter=2000, eps.mean=dating_error.mean,
-  eps.sigma=mean(tmp.sd), .CI_estimates=tmp.SI_results,
-  .model=tmp.SI_results$model, return_iters = T, max_var=-1,
-  .starting_vals=c(tmp.SI_results$lower, tmp.SI_results$upper)
-)
-
-tmp.SIRM_results.bad_start = estimate_CI.rm(
-  W=tmp.W, K=K, alpha=alpha, max_iter=2000, eps.mean=dating_error.mean,
-  eps.sigma=mean(tmp.sd), .CI_estimates=tmp.SI_results,
-  .model=tmp.SI_results$model, return_iters = T, max_var=-1,
-  .starting_vals=c(14000, 5000)
-)
 ```
 
-```{r fig.height=10, fig.width=12}
+```{r fig.height=6, fig.width=20}
 # Combine all results tidily
 tmp.results = rbind(
   # Garthwaite & Buckland Heuristic
-  data.frame(`Starting Value` = "Percentile Method",
+  data.frame(`Starting Value` = "SI-RM",
              Iteration = 1:length(tmp.SIRM_results.GB_start$lower.iters),
-             Endpoint = "Lower Endpoint",
-             Estimate = tmp.SIRM_results.GB_start$lower.iters),
-  data.frame(`Starting Value` = "Percentile Method",
+             Endpoint = "Lower Endpoint (q=0.025)",
+             Estimate = tmp.SIRM_results.GB_start$lower.iters,
+             group_id = "SI-RM"),
+  data.frame(`Starting Value` = "SI-RM",
              Iteration = 1:length(tmp.SIRM_results.GB_start$upper.iters),
-             Endpoint = "Upper Endpoint",
-             Estimate = tmp.SIRM_results.GB_start$upper.iters),
-  # SI-UGM Starting values
-  data.frame(`Starting Value` = "SI-UGM",
-             Iteration = 1:length(tmp.SIRM_results.SIUGM_start$lower.iters),
-             Endpoint = "Lower Endpoint",
-             Estimate = tmp.SIRM_results.SIUGM_start$lower.iters),
-  data.frame(`Starting Value` = "SI-UGM",
-             Iteration = 1:length(tmp.SIRM_results.SIUGM_start$upper.iters),
-             Endpoint = "Upper Endpoint",
-             Estimate = tmp.SIRM_results.SIUGM_start$upper.iters),
-  # Manually selected starting values
-  data.frame(`Starting Value` = "Manual",
-             Iteration = 1:length(tmp.SIRM_results.bad_start$lower.iters),
-             Endpoint = "Lower Endpoint",
-             Estimate = tmp.SIRM_results.bad_start$lower.iters),
-  data.frame(`Starting Value` = "Manual",
-             Iteration = 1:length(tmp.SIRM_results.bad_start$upper.iters),
-             Endpoint = "Upper Endpoint",
-             Estimate = tmp.SIRM_results.bad_start$upper.iters)
+             Endpoint = "Upper Endpoint (q=0.975)",
+             Estimate = tmp.SIRM_results.GB_start$upper.iters,
+             group_id = "SI-RM")
 )
 
-SI_RM.starting_estimate_plot = tmp.results %>%
-  filter(Iteration <= 1000) %>%
-  filter(Starting.Value != "SI-UGM") %>%
-  ggplot(aes(x=Iteration, y=Estimate, colour=Starting.Value)) +
-  geom_line() +
-  facet_wrap(Endpoint ~ ., scales="free", nrow=2) +
-  theme(legend.title=element_blank())
-SI_RM.starting_estimate_plot
+starting_values = cbind(
+  lower = c(3000, 5000, 8000, 10000, 15000, 18000),
+  upper = c(18000, 15000, 10000, 8000, 5000, 3000)
+)
 
-ggsave(filename="../figures/SI-RM-starting-estimate-convergence.svg", plot=SI_RM.starting_estimate_plot)
+for (row_idx in 1:nrow(starting_values)) {
+  label = paste("Manual:", paste(starting_values[row_idx, ], collapse=","))
+  estimates = estimate_CI.rm(
+    W = tmp.W,
+    K = K,
+    alpha = alpha,
+    max_iter = max_iter,
+    eps.mean = dating_error.mean,
+    eps.sigma = mean(tmp.sd),
+    .CI_estimates = tmp.SI_results,
+    .model = tmp.SI_results$model,
+    return_iters = T,
+    max_var = -1,
+    .starting_vals = starting_values[row_idx, ]
+  )
+  
+  tmp.results = rbind(
+    tmp.results,
+    data.frame(`Starting Value` = label,
+               Iteration = 1:length(estimates$lower.iters),
+               Endpoint = "Lower Endpoint (q=0.025)",
+               Estimate = estimates$lower.iters,
+               group_id = "Manual"),
+    data.frame(`Starting Value` = label,
+               Iteration = 1:length(estimates$upper.iters),
+               Endpoint = "Upper Endpoint (q=0.975)",
+               Estimate = estimates$upper.iters,
+               group_id = "Manual")
+  )
+}
+
+tmp.results = tmp.results %>%
+  mutate(group_id2 = paste(Starting.Value, Endpoint))
+
+dim(tmp.results)
+```
+
+```{r fig.width=14, fig.height=5}
+SI_RM.starting_estimate_plot = tmp.results %>%
+  ggplot() +
+  geom_line(data=filter(tmp.results, group_id=="SI-RM"),
+            aes(x=Iteration, y=Estimate), colour="red") +
+  geom_line(data=filter(tmp.results, group_id=="Manual"),
+            aes(x=Iteration, y=Estimate, group=Starting.Value),
+            alpha=0.3) +
+  facet_wrap(Endpoint ~ ., scales="free", ncol=2) +
+  theme_bw() +
+  xlim(0, 500)
+SI_RM.starting_estimate_plot
+```
+
+
+```{r}
+ggsave(filename="../figures/SI-RM-starting-estimate-convergence.svg",
+       plot=SI_RM.starting_estimate_plot,
+       width=14,
+       height=5)
 ```
 
 
@@ -186,8 +209,11 @@ $$
 $$
 
 
+## Performance with the same starting estimates but bad step sizes
 
+```{r}
 
+```
 
 
 
