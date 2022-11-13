@@ -1,7 +1,7 @@
 # Simulation Experiments
 
 # Load synthetic data and configuration
-source("helpers-simulation-experiments.R")
+source("../src/helpers-simulation-experiments.R")
 
 load("../data/synthetic-data.RData")
 
@@ -28,23 +28,54 @@ results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 
 start_time = Sys.time()
 for (i in 1:nrow(datasets)) {
-  iter = datasets[i,]
+  iter = datasets[i, ]
   W = as.numeric(iter$W[[1]])
-  sd = as.numeric(iter$error_factor*fossil.sd)
+  sd = as.numeric(iter$error_factor * fossil.sd)
   print(paste("Dataset ID:", iter$id))
   
   print("- Point Estimates")
   for (method in methods.point_estimates) {
     print(paste("--", method))
-    estimation = estimate_extinction(W=W, sd=sd, method=method, K=K, dating_error.mean=dating_error.mean)
-    results = tibble::add_row(results, id=iter$id, error_factor=iter$error_factor, method=method, point=estimation$point, point_runtime=estimation$point_runtime, conf_int_runtime=estimation$conf_int_runtime)
+    estimation = estimate_extinction(
+      W = W,
+      sd = sd,
+      method = method,
+      K = K,
+      dating_error.mean = dating_error.mean
+    )
+    results = tibble::add_row(
+      results,
+      id = iter$id,
+      error_factor = iter$error_factor,
+      method = method,
+      point = estimation$point,
+      point_runtime = estimation$point_runtime,
+      conf_int_runtime = estimation$conf_int_runtime
+    )
   }
   
   print("- Confidence Intervals")
   for (method in methods.conf_int) {
     print(paste("--", method))
-    estimation = estimate_conf_int(W=W, sd=sd, method=method, alpha=alpha, K=K, dating_error.mean=dating_error.mean)
-    results = tibble::add_row(results, id=iter$id, error_factor=iter$error_factor, method=method, lower=estimation$lower, point=estimation$point, upper=estimation$upper, point_runtime=estimation$point_runtime, conf_int_runtime=estimation$conf_int_runtime)
+    estimation = estimate_conf_int(
+      W = W,
+      sd = sd,
+      method = method,
+      alpha = alpha,
+      K = K,
+      dating_error.mean = dating_error.mean
+    )
+    results = tibble::add_row(
+      results,
+      id = iter$id,
+      error_factor = iter$error_factor,
+      method = method,
+      lower = estimation$lower,
+      point = estimation$point,
+      upper = estimation$upper,
+      point_runtime = estimation$point_runtime,
+      conf_int_runtime = estimation$conf_int_runtime
+    )
   }
 }
 sims.time = Sys.time() - start_time
