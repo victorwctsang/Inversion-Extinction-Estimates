@@ -1,0 +1,23 @@
+We would like to prove that under the \hyperref[model: no-measurement-error]{$\delta$-model}, the MLE of $\theta$ has bias $= \frac{K-\theta}{n+1}$.
+\begin{proof}
+    Given that $X_1, \dots, X_n$ are independent and uniformly distributed on $[\theta, K]$, the CDF is \[
+    \PP_\theta(X_i \leq x) = \begin{cases}
+                0 & x > K \\
+                \frac{x-\theta}{K-\theta} & x \in [\theta, K] \\
+                1 & x < \theta
+            \end{cases}
+    \]
+    Now, as shown in \autoref{section:MLE}, the MLE is the first order statistic, which has CDF \begin{align*}
+        \PP_\theta(X_{(1)} \leq m) &= 1 - \PP_\theta(X_1 > m, X_2 > m, \dots, X_n > m) = 1 - \prod_{i=1}^n \left[1 - \PP_\theta(X_i \leq m)\right] \\
+        \therefore \PP_\theta(X_{(1)} \leq x) &= \begin{cases}
+                1 & \text{if $m > K$} \\
+                1 - \left(1 - \frac{m-\theta}{K-\theta}\right)^n & \text{if $m \in [\theta, K]$} \\
+                0 & \text{if $x < \theta$}
+            \end{cases}
+    \end{align*}
+    By differentiating, we have the density function $f(m) = \frac{n(K-m)^{n-1}}{(K-\theta)^n} \mathbbm{1}_{\left\{ m \in [\theta, K] \right\}}$. Hence, \begin{align*}
+        \E[X_{(1)}] &= \int_\theta^K \frac{n(K-m)^{n-1}}{(K-\theta)^n} m dm \\
+            &= \frac{n}{(K-\theta)^n} \int_0^{K-\theta} Ku^{n-1} - u^n du \quad \text{where $u = K - m$} \\
+            &= \frac{K}{n+1} + \frac{n}{n+1}\theta
+    \end{align*}
+\end{proof}

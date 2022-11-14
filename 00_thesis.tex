@@ -14,7 +14,7 @@
 % Title Page
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\title{Inferring Extinction Times in the Fossil Record using Test-statistic Inversion}
+\title{Inferring Extinction Times in the Fossil Record using Test-Statistic Inversion}
 
 \authornameonly{Victor Wing Chi Tsang}
 
@@ -38,7 +38,7 @@
 
 \input{tex/02_plagiarism.tex}
 
-\input{tex/03_acknowledgements.tex}
+% \input{tex/03_acknowledgements.tex}
 
 \input{tex/04_abstract.tex}
 
@@ -55,7 +55,7 @@
 \chapter{Introduction}\label{chap: intro}
 \input{tex/intro.tex}
 
-\chapter{Review of Common Assumptions and Notation Formulation}\label{chap: assumptions}
+\chapter{Model Formulation}\label{chap: assumptions}
 \input{tex/assumptions-and-notation.tex}
 
 \chapter{Review of Existing Methods}\label{chap: existing-methods}
@@ -64,23 +64,22 @@
 \chapter{Proposed Methods}\label{chap: proposed-methods}
 \input{tex/proposed_methods.tex}
 
-\chapter{Simulation Experiments}\label{chap: simulation-experiments}
+\chapter{Simulation Studies}\label{chap: simulation-experiments}
 \input{tex/sim-exp.tex}
 
 \chapter{Application}\label{chap: applications}
 \input{tex/application.tex}
 
-\chapter{Extensions}\label{chap: extensions}
-\input{tex/extensions.tex}
-
-\chapter{Conclusion}\label{chap: conclusions}
+\chapter{Conclusions and Future Directions}\label{chap: conclusions}
 \input{tex/conclusions.tex}
 
 \appendix
 
-% \chapter{Bias of Maximum Likelihood Estimator}
+\chapter{Proof: Bias of the Maximum Likelihood Estimator}\label{apx:mle-bias-proof}
+\input{tex/appendix-proof-MLE-bias.tex}
 
-% \chapter{Strauss Estimator Proof}
+\chapter{Proof: Strauss Estimator}\label{apx:strauss-estimator-proof}
+\input{tex/appendix-proof-strauss.tex}
 
 \chapter{Proof: Stochastically Increasing Property}\label{apx:minmi-stoch-incr-proof}
 \input{tex/appendix-minmi-stoch-incr.tex}
@@ -91,6 +90,11 @@
 \chapter{Extra Tables and Figures}\label{apx:extra-tables-figures}
 \input{tex/appendix-extras.tex}
 
+\chapter{R Code: MINMI Implementation}\label{apx:code-minmi}
+\input{tex/appendix-code-minmi.tex}
+
+\chapter{R Code: SI-RM Implementation}\label{apx:code-si-rm}
+\input{tex/appendix-code-si-rm.tex}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \bibliography{references}

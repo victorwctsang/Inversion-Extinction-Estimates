@@ -1,17 +1,29 @@
 
-In this chapter we study the performance of the existing and proposed methods for estimating extinction times and constructing confidence intervals, using synthetic datasets generated under known conditions. To investigate the performance of these methods with increasing measurement error variation, we repeated the experiments by multiplying the measurement errors by factors of 0 (representing the no measurement error scenario), $0.5$, 1, and 2 (representing a high measurement error scenario). For each ``error factor", we generated 1000 synthetic datasets.
+In this chapter we study the performance of the existing and proposed methods for estimating extinction times and constructing confidence intervals, using synthetic datasets generated under various known conditions.
 
-Denote the $i\textsuperscript{th}$ sample of the $j\textsuperscript{th}$ synthetic dataset by $W_{i, j} = X_{i, j} + \varepsilon_{i, j}$, where each fossil is conditionally uniform on a corresponding measurement error and is distributed on the interval $\left[ \theta_0, K - \varepsilon_{i,j} \right]$. For these trials, we set the true extinction date $\theta_0 = 10,000$, and set the known upper bound $K = 20,000$ as the speciation date. Assume that the measurement errors are normally distributed with mean 0 and constant variance $\sigma^2$, which is arbitrarily selected according to a real fossil dataset: \[
-W_{i, j} = X_{i, j} + \varepsilon_{i, j}; \quad X_{i, j} \sim \mathcal{U}(\theta_0, K - \varepsilon_{i, j}), \quad \varepsilon_{i, j} \sim \cN(0, \sigma^2)
-\] for all $i \in \{1, 2, \dots, 20\}$ and $j \in \{1, 2, \dots, 1000\}$ where $\theta_0 = 10000$ and $K = 20000$.
+\section{Simulation Setup}
+
+Simulation studies were performed using synthetic datasets generated according to the \hyperref[model: no-measurement-error]{$\delta$-model} and \hyperref[model: measurement-error]{$\varepsilon$-model} introduced in \autoref{chap: assumptions}. Each synthetic fossil record was generated with $n=20$, a true extinction time of $\theta_0 = 10,000$, and an upper bound of $K = 20,000$. These conditions were informed by the typical sample sizes and time periods for megafauna that went extinct in the late Pleistocene era, which occurred during the last glacial period \cite{Cooper2015}.
+
+For datasets generated under the \hyperref[model: measurement-error]{$\varepsilon$-model}, we assumed a measurement error variation of $\sigma = 291.3$, which was chosen by taking the average standard deviation in a dataset of woolly mammoth fossils from the dataset provided by \citet{Cooper2015}. To investigate the impact of increasing measurement error variation, separate datasets were generated with varying magnitudes of $\sigma$, multiplying it by factors of 0.5, 1, and 2. In total, 1000 synthetic datasets were generated for each of the four scenarios: the $\delta$-model ($0*\sigma$), the $\varepsilon$-model with $0.5*\sigma$, $1*\sigma$, and $2*\sigma$. 
+
+The Simulated Inversion - Uniform Gaussian Minimum (SI-UGM) estimator proposed by \citet{Huang2019} requires a predetermined vector $\bm{\theta}$ of candidate values for $\theta$. The challenge with implementing SI-UGM therefore lies in choosing $\bm{\theta}$, as it affects the regression model used to estimate the quantile function $\PP_\theta(S(\bm{W}) > S(\bm{x}))$. For the purposes of these simulation studies, $\bm{\theta}$ was arbitrarily chosen as the set of all integers between $[4000, 17000]$.
+
+The number of Monte Carlo samples used by the MINMI estimator and the stopping criteria of SI-RM rely on some target variance $A$ that we consider ``negligible". For these simulation studies, we let $A = 0.2\sigma^2$. For MINMI, this target variance was substituted into \autoref{eqn:minmi-optimal-b} under each of the four scenarios to find a the number of Monte Carlo samples to use in each scenario (see \autoref{tab:table-sim-exp-minmi-Bs}), while we allowed SI-RM to iterate until the estimated RM variance was less than this target value according to the stopping criteria defined in \autoref{subsec:si-rm-stopping-criteria}.
+\begin{table}[ht]
+    \centering
+    \caption{Number of Monte Carlo samples ($B$) used in each scenario for MINMI estimates of the lower ($q=0.025$) and upper ($q=0.975$) endpoints of 95\% confidence intervals. Point estimates are found at $q = 0.5$.}
+    \vspace{4mm}
+    \include{figures/table-sim-exp-minmi-Bs.tex}
+    \label{tab:table-sim-exp-minmi-Bs}
+    \vspace{-4mm}
+\end{table}
 
 \section{Point Estimates}
 
-In these experiments, we compared the performance of the different methods' point estimates of extinction times across four metrics: the mean squared error, bias, variance, and average run time. We considered the following seven estimators: MLE, Bias-Adjusted MLE (BA-MLE), the Strauss estimator, GRIWM, SI-UGM, and MINMI. For the SI-UGM, SI-RM, and MINMI estimators, point estimates were obtained by estimating the median $\hat\theta_{q=0.5}$. Note that we exclude the SI-RM estimator in these experiments as it estimates quantiles relative to a given point estimate: hence point estimates produced by SI-RM would be equivalent to the MLE.
+In these experiments, we compared the performance of the different methods' point estimates of extinction times across four metrics: the mean squared error, bias, variance, and average run time. We considered the existing methods discussed in \autoref{chap: existing-methods}: the MLE, the Bias-Adjusted MLE (BA-MLE), the Strauss estimator, GRIWM with threshold probability $q=0.05$, the bias-adjusted version of GRIWM (GRIWM-BA) with $q=0.5$, and SI-UGM. We compared these against our proposed estimators MINMI and SI-RM. For the SI-UGM, SI-RM, and MINMI estimators, point estimates were obtained by estimating the median $\hat\theta_{q=0.5}$.
 
-We first considered the \textbf{no-measurement error scenario }in order to form a baseline comparison against the MLE, BA-MLE, and Strauss estimators which do not account for measurement error. The best methods were the bias adjusted MLE and the Strauss estimator, which were both designed to be statistically optimal under uniformity assumptions and no measurement error. These two estimators show little to no bias with the best MSE out of the seven methods (\autoref{tab:table-sim-exp-point-error0}).
- 
-Finally, although MINMI, GRIWM, and SI-UGM produced relatively low MSE estimates, they remained relatively \textbf{positively biased}. This is because these three estimates use a median-based estimate: the sampling error in the data naturally means a median-based estimate would be biased upwards, as estimates would be skewed upwards towards the data rather than being centered on the true value. We also note that the MINMI, GRIWM, and SI-UGM estimators had relatively low variance compared to the BA-MLE and Strauss estimators.
+We first considered the scenario under the \hyperref[model: no-measurement-error]{$\delta$-model} in order to form a baseline comparison against the MLE, BA-MLE, and Strauss estimators which do not account for measurement error. The best methods were BA-MLE and Strauss estimator, which were both designed to be optimal under uniformity and negligible measurement error assumptions. These two estimators showed little to no bias with the best MSE (\autoref{tab:table-sim-exp-point-error0}). SI-RM produced identical results to the MLE, as the method will always converge to the chosen test-statistic (the MLE here) \cite{Garthwaite1992}.
 \begin{table}[ht]
     \centering
     \caption{Point estimator performance, ordered by MSE (error = $0*\sigma$)}
@@ -19,7 +31,15 @@ Finally, although MINMI, GRIWM, and SI-UGM produced relatively low MSE estimates
     \label{tab:table-sim-exp-point-error0}
 \end{table}
 
-We then moved on to the various estimators' performances across various magnitudes of measurement error variance. Looking at the ``expected" scenario shown in \autoref{tab:table-sim-exp-point-error1}, where we did not modify the variance of the measurement error $\sigma$, we see these results are fairly consistent with the no measurement error scenario, the only exception being the performance of the corrected version of GRIWM. The corrected version of GRIWM produced point estimates with the \textbf{lowest MSE} in a measurement error scenario with the second least amount of bias out of the 8 methods. This can be attributed to the changes we proposed, where the threshold probability $p_t$ was set to 0.5 instead of $0.05$ (resulting in a median-based estimate, similar to SI-UGM and MINMI) and the expression for the recovery rate $\lambda$ was bias-adjusted.
+Although MINMI, GRIWM-BA, and SI-UGM produced relatively low MSE estimates, they remained relatively \textbf{positively biased}. This is because these three estimates use a ``median-based estimate", in the sense that they find the value of $\theta$ such that a quantile function is equal to $q = 0.5$. The sampling distribution of $S(\bm{X}) = \min(\bm{X})$ is right-skewed, which has the effect of biasing estimates based on medians. We also note that the MLE, SI-RM, MINMI, GRIWM-BA, and SI-UGM estimators had relatively low variance compared to the BA-MLE and Strauss estimators (see \autoref{fig:sim-exp-bias-variance}).
+\begin{figure}[ht]
+    \centering
+    \includesvg[inkscapelatex=false,width=0.9\linewidth]{figures/plot-sim-exp-point-est-Bias-Variance.svg}
+    \caption{Bias and variance of methods as the magnitude of error increases. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM). Rows: top shows bias as error increases; bottom row shows the variance.}
+    \label{fig:sim-exp-bias-variance}
+\end{figure}
+
+We then studied the performance of these methods with some measurement error. Under the  \hyperref[model: measurement-error]{$\varepsilon$-model} with $1*\sigma$, we see these results are fairly consistent with the no measurement error scenario: BA-MLE, Strauss, and MINMI produce the best results (\autoref{tab:table-sim-exp-point-error1}). However, a significant change is the superior performance of GRIWM-BA, which produced point estimates with the \textbf{lowest MSE} and the \textbf{second least amount of bias} out of the 8 methods. This can be attributed to the changes we proposed, where the threshold probability $q$ was set to 0.5 instead of $0.05$ (resulting in a median-based estimate, similar to SI-UGM and MINMI) and the adjustment for bias in the expression for the recovery rate $\lambda$.
 \begin{table}[ht]
     \centering
     \caption{Point estimator performance, ordered by MSE (error = $1*\sigma$)}
@@ -27,41 +47,33 @@ We then moved on to the various estimators' performances across various magnitud
     \label{tab:table-sim-exp-point-error1}
 \end{table}
 
-We also found that these results became less consistent as measurement error increased. As an extreme example, we doubled the amount of measurement error variation and found that the BA-MLE and Strauss estimators ``fell off" in their performance, while the methods that account for measurement error in their estimations became much more accurate. An interesting result was that the \textbf{MLE became more accurate}, likely due to the fact that measurement error is negatively skewed since they cannot be greater than $K-\theta$ (see \autoref{fig: minmi_integral}). This means that as we increase the size of our measurement errors, the observed minimum becomes more likely to be less than $\theta$, which tends to cancel out with the positive bias of the MLE and produce fairly good estimates. Logically, this means the \textbf{MLE's estimates are much more varied}, which we can clearly see in \autoref{tab:table-sim-exp-point-error2} as it has the greatest sample variance.
-\begin{table}[ht]
-    \centering
-    \caption{Point estimator performance, ordered by MSE (error = $2*\sigma$)}
-    \include{figures/table-sim-exp-point-error2.tex}
-    \label{tab:table-sim-exp-point-error2}
-\end{table}
-
-In summary, we found that the proposed MINMI estimator produces good point estimates that are somewhat biased due to being based on a median. Our simulation experiments reinforced that the BA-MLE and Strauss estimators are optimal under uniformity assumptions where measurement error is negligible, although they become less reliable and less accurate as the magnitude of measurement error increases. The original implementation of GRIWM consistently performed poorly, producing negatively biased estimates, while the corrections we proposed improved its performance significantly in the measurement error scenarios, albeit at a computational cost. Additional result tables from these experiments have been provided in \autoref{apx:extra-tables-figures}.
+In summary, we found that the proposed MINMI estimator produced point estimates that are comparable to existing methods despite being somewhat biased. When accounting for measurement error, GRIWM-BA substantially outperformed the original and all other methods. Moreover, our simulation experiments reinforced that \textbf{the BA-MLE and Strauss estimators are optimal under uniformity assumptions where measurement error is negligible}, although they become less reliable and accurate as the magnitude of measurement error increases. The original implementation of GRIWM consistently performed poorly, producing negatively biased estimates in all measurement error scenarios (see additional result tables for all methods in \autoref{apx:extra-tables-figures}).
 
 \section{Confidence Intervals}
 
-Next, we evaluated the performances of four methods for constructing 95\% confidence intervals for extinction times in terms of their coverage probability, width, and runtime: SI-UGM, MINMI, GB-RM, and GRIWM. The point estimators (MLE, BA-MLE, and Strauss estimators) were excluded from these experiments. For the SI-RM estimator, we again applied the heuristics Garthwaite and Buckland suggested for determining appropriate starting levels and adaptive step sizes.
+Next, we evaluated the performance of four methods for constructing 95\% confidence intervals for extinction times in terms of their coverage probability, width, and run time: MINMI, SI-RM, SI-UGM, GRIWM, and GRIWM-BA. The other estimators (MLE, BA-MLE, and Strauss) were excluded from these studies as they are were not designed to estimate confidence intervals.
 
-Across all four levels of measurement error, we found that the SI-UGM, GB-RM, and MINMI estimators all produced comparable coverage probabilities close to 95\% (\autoref{tab:table-sim-exp-coverage}). However, SI-UGM tends to estimate more conservative confidence intervals, as indicated by the slightly higher coverage probabilities compared to GB-RM and MINMI, which gives coverage probabilities within 1\% of the nominal coverage probability. GRIWM consistently had the worst performance, with coverage probabilities of less than 30\%; however, its performance improved marginally as measurement error increased. These results may be explained by the considerably narrower intervals produced by GRIWM (\autoref{tab:table-sim-exp-width}) and the significant negative bias (see \autoref{tab:table-sim-exp-point-error0}).
+Across all four scenarios, we found that MINMI and SI-UGM produced coverage probabilities that were closest to 95\% while the coverage probability of SI-RM tended to be below nominal (\autoref{tab:table-sim-exp-coverage}). SI-UGM tended to estimate more conservative confidence intervals, as indicated by the slightly higher coverage probabilities compared to MINMI, which consistently gives coverage probabilities within 1\% of the nominal coverage probability across all magnitudes of measurement error. On the other hand, both the original and corrected implementations of GRIWM had the worst performances, with coverage probabilities far below 95\%. These results may be explained by the considerably narrower intervals produced by both versions of GRIWM (\autoref{fig:sim-exp-conf-int-widths}) and the significant negative bias present in the uncorrected version of GRIWM (see \autoref{tab:table-sim-exp-point-error0}).
 \begin{table}[ht]
     \centering
-    \caption{Confidence Interval Coverage}
+    \caption{95\% Confidence Interval Coverage Probabilities}
     \include{figures/table-sim-exp-conf-int-coverage.tex}
     \label{tab:table-sim-exp-coverage}
+    \vspace{-4mm}
 \end{table}
 
-Moving on to the confidence interval widths, we found that the MINMI and GB-RM estimators produced confidence intervals that are \textbf{slightly narrower} than those obtained by SI-UGM. The wider intervals of SI-UGM  correlate with the higher coverage probabilities obtained by SI-UGM, as wider intervals would naturally mean the true value for $\theta$ would be more likely to be contained in the  estimated interval. GRIWM's poor performance is once again seen here, as it produces significantly narrower confidence intervals than the other three methods, hence its poor coverage probability.
-\begin{table}[ht]
+With regards to the confidence interval widths, we found that SI-UGM tended to produce wider confidence intervals than other methods, including MINMI and SI-RM (\autoref{fig:sim-exp-conf-int-widths}). This correlates with its slightly higher coverage probability, as wider intervals would naturally mean the true value for $\theta$ would be more likely to be contained in the  estimated interval. GRIWM's poor performance is once again seen here, as it produces extremely narrow intervals, hence its poor coverage probability.
+\begin{figure}[ht]
     \centering
-    \caption{Confidence Interval Width}
-    \include{figures/table-sim-exp-conf-int-average-width.tex}
-    \label{tab:table-sim-exp-width}
-\end{table}
+    \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-sim-exp-conf-widths.svg}
+    \caption{Average widths of confidence intervals as the magnitude of error increases. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM). We see that SI-UGM produces wider confidence intervals, while GRIWM produces very narrow intervals. Table of results provided in appendix.}
+    \label{fig:sim-exp-conf-int-widths}
+\end{figure}
 
-Finally, we investigated the computational cost of the methods. We found that the MINMI estimator had the fastest runtime across all measurement error scenarios due to it \textbf{directly estimating} the quantile function, using one set of Monte Carlo samples for all calculations. This is compared to GRIWM, SI-UGM, and SI-RM's procedures that all involve repeatedly sampling from a distribution: for example, SI-UGM simulates $n$ samples from a model for each hypothesised extinction time in $\bm{\theta}$.
-\begin{table}[ht]
+Finally, we investigated the computational cost of the methods. We found that the MINMI estimator had the fastest run time across all measurement error scenarios due to it \textbf{directly estimating} the quantile function, using one set of Monte Carlo samples for all calculations (\autoref{fig:sim-exp-conf-int-runtime}). This is compared to GRIWM, SI-UGM, and SI-RM's procedures that all involve repeatedly sampling from a distribution: for example, SI-UGM simulates $n$ samples from a model for each hypothesised extinction time in $\bm{\theta}$, where the set of values of $\bm{\theta}$ used to estimate the quantile function is necessarily large.
+\begin{figure}[ht]
     \centering
-    \caption{Confidence Interval Runtime}
-    \include{"figures/table-sim-exp-conf-int-average-runtime.tex"}
-    \label{tab:table-sim-exp-runtime}
-\end{table}
-
+    \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-sim-exp-conf-runtime.svg}
+    \caption{Average run times of methods when estimating confidence intervals with increasing magnitudes of error. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM); $\log_10$ scale used for y-axis. We see that MINMI and SI-RM are significantly faster than any other available methods. Table of results provided in appendix.}
+    \label{fig:sim-exp-conf-int-runtime}
+\end{figure}

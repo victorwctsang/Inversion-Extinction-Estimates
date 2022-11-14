@@ -1,27 +1,26 @@
 
-Dot points...
-\begin{itemize}
-    \item Extinction time estimation is important in paleontology/paleobiology: it helps us understand the causes and timings of extinctions more precisely.
-    \item Due to sampling error (e.g. the Signor-Lipps effect), radiometric error, and calibration error, it is difficult to obtain reliable and high-precision estimates of extinction times.
-    \item In our thesis, we investigate various existing methods used for estimating extinction times. Depending on how strict their assumptions are, these methods vary in complexity. For example, the Strauss estimator is a relatively simple method that assumes uniformly distributed fossils and no measurement error.
-    \item On the other hand, GRIWM (a relatively more recent method) is a good deal more complex because it assumes that there is measurement error. However, it still assumes uniformity.
-    \item We propose two new methods based on test-statistic inversion: the Minimum-Statistic Inversion (MINMI) and the Simulated Inversion - Robbins Monro Process (SI-RM) estimators.
-    \item \textit{brief explanation of MINMI}
-    \item \textit{brief explanation of SI-RM}
-    \item Outline of thesis:
-    \begin{enumerate}
-        \item Chapter 2: We start by reviewing the assumptions and formulating the models under which most existing methods are based on
-        \item Chapter 3: Then we review the various methods that currently exist to solve this problem
-        \item Chapter 4: We introduce our proposed methods and their statistical properties, as well as considerations when implementing them.
-        \item Chapter 5: We run simulation experiments and compare 8 different methods' performances under known conditions.
-        \item Chapter 6: We apply our methods to 4 datasets to compare performances. We also do a case study to see if we arrive at similar conclusions as the literature.
-        \item Chapter 7: We discuss areas of improvement and future work.
-        \item Chapter 8: Concluding chapter.
-    \end{enumerate}
-\end{itemize}
+The exact timing of a species' extinction is crucial to understanding how life on Earth has changed, contributing to our knowledge of the causes and effects of extinctions. Accurate and precise estimates of extinctions from the fossil record are hence critical to understanding when and why endangered species today may become extinct in the future.
 
-The exact timing of a species' extinction is crucial to paleobiological understandings, such as species' lineages, migration patterns, and mass-extinctions. However, researchers have long understood that the last observed fossil of a species almost certainly does not represent the true extinction time, an effect known as the ``Signor-Lipps Effect" \cite{Signor1982}. Combined with the presence of both sampling variation and measurement variation, this means that high-precision inferences of extinction times are virtually impossible \cite{Bradshaw2012}. As a result, the causes and mechanisms of various mass extinction events in history continue to be debated today \cite{Saltre2015}.
+In this thesis, we develop methods for estimating the extinction times from the fossil record, focusing on applications to estimate the extinction of megafauna (species with adults weighing over 45 kilograms) that occurred during the late Quaternary mass extinction between 110,000 and 10,000 years before present \cite{Walker2005Quaternary}. We also propose two novel estimators that apply test-statistic inversion to address limitations in existing methods' assumptions and procedures. In discussing the limitations and validity of these assumptions, we also formulate two models to unify the currently-disparate models under which existing methods have been developed.
 
-In this thesis, we focus on methods to estimate the extinction times of megafauna (species with adults weighing over 45 kilograms) that occurred during the late Quaternary extinction between 110,000 and 11,650 years before present. We discuss and assess the validity of assumptions and methods available to paleobiologists for inferring extinction times in the fossil record, and then propose two alternative approaches for solving this problem, both based on test-statistic inversion.
+Central to precisely estimating extinction times in the fossil record are methods that can account for the different sources of variation in fossils. One source of error is sampling error, where the true extinction time of a species is almost guaranteed to be outside of the observed fossil record since the fossil record is inherently incomplete (see \autoref{fig:signor-lipps-effect}), and is known as the Signor-Lipps Effect \cite{Signor1982}.
+\begin{figure}[ht]
+    \centering
+    \input{figures/signor-lipps-effect.tex}
+    \caption{The Signor-Lipps Effect. Since the fossil record is inherently incomplete due to the low chance of fossilization, the last observed fossil of a species almost certainly does not represent the true extinction time.}
+    \label{fig:signor-lipps-effect}
+\end{figure}
 
-\textcolor{red}{More to come}
+In addition, the radiocarbon dating and calibration procedures may cause additional variation in the fossil record. Radiocarbon dating is a complex process where radioactive carbon isotopes in the fossils are measured and compared against the isotope's expected half-life to estimate a ``radiocarbon age" for the fossil. This is another source of variation, and there is some evidence to suggest radiocarbon dating measurement errors are approximately normally distributed \cite{Taylor1987,Walker2005Quaternary}. In addition, these radiocarbon ages are often converted to calendar ages via calibration curves (the newest standard for fossils in the Northern Hemisphere being IntCal20, which was published in 2020 \cite{Reimer2020}). Unlike the radiocarbon dating errors, there is evidence to show that the variation introduced by calibration may not be normal \cite{Ramsey2009, Ramsey2010, Ramsey2013}.
+
+These sources of variation make high-precision inference of extinction times virtually impossible \cite{Bradshaw2012}. As such, palaeontologists continue to debate the causes and timings of various mass extinction events in history \cite{Saltre2015}.
+
+Almost all methods currently used in the literature assume that fossils are preserved and recovered at a constant rate and are hence uniformly distributed, despite the abundance of evidence suggesting this assumption is invalid. These methods continue to be used today since alternative methods that assume otherwise may be too complex or rely on additional environmental and geological data that is often unavailable \cite{WangMarshall2016}.
+
+Additionally, most existing methods are unable to account for measurement errors, assuming that measurement error is negligible relative to sampling error. One such method, by \citet{Strauss1989}, is considered the ``standard" approach as it is based on the bias-adjusted maximum likelihood estimator under assumptions of uniformity with negligible measurement error \cite{WangMarshall2016}. However, there is evidence to suggest that this assumption is not generally applicable, as some fossil records will have measurement errors comparable to the gaps between the fossils \cite{Solow2006}.
+
+On the other hand, methods that do account for measurement error often assume normality. One such method is the Gaussian Resampled, Inverse-Weighted McInerny et al. (GRIWM) method proposed by \citet{Bradshaw2012}. GRIWM assumes uniformity with normally distributed measurement errors, and resamples the data accordingly to account for the effect of measurement errors. Using the resampled dataset, the authors use the \citet{Mcinerny2006} method to estimate extinction times using subsets of the data before taking a weighted average to construct one estimation. Each estimate is inversely weighted according to its temporal distance from the most recent record, as they hypothesised that more recent fossils would provide better estimates of the extinction time. The authors of GRIWM argue that it provides robust and less biased estimates. However, as mentioned previously, assuming the measurement errors are normally distributed may only be appropriate for uncalibrated radiocarbon ages, as there is evidence to show that this is not true for calibrated ages. Additionally, GRIWM does not account for sampling uncertainty, accounting \textbf{only} for measurement error. Due to the Signor-Lipps Effect, sampling error is likely to be significant: hence, we propose accounting for both sampling and measurement error when estimating extinction times.
+
+In \autoref{chap: assumptions}, we review the aforementioned assumptions in more detail, formulating two models under which most methods are constructed. In doing so, the notation developed will lay the foundation for \autoref{chap: existing-methods}, where we discuss various existing methods for estimating extinction times including the previously mentioned Strauss estimator and GRIWM.
+
+We then propose our two novel estimators in \autoref{chap: proposed-methods}: the Minimum Statistic Inversion (MINMI) and the Simulated Inversion - Robbins-Monro Process (SI-RM) estimators. The performance of MINMI and SI-RM are then placed in context in \autoref{chap: simulation-experiments}, where simulation studies are used to understand their advantages and disadvantages in relation to existing methods under known conditions. Following this, in \autoref{chap: applications} we apply our proposed methods to real datasets of megafauna that went extinct in the last glacial period \cite{Baca2016} as an example of how our methods perform on real datasets compared to existing methods. In the concluding chapter, \autoref{chap: conclusions}, we summarise the findings of the thesis and discuss some limitations and extensions of the proposed methods.

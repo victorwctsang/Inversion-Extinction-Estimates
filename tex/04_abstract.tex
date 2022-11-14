@@ -1,10 +1,4 @@
 
 \prefacesection{Abstract}
 
-\begin{itemize}
-    \item We propose two inversion-based methods for inference of extinction times in the fossil record: the MINMI estimator, a novel approach that direct accounts for measurement error and sampling error; and the SI-RM estimator, an application of the Robbins-Monro process to this problem.
-    \item This problem is important because most methods for estimating extinction times in the fossil record do not account for radiometric error or aare not able to accommodate for non-uniformly distributed fossils. This means estimates of extinction times may be significantly biased or imprecise, meaning the causes and timings of extinctions may be incorrectly estimated.
-    \item \textit{brief outline of MINMI}
-    \item \textit{brief outline of SI-RM}
-    \item Under known conditions, we found that MINMI and SI-RM both produce estimates with better coverage than existing methods at a fraction of the computational cost.
-\end{itemize}
+Precise estimates of extinction times in the fossil record are crucial to understanding how and why extinction events occurred. However, existing methods are unable to adequately address the sampling uncertainty of the fossil record as well as uncertainty introduced by radiocarbon dating and calibration. We propose two novel approaches to estimating extinction times, both based on test-statistic inversion: the Minimum Statistic Inversion (MINMI) estimator, and the Simulated Inversion - Robbins Monro Process (SI-RM). The MINMI estimator exploits assumptions of uniformity to directly estimate the probability of a test statistic exceeding the observed test-statistic value, from which point estimates and confidence intervals can be obtained by inversion. On the other hand, the SI-RM estimator uses stochastic approximation to obtain estimates via inversion. Under uniformity assumptions, we show that the MINMI and SI-RM estimators produce confidence intervals with better coverage, more appropriate widths, and faster computation times than existing methods.

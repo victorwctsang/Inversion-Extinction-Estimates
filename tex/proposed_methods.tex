@@ -1,56 +1,51 @@
 
-In this chapter, we propose two new methods for estimating any sample quantile $\theta_q$ of the true extinction date, given a set of fossils. Both of these methods use test-statistic inversion: we first describe a novel approach called MINMI, which directly inverts a minimum statistic to estimate a quantile; then we describe an application of the \citet{Garthwaite1992} implementation of the Robbins-Monro process for generating Monte Carlo confidence intervals via inversion. 
+In this chapter, we propose two new methods for estimating any sample quantile $\theta_q$ of the true extinction date, given a set of fossils. Both of these methods use test-statistic inversion: we first describe a novel approach called MINMI, which directly inverts a minimum statistic to estimate a quantile; then we describe SI-RM, an application of the the Robbins-Monro process, which can be considered a stochastic approximation extension of the simulated inversion estimator. 
 
 \section{Minimum-Statistic Inversion (MINMI) Estimator}\label{new-method}
 
-The MINMI\footnote{The name MINMI is a reference to \textit{Minmi}, a genus of ankylosaur (or armoured dinosaur). Notably, \textit{Minmi} is the only known genus of ankylosaur from Australia \cite{Carpenter2001}} estimator assumes fossil recovery is uniformly distributed and that the distribution of measurement errors is known with constant variance. Then, using these assumptions, we are able to directly construct a quantile estimator by inversion. Recall that we have observed fossil dates (measured in calibrated years before present) $W_1, W_2, \dots, W_n$ such that:
-\[
-W_i = X_i + \varepsilon_i, \quad i = 1, 2, \dots, n
-\]
-where $X_i$ are the unobserved fossil dates such that $X_i | \varepsilon_i \sim \mathcal{U}(\theta, K - e_i)$; $\varepsilon_i$ come from a known distribution $f_{\varepsilon}$ independent to $X_i$; and $\varepsilon_i$ are i.i.d $\forall i$ with $\E[\varepsilon_i] = 0$ and $\Var(\varepsilon_i) = \sigma^2$ and we further condition on $\varepsilon_i<K=\theta$.
+The MINMI\footnote{The name MINMI is a reference to \textit{Minmi Paravertebra}, a species of ankylosaur (or armoured dinosaur). Notably, \textit{Minmi} is the only known genus of ankylosaur from Australia, and was found in north-central Queensland \cite{Carpenter2001}. They were herbivores!} estimator assumes fossil recovery is uniformly distributed and that the distribution of measurement errors is known with constant variance. Then, using these assumptions, we are able to directly construct a quantile estimator by inversion.
 
 \subsection{No Measurement Error Scenario}
 
-If we assume measurement error is negligible, we may completely eliminate $\varepsilon$ from the above. Thus, the quantile estimate becomes trivial to find as the joint density of $(X, \varepsilon)$ is equivalent to the density of $X$, a uniformly distributed random variable on the interval $[\theta, K]$. Let the test statistic $S(\bm{W})$ be the minimum statistic (which is the maximum likelihood estimator in this scenario), and let $m$ denote the observed minimum value of $S(\bm{W})$:
-\begin{align*}
-    \PP_\theta (S(\bm{W}) \geq m)
-        &= \prod_{i=1}^n \PP_\theta (X_i \geq m) \\
-        &= \left[ \PP_\theta (X_i \geq m) \right]^n, \quad \text{since our $X$'s are assumed i.i.d}\\
-        &= \left( \frac{K - m}{K - \theta} \right)^n
-\end{align*}
-
+Under the \hyperref[model: no-measurement-error]{$\delta$-model} proposed in \autoref{section: delta-model}, our fossil ages $X_i$ are uniform over $[\theta, K]$. Hence, we can compute the quantile function of the test-statistic $S(\bm{X})$ directly. Let the test statistic $S(\bm{X})$ be the MLE, the minimum statistic, and let $m$ denote the observed minimum value of $S(\bm{X})$:
+\[
+    \PP_\theta (S(\bm{X}) \geq m) = \prod_{i=1}^n \PP_\theta (X_i \geq m) = \left[ \PP_\theta (X_i \geq m) \right]^n = \left( \frac{K - m}{K - \theta} \right)^n
+\]
+\clearpage
 Applying test-statistic inversion as per \autoref{eq: inversion}, we have
 \begin{align*}\label{eq:minmi-no-measurement-error}
-    q &= \PP_{\hat{\theta}_q}(M \geq m) = \left( \frac{K - m}{K - \hat{\theta}_q} \right)^n \\
+    q &= \PP_{\hat{\theta}_q}(S(\bm{X} \geq m) = \left( \frac{K - m}{K - \hat{\theta}_q} \right)^n \\
     \therefore \hat{\theta}_q &= K - q^{-1/n} (K-m) \numberthis
 \end{align*}
 
-where $\hat\theta_q$ is the MINMI estimate of $\theta_q$, the $q\textsuperscript{th}$ sample quantile of $\theta$, such that $\PP_{\theta_q} (S(\bm{W}) \geq m) = q$.
+where $\hat\theta_q$ is the MINMI estimate of $\theta_q$, such that $\PP_{\theta_q} (S(\bm{X}) \geq m) = q$.
 
 \subsection{Measurement Error Scenario}
 
-Suppose we do in fact have measurement error. Then, we must first consider the joint density of $(X, \varepsilon)$, which is \[ f_{X, \varepsilon} ( x , \varepsilon) = c f_{X | \varepsilon} ( x | \varepsilon=e) f_\varepsilon(e) \]
-
-where $x > \theta$, $x+e \leq K$, and $c$ is a normalising constant. Rearranging to find $c$:
+Under the \hyperref[model: measurement-error]{$\varepsilon$-model} proposed in \autoref{section: varepsilon-model} where measurement error is assumed to be substantial, we first consider the joint density of $(X, \varepsilon)$:
+\[
+    f_{X, \varepsilon} ( x , \varepsilon) = c f_{X | \varepsilon} ( x | \varepsilon=e) f(e)
+\] where $x > \theta$, $x+e \leq K$, and $c$ is a normalising constant. Rearranging to find $c$:
 \begin{align*}
     c^{-1}
-        &= \int_{e=-\infty}^{K-\theta} \int_{x=\theta}^{K-e} f_{X | \varepsilon} ( x | \varepsilon=e) f_\varepsilon(e) dx de = \int_{e=-\infty}^{K-\theta} f_\varepsilon(e) de \\
-    \therefore c^{-1} &= F_\varepsilon(K - \theta)
+        &= \int_{-\infty}^{K-\theta} \int_{\theta}^{K-e} f_{X | \varepsilon} ( x | \varepsilon=e) f(e) dx de = \int_{-\infty}^{K-\theta} f(e) de \\
+    \therefore c^{-1} &= F(K - \theta)
 \end{align*}
+where $F(y)=\int_{-\infty}^{y} f(e) de$ is the CDF of the measurement error.
 
-Thus our joint density function is given by \begin{align*}
+Thus our joint density function is given by
+\begin{align*}
     f_{X, \varepsilon} ( x , \varepsilon)
-        =& [F_\varepsilon(K - \theta)]^{-1} f_{X | \varepsilon} ( x | \varepsilon=e) f_\varepsilon(e) \\
-        =& [F_\varepsilon(K - \theta)]^{-1} \frac{1}{K - e - \theta} f_\varepsilon(e)
+        =& [F(K - \theta)]^{-1} f_{X | \varepsilon} ( x | \varepsilon=e) f(e) \\
+        =& [F(K - \theta)]^{-1} \frac{1}{K - e - \theta} f(e)
 \end{align*}
-
-since $f_{X | \varepsilon} ( x | \varepsilon=e) = \frac{1}{K - e - \theta}$ ($X|\varepsilon$ is conditionally uniform). 
+since $X_i | \varepsilon_i \sim \mathcal{U}(\theta, K-\varepsilon_i)$. 
 
 From this, we can geometrically identify our region of interest as shown by the shaded region of \autoref{fig: minmi_integral}.
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.8\textwidth]{figures/minmi-integral-sketch.png}
-    \caption{Sketch of the region of the joint density $(X, \varepsilon)$, indicated by the shaded area. Note that it is bounded by the lines $X+\varepsilon = K$ and $X + \varepsilon = m$, and that the measurement errors are truncated at $K-\theta$.}
+    \includesvg[inkscapelatex=false,width=0.85\linewidth]{figures/plot_minmi_joint_density.svg}
+    \caption{Sketch of the region of the joint density $(X, \varepsilon)$, indicated by the shaded area bounded by  $X+\varepsilon = K$ and $X + \varepsilon = w$, where $X \in [\theta, K]$ and $\varepsilon <= K-\theta$.}
     \label{fig: minmi_integral}
 \end{figure}
 
@@ -58,95 +53,154 @@ Hence, we can find $\PP_\theta ( X + \varepsilon \geq w)$ for some value $w$. \b
     \PP_\theta ( X + \varepsilon \geq w)
         =& 1 - \PP_\theta ( X + \varepsilon < w) \\
         =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} f_{X, \varepsilon}(x, e) dx de \quad \text{by inspection} \\
-        =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} \frac{1}{K - \theta - e} \frac{1}{F_\varepsilon (K - \theta)} f_\varepsilon(e) dx de \\
-        =& 1 - \frac{1}{F_\varepsilon (K-\theta)} \int_{-\infty}^{w-\theta} \frac{w - \theta - e }{K - \theta - e} f_\varepsilon(e) de \\
-    \therefore \PP_\theta ( X + \varepsilon \geq w) =& 1 - \frac{F_\varepsilon(w-\theta)}{F_\varepsilon(K - \theta)} \psi(\theta; w) \numberthis \label{eqn:minmi}
-\end{align*} where 
-\[
- \psi(\theta; w) =  \int^{w-\theta}_{-\infty} \frac{w - e - \theta}{K - e - \theta) } \frac{f_\varepsilon(e)}{F_\varepsilon(w-\theta)} de
-\]
-
-As before, we let our statistic $S(\bm{W})$ be the minimum statistic, $m$ be the observed minimum, and $\theta_q$ be the $q\textsuperscript{th}$ quantile such that $\PP_{\theta_q} (S(\bm{W}) \geq m) = q$: \begin{align*}
-    q &= \PP_{\theta_q} (S(\bm{W}) \geq m) \\
-        &= \prod_{i=1}^n \PP_{\theta_q} (X_{i} + \varepsilon_i \geq m) \\
-        &= \left[ 1 - \frac{F_\varepsilon(m-\theta_q)}{F_\varepsilon(K - \theta_q)} \psi(\theta_q; m)  \right]^n \\
-    q^{\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m-\theta_q)}{F_\varepsilon(K - \theta_q)} \psi(\theta_q; m) \numberthis \label{eqn: minmi-ee}
+        =& 1 - \int_{-\infty}^{w-\theta} \int_{\theta}^{w-e} \frac{1}{K - \theta - e} \frac{1}{F (K - \theta)} f(e) dx de \\
+        =& 1 - \frac{1}{F (K-\theta)} \int_{-\infty}^{w-\theta} \frac{w - \theta - e }{K - \theta - e} f(e) de \\
+    \therefore \PP_\theta ( X + \varepsilon \geq w) =& 1 - \frac{F(w-\theta)}{F(K - \theta)} \psi(\theta; w) \numberthis \label{eqn:minmi}
 \end{align*}
+where $\psi(\theta; w) =  \int^{w-\theta}_{-\infty} \frac{w - e - \theta}{K - e - \theta) } \frac{f(e)}{F(w-\theta)} de$.
 
-The MINMI estimator $\hat\theta_q$ can be found using inversion by solving the above equation for $\theta = \hat\theta_q$. However, since $\psi$ does not simplify in general, we can approximate it with a Monte Carlo integral using $B$ samples, resulting in the below MINMI estimating equation: \begin{align*}
-    q^{\frac{1}{n}} &= 1 - \frac{F_\varepsilon(m - \theta_q)}{F_\varepsilon(K - \theta_q)} \hat\psi_B(\theta_q; m); &\hat\psi_B(\theta_q; m) =  \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\hat\theta_q}{K-e_b-\theta_q} \numberthis \label{eqn: minmi-ee-mc}
+As before, we let our statistic $S(\bm{W})$ be the minimum statistic, $m$ be the observed minimum, and take $\theta_q$ such that $\PP_{\theta_q} (S(\bm{W}) \geq m) = q$:
+\begin{align*}
+    \PP_{\theta_q} (S(\bm{W}) \geq m)
+      &= \prod_{i=1}^n \PP_{\theta_q} (X_{i} + \varepsilon_i \geq m) \\
+    \implies q &= \left[ 1 - \frac{F(m-\theta_q)}{F(K - \theta_q)} \psi(\theta_q; m)  \right]^n \\
+    q^{\frac{1}{n}} &= 1 - \frac{F(m-\theta_q)}{F(K - \theta_q)} \psi(\theta_q; m) \numberthis \label{eqn: minmi-ee}
 \end{align*}
+The MINMI estimator $\hat\theta_q$ can be found using inversion by solving the above \autoref{eqn: minmi-ee} for $\theta_q = \hat\theta_q$. However, since $\psi$ does not simplify in general, we propose approximate it with a Monte Carlo integral using $B$ Monte Carlo samples from $f(e)$, resulting in the below MINMI estimating equation:
+\begin{align*}
+    q^{\frac{1}{n}} &= 1 - \frac{F(m - \theta_q)}{F(K - \theta_q)} \hat\psi_B(\theta_q; m); &\hat\psi_B(\theta_q; m) =  \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\hat\theta_q}{K-e_b-\theta_q} \numberthis \label{eqn: minmi-ee-mc}
+\end{align*} where $e_b$ are drawn from $f(e_b)$ truncated at $m-\hat\theta_q$
 
-where $e_b$ are drawn from $f_\varepsilon(e_b)$ truncated at $m-\hat\theta_q$
+\subsection{Stochastically Increasing Property}\label{subsec: stochastically-increasing}
 
-\subsection{Stochastically Increasing Property}
+Generating confidence intervals by inversion is conditional on $\PP_{\theta} (S(\bm{W}) \geq m)$ being stochastically increasing in $\theta$. Although we were unable to show theoretically that this condition is true in general, we expect that it will be in most practical instances, and have been able to show this numerically under a range of parameter settings. We have been able to show that $\PP_{\theta_q} (S(\bm{W}) \geq m)$ is stochastically increasing under two assumptions, as below.
+\begin{restatable}{theorem}{MinmiStochIncr}\label{theorem: stoch-increasing}
+    Under the \hyperref[model: measurement-error]{$\varepsilon$-model} specified in \autoref{section: varepsilon-model}, if the following assumptions are satisfied:
+    \begin{enumerate}
+        \item The density function $f$ is symmetric and uni-modal about mean 0.
+        \item $f(2|m-\theta|) > f(K-\theta) \left(2 + \frac{K-\theta}{|m-\theta|} \right)$
+    \end{enumerate}
+    Then $\PP_{\theta} (S(\bm{W}) \geq m)$ is stochastically increasing in $\theta$.
+\end{restatable}
 
-Generating confidence intervals by inversion is conditional on $\PP_{\theta_q} (S(\bm{W}) \geq m)$ being stochastically increasing in $\theta$. Although we were unable to show theoretically that this condition is true in general for any density function $f$ and all values of $\varepsilon$, we were able to simplify this assumption to be true according two some constraints, which we believe to be reasonable to assume. We were also able to show numerically that, under the assumption of normally distributed errors $\varepsilon$, $\PP_{\theta_q} (S(\bm{W}) \geq m)$ is indeed stochastically increasing in $\theta$. The working out used to simplify this assumption to the constraints has been provided in \autoref{apx:minmi-stoch-incr-proof}.
+The proof of \autoref{theorem: stoch-increasing} is provided in \autoref{apx:minmi-stoch-incr-proof}.
 
-\subsection{Selecting the number of Monte Carlo Samples}
+Assumption 1 in \autoref{theorem: stoch-increasing} is clearly satisfied when we use a normal distribution to simulate measurement error, as we do in this thesis. Assumption 2 is not true at all values of $\theta$ (for example, if we were to choose $\theta$ to be arbitrarily close to $K$). But such values of $\theta$ are not plausible -- recall that $K$ and $\theta$ are the endpoints of the time interval under consideration, and $m$ is the most recently observed fossil. Hence $m$ we expect to be much closer to $\theta$ than to $K$ in settings of practical interest. Further, $K-\theta$ will typically be very large relative to measurement error, meaning that $f(K-\theta)$ will be very small, relative to $f(2|m-\theta|)$.
 
-There is a question of how large $B$ needs to ``be". As the number of Monte Carlo samples increases, the variance of the MINMI estimator can be expected to decrease: however, we would like to determine a way to obtain a ``good" value for $B$ since a large $B$ would result in estimates with low variance of Monte Carlo error at the cost of more computation. Using the delta method, we were able to show how the Monte Carlo error changes as $B \rightarrow \infty$.
+\subsection{Selecting the number of Monte Carlo Samples}\label{subsec:minmi-mce-var}
 
-\begin{theorem}\label{eqn:minmi_mce}
+There is a question of how large $B$ needs to be for MINMI to achieve stable results. As the number of Monte Carlo samples increases, the variance of the MINMI estimator can be expected to decrease at the cost of greater computation: however, we would like to determine a way to obtain a ``good" value for $B$.
+
+Using the delta method, we were able to show how the Monte Carlo error changes as $B \rightarrow \infty$ (a full derivation of is given in \autoref{apx:minmi-asymptotics-proof}):
+\begin{restatable}{theorem}{ChooseMinmiB}\label{theorem: delta-method-variance}
     The limiting distribution of the MINMI estimator $\hat\theta_q$ of the q\textsuperscript{th} sample quantile $\theta_q$ as $B \rightarrow \infty$ is approximately normal, where $B$ is the number of Monte Carlo samples used.
-    $$\sqrt{B}(\hat\theta_q - \theta_q) \sim \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2 \right)$$
-\end{theorem}
-A full derivation of this result is given in \autoref{apx:minmi-asymptotics-proof}.
+    \[
+        \sqrt{B}(\hat\theta_q - \theta_q) \stackrel{D}{\rightarrow} \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2 \right)
+    \]
+\end{restatable}
 
-In practice, we are interested in values of $B$ that result in ``low" variance estimates. To do so, we can use the following equation \[
-B \approx \frac{\sigma^2_{\psi(\theta_q)}}{\Var{\hat\theta_q}} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2
-\] where $\sigma^2_{\theta_q}$ is some ``small" amount of variance we are comfortable with.
+Since this is a delta method approximation of the Monte Carlo error variance, \autoref{theorem: delta-method-variance} is only true as $B$ approaches infinity where the estimating equation (\autoref{eqn: minmi-ee-u(theta)}) becomes approximately linear in $\theta_q$. We were able to verify these results numerically, comparing the variance estimated by \autoref{theorem: delta-method-variance} to the sample variance from 250 estimates for the upper and lower endpoints of a central $95\%$ confidence interval at different values of $B$. We observed the delta method variance to be accurate to within 15\% for $B > 100$ (See \autoref{fig: minmi-delta-method-variance}).
+\begin{figure}[ht]
+    \centering
+    \includesvg[inkscapelatex=false, width=0.7\linewidth]{figures/minmi-delta-method_variance.svg}
+    \caption{Percentage difference of the variance estimated by the delta method and the variance found numerically as $B$ increases. The area shaded in green represents the region where the variance is accurate within 15\%, which we observed for $B > 100$.}
+    \label{fig: minmi-delta-method-variance}
+\end{figure}
 
-Note that the true values for $\theta_q$ and $\sigma^2_{\psi(\theta_q)}$ will usually be unknown. For our purposes, pilot estimates would suffice for obtaining a value of $B$ that gives estimates with Monte Carlo error roughly equal to $\Var \hat\theta_q^*$. For instance, a pilot estimate of $\theta_q$ can be obtained using the no-measurement error scenario proposed i \autoref{eq:minmi-no-measurement-error}, and a Monte Carlo estimate of $\sigma^2_{\psi(\theta_q)}$ can be obtained using some pilot number of Monte Carlo samples, such as $B=500$.
-
-We were also able to verify these results numerically, comparing the variance estimated by \autoref{eqn:minmi_mce} to the sample variance from 1000 estimates for the upper and lower endpoints of a central $95\%$ confidence interval at different values of $B$. Since this is a delta method approximation of the variance, it relies on an assumption that the estimating equation (\autoref{eqn: minmi-ee-u(theta)}) is approximately linear in $\theta_q$. This assumption is only reasonable at large values of $B$, which we observed to be accurate to within \textcolor{red}{XXX\% for $B > 500$ (See Figure YYY). Since we are using this to \textit{guide} the choice of $B$, this degree of accuracy is acceptable in practice.}
-
-% \begin{figure}[ht]
-%     \centering
-%     \include{figures/minmi-asymptotics-ratios.tex}
-%     \caption{Caption}
-%     \label{fig:my_label}
-% \end{figure}
-
-\section{Simulated inversion - Robbins Monro Process (SI-RM)}
-
-We now propose applying the Robbins-Monro (RM) process to the estimation of extinction times. Although the RM process has not yet been used to search for extinction times or endpoints of confidence intervals in paleobiology, it is a classical stochastic approximation algorithm and is a generally well used technique in other spaces \cite{Carpenter1999, Fisher2020}. In this section, we draw on \citet{Garthwaite1992}, who proposed the RM process as a method of generating inversion-based confidence intervals.
-
-The RM process, or RM algorithm, was originally introduced to solve the rootfinding problem  \cite{Fu2015}: \[ M(\theta)\overset{\text{def}}{=} \E_\theta H(\bm{X}) = \alpha \] for $X \in \R$, $\alpha \in \R$, $\E_\theta$ means expectation with respect to $\theta$, and $M(\theta)$ is a monotonically increasing function. The objective of the RM process is to find a sequence $\{\theta_n\}$ that converges to a unique (local) optimum $\theta^*$ by using the recursion
-\[ \theta_{i+1} = \theta_i - c_i \widehat{\nabla f}(\theta) \]
-where $c_i > 0$ is the step size. This recursion converges in mean square to the optimum $\theta^*$. Moreover, the step sizes $c_n$ must decrease according to conditions $\sum_nc_n^2 < \infty$ and $\sum_n c_n = \infty$.
-
-\citet{Garthwaite1992} proposed a method for constructing central $100(1-\alpha)\%$ confidence intervals for $\theta$ using inversion and the RM process. This involved solving the equation $\PP(S(\bm{X} > S(\bm{x}); \theta) = \alpha/2$ (for the lower endpoint of the confidence interval) where $S(\bm{X})$ is a point estimate of $\theta$. Using the RM process, they were able to produce asymptotically exact, unbiased, and efficient confidence intervals.
-
-Suppose that we have a point estimate of $\theta$, denoted by $S(\bm{x})$. We would like to estimate $\theta_{q}$, the $q$\textsuperscript{th} quantile of $\theta$. Let $\hat\theta_{q; i}$ be the estimate of $\theta_q$ at step $i$ of the RM process. At each step of the process, we generate a resample $\bm{x}^* = [x_1^*, \dots, x_n^*]$ by setting $\theta = \hat\theta_{q; i}$. The next estimate of $\theta_q$, $\hat\theta_{q; i+1}$, is then given by \begin{align}
-    \hat\theta_{q; i+1} = \begin{cases}
-        \hat\theta_{q; i} + c q/i &\text{if $S(\bm{x^*}) \leq S(\bm{x})$} \\
-        \hat\theta_{q; i} - c (1-q)/i &\text{if $S(\bm{x^*}) > S(\bm{x})$}
-    \end{cases}
-\end{align}
-
-where $c$ is a predetermined step length constant. The use of a resample, where we simulate new data according to our simulation model by setting $\theta$ to our current estimate of $\theta_q$, is analogous to the simulated inversion estimator proposed by \citet{Huang2019}. Thus, the application of the RM process can be thought of as a variation of the simulated-inversion estimator, where stochastic approximation is used to recursively converge to an exact estimate.
-
-That being said, the choice of $c$ has a significant impact on the performance of the RM process: too large, and the algorithm may oscillate back and forth without approaching the optimum; too small (relative to the magnitude of the gradient), and the iterates may never move. 
-
-The optimal step length according to the asymptotic properties of the RM process is \begin{equation}
-    c = \frac{1}{g};\quad g = \frac{d}{d\theta_q} \PP_{\theta = \theta_q} (\hat\theta > S(\bm{x}))
+In practice, we are interested in the value of $B$ that results in an estimator with ``low" variance. Rearranging the variance expression in \autoref{theorem: delta-method-variance}:
+\begin{align*}
+    \Var(\hat\theta_q) &\approx \frac{1}{B}\sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2 \\
+    \implies B &\approx \frac{1}{\Var(\hat\theta_q)}\sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2
+\end{align*}
+Suppose we would like estimates with Monte Carlo error variance that is no larger than some small value $A$. Let $B^*$ denote the number of Monte Carlo samples required to achieve this. Then,
+\begin{equation}\label{eqn:minmi-optimal-b}
+    B^* \approx \frac{1}{A}\sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2
 \end{equation}
+Note that we must approximate $\theta_q$ and $\sigma^2_{\psi(\theta_q)}$ as their true values are unknown. For our purposes, pilot estimates for each will suffice: for instance, $\theta_q$ can be estimated using the MINMI estimator under the $\delta$-model as per \autoref{eq:minmi-no-measurement-error}, and a Monte Carlo estimate of $\sigma^2_{\psi(\theta_q)}$ can be obtained using some pilot number of Monte Carlo samples, such as $B=100$. For this thesis, we aimed to find estimates with Monte Carlo error variance no more than 20\% of our assumed measurement error variation.
 
-However, since $g$ will be unknown in general, the step-length constant $c$ cannot be set equal to its optimum, $1/g$. Thus, Garthwaite and Buckland proposed an \textit{adaptive} step length where $c_i$ is proportional to the distance between the point estimate $\hat\theta(\bm{y})$ and the current estimate $\theta_{q; i}$:\begin{equation} c_i = \begin{cases}
-    k\left(\theta_{q; i} - \hat\theta(\bm{y}) \right) &\text{if $q >= 0.5$} \\
+\section{Simulated Inversion - Robbins Monro Process (SI-RM)}
+
+We now propose applying the Robbins-Monro (RM) process to the estimation of extinction times, motivated by an application of the RM process to construct confidence intervals by \citet{Garthwaite1992}. We relate this to the simulated inversion estimator proposed by \citet{Huang2019} and apply it to estimating extinction times. Although the RM process has not yet been used to search for extinction times or endpoints of confidence intervals in palaeobiology, it is a generally well used technique in other spaces \cite{Carpenter1999, Fisher2020, Fu2015}.
+
+\subsection{The Robbins-Monro Process}
+
+The RM process is a stochastic approximation algorithm originally designed to solve various root-finding problems. It was later adapted to a specific root-finding problem of the form \cite{Fu2015} \[
+M(\theta) \overset{\text{def}}{=} \E_\theta H(\bm{W}) = \beta
+\] where $H(\bm{W})$ is some function of random variables $\bm{W}$ and $\beta \in \R$. The objective of the RM process is to find a sequence $\{\theta_n\}$ that converges to a unique (local) optimum $\theta^*$ by using the recursion \cite{LlyodBotev2015}
+\[ \theta_{i+1} = \theta_i - c_i \Big( H(\bm{W}_i) - \beta \Big) \]
+where $c_i > 0$ is the step size. \citet{RobbinsMonro1951} showed that, under weak regularity conditions, this recursion converges in mean square to the optimum $\theta^*$. However, the step sizes $c_n$ must decrease according to conditions $\sum_nc_n^2 < \infty$ and $\sum_n c_n = \infty$.
+
+\subsection{The SI-RM Estimator}
+
+We propose an inversion-based method for constructing central $100(1-\alpha)\%$ confidence intervals for $\theta$, applying the implementation of the RM process developed by \citet{Garthwaite1992}. They adapted the original scheme by letting $M(\theta) = \PP_\theta(S(\bm{W} > S(\bm{w}))$ and $\beta = \alpha/2$ (for the lower endpoint of the confidence interval, and $1-\alpha/2$ for the upper endpoint) where $S(\bm{w})$ is a point estimator of $\theta$. This scheme is described for the lower endpoint as follows:
+\begin{align*}
+    M(\theta) \overset{\text{def}}{=} \PP(S(\bm{W} > S(\bm{w})) = \alpha/2
+\end{align*}
+
+\citet{Garthwaite1992} designed this method to construct confidence intervals assuming that a point estimate (for instance, the maximum likelihood estimator) can be easily obtained, although in principle any statistic could be used if it is stochastically increasing in $\theta$, and as such we use $S(\bm{w})$ as previously. Next, let $\hat\theta_{q; i}$ be the estimate of $\theta_q$ at step $i$ of the RM process, for the $q$\textsuperscript{th} quantile. At each step of the process, generate a resample $\bm{w}^* = [w_1^*, \dots, w_n^*]$ by setting $\theta = \hat\theta_{q; i}$. Then, the next estimate $\hat\theta_{q; i+1}$ can be found by the recursion
+\begin{equation}\label{eqn: SIRM-recursion}
+    \hat\theta_{q; i+1} = \hat\theta_{q; i} - c/i \left( \mathbb{I}\left[S(\bm{w^*}) > S(\bm{w})\right] - q \right)
+\end{equation}
+where $c$ is a predetermined step length constant and $\mathbb{I}$ is the indicator function.
+
+The resample step, where we simulate new data according to our simulation model by setting $\theta = \hat\theta_{q; i}$, is similar to the simulated inversion estimator proposed by \citet{Huang2019}. As such, the application of the RM process can be thought of as a variation of the simulated-inversion estimator, where stochastic approximation is used to converge to an optimal estimate of $\theta_q$.
+
+The recursion in \autoref{eqn: SIRM-recursion} must be adapted for the uniformity assumption in Models \ref{model: no-measurement-error} and \ref{model: measurement-error}, since $\theta_q$ must be positive and less than $K$. We propose recursing on a transformation of $\hat\theta_{q; i}$, to allow step sizes to still be defined on $\R$ while enforcing $\hat\theta_{q;i} < K$. Let $\eta$ be the following transformation:\begin{equation}
+    \eta(\theta) = K -\ln(K-\theta)
+\end{equation}
+Hence, the recursion in \autoref{eqn: SIRM-recursion} becomes:
+\begin{equation}
+    \hat\eta_{q; i+1} = \hat\eta_{q; i} - c/i \left( \mathbb{I}\left[S(\bm{w^*}) > S(\bm{w})\right] - q \right)
+\end{equation}
+where $c_\eta$ denotes predefined step lengths that are on the same scale as $\eta$.
+
+Estimates based on the RM process are clearly advantageous when the function $M(\theta)$ is unknown or too complex to be directly inverted. An example of this is if the uniformity assumption is relaxed, as depending on the distribution of the fossils, $M(\theta)$ may potentially be too complex to apply a method similar to the MINMI estimator. 
+
+However, there are still some disadvantages to the SI-RM estimator. The flexibility of this method means we may expect it to be slower than MINMI, which exploits our knowledge of the form of the quantile function $P_{\theta_q}(S(\bm{W})>S(\bm{w}))$ to directly find an estimate. This will be explored by simulation in the next chapter. Moreover, the flexibility also means the method must be \textit{tuned} for each problem on a case-by-case basis, as choices of step size, starting values, and stopping criteria all significantly impact the exactness of estimates.
+
+\subsection{Choice of Step Size}
+
+The choice of $c$ has a significant impact on the performance of the RM process: too large, and the algorithm may oscillate back and forth without approaching the optimum; too small (relative to the magnitude of the gradient), and the iterates may never move, preventing convergence.
+
+The optimal step length (let this be $c^*$) is dependent on $M^\prime(\theta)$ \cite{LlyodBotev2015}, which is typically unknown. As such, \citet{Garthwaite1992} proposed an \textit{adaptive} step length where $c_i$ is proportional to the distance between the point estimate $\hat\theta(\bm{y})$ and the current estimate $\theta_{q; i}$:\begin{equation} c_i = \begin{cases}
+    k\left(\theta_{q; i} - \hat\theta(\bm{y}) \right) &\text{if $q \geq 0.5$} \\
     k\left(\hat\theta(\bm{y}) - \theta_{q; i}\right) &\text{if $q < 0.5$}
 \end{cases}
 \end{equation}
+where $k$ is a proportionality constant dependent on the distribution of $S(\bm{w})$.
 
-where $k$ is a proportionality constant dependent on the distribution of $S(\bm{x})$.
-
-In the absence of better information, Garthwaite and Buckland suggest a heuristic for selecting the step length proportionality constant $k$, setting it to twice the optimal value for the normal distribution, implying that $g$ would equal the value of the density function at its $100q$\% point: \[
-k = 2/\left[z_q (2\pi)^{-1/2}\exp(-z_q^2/2)\right]
+In the absence of better information, \citet{Garthwaite1992} set the step length proportionality constant $k$ to twice the optimal value for the normal distribution: \[
+k = 2/\left[z_q \phi(z_q) \right]
 \]
-Since the step sizes for early iterations can often be disproportionately large, meaning it is possible for the initial steps to ``send" the process out of the neighbourhood of the true value and make it difficult for convergence to the optimum, Garthwaite and Buckland suggest some heuristics for selecting appropriate starting values for the RM process. They propose the ``percentile method" for selecting starting points, proceeding with the process as though these starting points were reached after $m$ steps. For a $100(1-\alpha/2)\%$ confidence interval, starting values are found by first generating $(4-\alpha)/\alpha$ resamples with $\theta = S(\bm{x})$. The starting values for the upper and lower endpoints are then provided by the second largest and second smallest resamples, respectively.
+The recommendation to double the optimal value for the normal distribution comes because the cost (in terms of impact to the variance) of underestimating $c^*$ is greater than the cost of overestimating it -- specifically, the variance of $\hat\theta_q$ can increase significantly when step sizes are too small.
 
-The number of steps to skip, $m$, is computed as \[
-m = \min \left\{ 50, 0.3(4-\alpha)/\alpha \right\}
+However, \citet{LlyodBotev2015} found that the above step length proposed by \citet{Garthwaite1992} leads to variances that are 20-30\% greater than the lower bound of the RM variance. Hence, although we will use the adaptive step size scheme in the experiments in subsequent chapters, we recognise this is an area where improvements can potentially be made.
+
+\subsection{Choice of Starting Values}
+
+The starting values used to initiate the RM process also affect convergence -- if initial estimates are not in the neighbourhood of the true value then it may be difficult to converge quickly to the optimum. As a result, \citet{Garthwaite1992} suggested some heuristics for selecting appropriate starting values for the RM process.
+
+They propose the ``percentile method" for selecting starting points, proceeding with the process as though these starting points were reached after $m$ steps. For a $100(1-\alpha/2)\%$ confidence interval, starting values are found by first generating $(4-\alpha)/\alpha$ resamples with $\theta = S(\bm{w})$. The starting values for the upper and lower endpoints are then provided by the second largest and second smallest resamples, respectively.
+
+The number of steps to skip, $m$, is chosen as
+\[
+    m = \min \left\{ 50, 0.3(4-\alpha)/\alpha \right\}
 \]
-The advantage of the RM process is clear when the function $M(\theta)$ is unknown or too complex to be written explicitly --- in the context of estimating extinction times and generating confidence intervals, it provides flexibility for non-uniform assumptions as well as measurement error.
+Although the Robbins-Monro process is robust to the choice of starting values, good starting values improve the rate of convergence. Moreover, step sizes tend to be disproportionately large early on in the search. Hence, if starting estimates are not in the neighbourhood of the true value then the process may be sent far away and convergence may take significantly longer--- see \autoref{fig:SI-RM-starting-values}.
+\begin{figure}[ht]
+    \centering
+    \includesvg[inkscapelatex=false, width=\linewidth]{figures/SI-RM-starting-estimate-convergence.svg}
+    \caption{Left: SI-RM searches for the lower endpoint of a 95\% confidence interval. Right: SI-RM searches for the upper endpoint. \textcolor{red}{Red} is the search with starting values chosen by Garthwaite \& Buckland's percentile method \cite{Garthwaite1992}. Each line is a separate RM process performed on the same simulated dataset with different starting values. Note that the RM process converges to similar estimates regardless of the starting value, with the only difference being convergence speed. If starting estimates are too far away, estimates may be "sent" too far away and substantially impact convergence.}
+    \label{fig:SI-RM-starting-values}
+\end{figure}
+
+\subsection{Selecting Stopping Criteria}\label{subsec:si-rm-stopping-criteria}
+
+The standard error of estimates obtained by the SI-RM process naturally reduces as the number of steps increases at the cost of computation time. We would like to stop the process once our estimates have variance that is below a certain value. However, there is currently no universal stopping criteria, since we are unable to approximate the expected variance at the $i$\textsuperscript{th} step of the RM process. 
+% To determine a stopping rule, we can approximate the SI-RM estimator's variance at each iteration; if the approximate variance is below a predetermined threshold variance, the process is terminated. Otherwise, the process continues until some maximum number of iterations $i_\text{max}$ is reached.
+
+Consider the limiting variance of the $(i+1)$\textsuperscript{th} estimate, which can be found using the delta method \cite{Garthwaite1992}
+\[
+    \Var(\hat\theta_{q; i+1}) = \frac{\alpha/2 (1-\alpha/2) c^2}{i(2gc-1)}, \quad g = \left[ \frac{d}{d\hat\theta_q}M(\hat\theta_q) \right]_{\hat\theta_q = \theta_q}
+\]
+In practice, neither $\frac{d}{d\theta}M(\theta)$ or $\theta_q$ are known, so $\Var(\hat\theta_{q; i+1})$ cannot be calculated. Currently there is no universal stopping criteria for the RM process; \citet{Garthwaite1992} proposed a manual approach by inspection, allowing the RM process to iterate for some time, pausing and inspecting for convergence, then restarting if not converged. In our simulation studies, we will use the estimated quantile function from the SI estimator proposed by \citet{Huang2019}, estimating $\frac{d}{d\theta}M(\theta)$ by symmetric finite difference \cite{Fu2015} for the purpose of illustrating the potential of this method.

@@ -252,6 +252,9 @@ FUNCTION {bbl.chapter}
 FUNCTION {bbl.techrep}
 { "Technical Report" }
 
+FUNCTION {bbl.honsthesis}
+{ "Honours' thesis" }
+
 FUNCTION {bbl.mthesis}
 { "Master's thesis" }
 
@@ -1074,7 +1077,7 @@ FUNCTION {honsthesis}
   format.btitle
   "title" output.check
   new.block
-  bbl.mthesis format.thesis.type output.nonnull
+  bbl.honsthesis format.thesis.type output.nonnull
   school "school" bibinfo.warn output
   address "address" bibinfo.check output
   new.block

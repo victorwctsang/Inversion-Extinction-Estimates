@@ -1,47 +1,56 @@
+\MinmiStochIncr*
 
-We would like to show that $\PP_\theta(S(\bm{W}) \geq m)$ is stochastically/monotonically increasing in $\theta$. Since $W_i = X_i + \varepsilon$ are independent random variables for all $i \in \{1, 2, \dots, n\}$, $\PP_\theta(S(\bm{W}) \geq m)$ is monotonically increasing if $\PP_\theta(W \geq m)$ is stochastically increasing.
+\begin{proof}
+    We would like to show that $\PP_\theta(S(\bm{W}) \geq m)$ is stochastically/monotonically increasing in $\theta$ under the assumptions specified by Model \ref{model: measurement-error}. Since $W_i = X_i + \varepsilon$ are independent random variables for all $i \in \{1, 2, \dots, n\}$, $\PP_\theta(S(\bm{W}) \geq m)$ is monotonically increasing if $\PP_\theta(W \geq m)$ is monotonically increasing. Recall: \begin{align*}
+        \PP_\theta(W \geq m) &= 1 - \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e}f(e)de \\
+        &= \frac{F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e}f(e)de}{F(K-\theta)}
+    \end{align*}
 
-We assume that $X$ is conditionally uniform on $\varepsilon$, $\varepsilon$ are distributed according to a known density function $f(\cdot)$ that is symmetric and unimodal around 0. Suppose also that $f(2|m-\theta|) > f(K-\theta) \left(2 + \frac{K-\theta}{|m-\theta|} \right)$.
+    \begin{lemma} \label{lemma: monotone-quotient}
+        Let $f(x)$ be a monotonically increasing function and let $g(x)$ be a monotonically decreasing function.
+    
+        Then, $\frac{f(n)}{g(n)}$ is monotonically increasing if and only if $f(n)$ and $g(n)$ are both positive, where $n \in \R$.
+    \end{lemma}
+    
+    Note that $F(K-\theta)$ is monotonically decreasing in $\theta$. Hence by Lemma \ref{lemma: monotone-quotient}, $\PP_\theta(W \geq m)$ is monotonically increasing if $F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e}f(e)de$ is monotonically increasing, since both functions are strictly positive for all $\theta$.
+    
+    Let $J(\theta) = F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e}f(e)de$. Then:
+        \begin{align*} \label{eqn:stoch-increasing-inequality}
+            \frac{d}{d\theta} J(\theta)
+                &= -f(K-\theta) - \int^{m-\theta}_{-\infty} \frac{\del}{\del\theta} \frac{m-\theta-e}{K-\theta-e}f(e)de \\
+                &\quad \text{Using integration by parts:} \\
+                &= -f(K-\theta) - \left[ \frac{m-\theta-e}{K-\theta-e} \right]^{m-\theta}_{-\infty} + \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \\
+                &> -f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \\
+                &\quad \text{since $\frac{m-e}{K-e} \geq 0$ for $e < m-\theta$} \\
+         \therefore J(\theta) &> -f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \numberthis
+        \end{align*}
+    From here, we must impose additional assumptions to complete the proof.
+    
+    \textbf{Assumption A1}: Assume that $f$ is symmetric and uni-modal about 0.
 
-Recall \begin{align*}
-    \PP_\theta(W \geq m) &= 1 - \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de \\
-    &= \frac{F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de}{F(K-\theta)}
-\end{align*}
+    Under assumption \textbf{A1}, $\frac{d}{de}f(-e) = -\frac{d}{de}f(e)$ since $f(e)$ is symmetric about 0. Hence, 
+    \begin{align*}
+        &\int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \\
+            &= \int^{-|m-\theta|}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de + \int^{|m-\theta|}_{-|m-\theta|} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \\
+            &= \int^{-|m-\theta|}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \\
+            &\quad \text{since $f(e)$ is symmetric about 0 and $\frac{m-\theta-e}{K-\theta-e} \in [0, 1]$}
+    \end{align*}
+    
+    Hence, if \textbf{A1} is true then it follows from \autoref{eqn:stoch-increasing-inequality}:
+    \begin{align*} \label{eqn:stoch-increasing-inequality2}
+        J(\theta)
+            &> -f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de \\
+            &\geq \int^{-|m-\theta|}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de  -f(K-\theta) \\
+            &> \int^{-2|m-\theta|}_{-\infty} \frac{m-\theta-e}{K-\theta-e} \frac{d}{de} f(e)de -f(K-\theta) \\
+            &\quad \text{since $f(e)$ is unimodal} \\
+            &> \left[ \frac{|m-\theta|}{K-\theta+2|m-\theta|}\right]f(-2|m-\theta|) -f(K-\theta) \numberthis
+    \end{align*}
 
-Note that $F(K-\theta)$ is monotonically decreasing in $\theta$. Thus, $\PP_\theta(W \geq m)$ is monotonically increasing if $F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de$ is monotonically increasing, since the ratio of a monotone increasing function and a non-increasing function is monotone increasing if both functions have positive range.
+    \textbf{Assumption A2}: $\left[ \frac{|m-\theta|}{K-\theta+2|m-\theta|}\right]f(-2|m-\theta|) > f(K-\theta)$
+    
+    If \textbf{A2} is true, then \autoref{eqn:stoch-increasing-inequality2} is greater than 0. Hence,  $J(\theta) > 0$ and we may conclude the proof. Assumption \textbf{A2} is a fairly reasonable assumption, as the fossils tend to be spread over extremely wide intervals. Hence, in practice, $K-\theta$ tends to be very large and we can expect $f(K-\theta)$ be very small.
 
-Taking the first derivative of $F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de$:
-\begingroup
-\allowdisplaybreaks
-\begin{align*}
-    \frac{d}{d\theta}\Bigg[ &F(K-\theta) - \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de \Bigg] \\
-        &= -f(K-\theta) - \int^{m-\theta}_{-\infty} \frac{\del}{\del\theta} \frac{m-e-\theta}{K-e-\theta}f(e)de \\
-        &\text{(integration by parts)} \\
-        &= -f(K-\theta) - \left[ \frac{m-\theta-e}{K-\theta-e} \right]^{m-\theta}_{-\infty} + \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de \\
-        &> -f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de 
- \quad \text{since $\frac{m-e}{K-e} \geq 0$ for $e < m-\theta$}
-\end{align*}
-\endgroup
+    Thus, we have shown that $\PP_\theta(S(\bm{W}) \geq m)$ is stochastically increasing in $\theta$ under assumptions \textbf{A1} and \textbf{A2}.
+\end{proof}
 
-Since $f$ is symmetric and unimodal about 0, $f^\prime(-e) = -f^\prime(e)$ for all $e$. Then
-\begin{flalign*}
-    &-f(K-\theta) + \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de \\
-    &> \int^{-2|m-\theta|}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{d}{d\theta} f(e)de -f(K-\theta) \\
-    &> \left[ \frac{|m-\theta|}{K-\theta+2|m-\theta|}\right]f(-2|m-\theta|) -f(K-\theta) \\
-    &> 0 \quad \text{since $f(2|m-\theta|) > f(K-\theta) \left(2 + \frac{K-\theta}{|m-\theta|} \right)$}
-\end{flalign*}
-
-Thus, we have shown that $\PP_\theta(S(\bm{W}) \geq m)$ is stochastically/monotonically increasing in $\theta$, subject to some conditions on the distribution of measurement error $\varepsilon$.
-
-% \section{(WIP) Alternate Proof}
-
-% \begin{align*}
-%     \PP_\theta(W \geq m)
-%         &= 1 - \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}f(e)de \\
-%         &= 1 - \frac{F(m-\theta)}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta}\frac{f(e)}{F(m-\theta)}de \\
-%         &= 1 - \frac{F(m-\theta)}{F(K-\theta)} \E \left[ \frac{m-\varepsilon^*-\theta}{K-\varepsilon^*-\theta} \right] \quad \text{where $\varepsilon^*$ are sampled from $f$ truncated at $m-\theta$}
-% \end{align*}
-
-% Taking the first derivative, we have:
-
-
+            

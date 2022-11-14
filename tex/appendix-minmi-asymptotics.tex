@@ -1,40 +1,37 @@
+\ChooseMinmiB*
 
-We want to find the asymptotic variance for our estimator $\hat\theta_q$, which is the quantile estimate of the sample quantile $\theta_q$. Recall \autoref{eqn: minmi-ee}: \[ q^{1/n} = 1 - \frac{F(m-\hat\theta_q)}{F(K-\hat\theta_q)} \int^{m-\hat\theta_q}_{-\infty} \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \frac{f(e)}{F(m-\hat\theta_q)} de \]
-
-Let $\psi(\theta) = \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{f(e)}{F(m-\theta)} de$ and let $\hat\psi(\theta) = \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\theta}{K-e_b-\theta}$ denote the Monte Carlo approximation of $\psi(\theta)$, where $e_b$ are sampled from density function $f$ truncated at $m-\theta$.
-
-Now, rearranging \autoref{eqn: minmi-ee}, we can obtain the estimating equation $u(\theta)$ \begin{equation}\label{eqn: minmi-ee-u(theta)}
-    u(\theta) = \frac{F(m-\theta)}{F(K-\theta)} \psi(\theta) - 1 + q^{1/n}
-\end{equation} such that $\theta_q$ satisfies $u(\theta_q) = 0$. By substituting $\psi$ with its Monte Carlo approximation $\hat\psi$, we can obtain $\hat{u}(\theta)$ \begin{equation}
-    \hat{u}(\theta) = \frac{F(m-\theta)}{F(K-\theta)} \hat{\psi}(\theta) - 1 + q^{1/n}
-\end{equation} such that $\hat\theta_q$ satisfies $\hat{u}(\hat\theta_q) = 0$.
-
-Next, we consider the asymptotic distribution of $\hat\psi(\theta)$. By the Central Limit Theorem, we have \begin{equation} \label{eqn: psi_hat_CLT}
-    \sqrt{B} (\hat\psi(\theta) - \psi(\theta)) \Dconverge \cN\left(0, \sigma^2_{\psi(\theta)} \right)
-\end{equation} and by extension we have \begin{equation}
-    \sqrt{B} (\hat{u}(\theta) - u(\theta)) \Dconverge \cN\left(0, \sigma^2_{\psi(\theta)} \left[ \frac{F(m-\theta)}{F(K-\theta)} \right]^2 \right)
-\end{equation}
-
-Since $u(\theta_q) = 0$, substituting $\theta = \theta_q$ we obtain \begin{equation}
-    \sqrt{B} \hat{u}(\theta_q) \Dconverge \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)} \right]^2 \right)
-\end{equation}
-
-Next, we apply a Taylor expansion to $\hat{u}(\hat\theta_q)$ about $\hat{u}(\theta_q)$ \begin{align*}
-    \hat{u}(\hat\theta_q) &\approx \hat{u}(\theta_q) + (\hat\theta_q - \theta_q) \hat{u}^\prime(\theta_q) \\
-    \implies \hat\theta_q - \theta_q &\approx -\frac{\hat{u}(\theta_q)}{\hat{u}^\prime(\theta_q)} \quad \text{since $\hat{u}(\hat\theta_q) = 0$} \numberthis \label{eqn: taylor-expansion}
-\end{align*}
-
-$\hat{u}^\prime(\theta)$ is the Monte Carlo approximation of $u^\prime(\theta)$:\begin{align*}
-    u(\theta) &= \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de - 1 + q^{1/n} \\
-    u^\prime(\theta)
-        &= \frac{f(K-\theta)}{\left[F(K-\theta)\right]^2} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de + \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{\del}{\del \theta} \frac{m-e-\theta}{K-e-\theta} f(e) de \\
-        &= \frac{f(K-\theta)}{\left[F(K-\theta)\right]^2} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de + \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-K}{(K-e-\theta)^2} f(e) de \\
-        &= \frac{F(m-\theta)}{F(K-\theta)} \left[ \frac{f(K-\theta)}{F(K-\theta)} \psi(\theta) +\psi^\prime(\theta) \right] \\
-    \therefore \hat{u}^\prime(\theta) &= \frac{F(m-\theta)}{F(K-\theta)} \left[ \frac{f(K-\theta)}{F(K-\theta)} \hat\psi(\theta) +\hat\psi^\prime(\theta) \right]
-\end{align*}
-
-Since $\hat\psi(\theta)$ and $\hat\psi^\prime(\theta)$ are Monte Carlo integrals, we have $\hat\psi(\theta) \Pconverge \psi(\theta)$ and $\hat\psi^\prime(\theta) \Pconverge \psi^\prime(\theta)$. Since $\hat{u}^\prime$ is a linear function of $\hat\psi$ and $\hat\psi^\prime$, the continuous mapping theorem implies that $\hat{u}^\prime(\theta) \Pconverge u^\prime(\theta)$.
-
-Now, applying Slutsky's Theorem to $\hat{u}(\theta) \Dconverge u(\theta)$ and $\hat{u}^\prime(\theta) \Pconverge u^\prime(\theta)$, we have $-\frac{\hat{u}(\theta_q)}{\hat{u}^\prime(\theta_q)} \Dconverge -\frac{{u}(\theta_q)}{{u}^\prime(\theta_q)}$ and therefore \begin{equation}
-    \sqrt{B}(\hat\theta_q - \theta_q) \sim \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2 \right)
-\end{equation}
+\begin{proof}
+    We want to find the asymptotic variance for our estimator $\hat\theta_q$, which is the quantile estimate of the sample quantile $\theta_q$. Recall \autoref{eqn: minmi-ee}: \[ q^{1/n} = 1 - \frac{F(m-\hat\theta_q)}{F(K-\hat\theta_q)} \int^{m-\hat\theta_q}_{-\infty} \frac{m-e-\hat\theta_q}{K-e-\hat\theta_q} \frac{f(e)}{F(m-\hat\theta_q)} de \]
+    
+    Let $\psi(\theta) = \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} \frac{f(e)}{F(m-\theta)} de$ and let $\hat\psi(\theta) = \frac{1}{B} \sum_{b=1}^B \frac{m-e_b-\theta}{K-e_b-\theta}$ denote the Monte Carlo approximation of $\psi(\theta)$, where $e_b$ are sampled from density function $f$ truncated at $m-\theta$.
+    
+    Now, rearranging \autoref{eqn: minmi-ee}, we can obtain the estimating equation $u(\theta)$ \begin{equation}\label{eqn: minmi-ee-u(theta)}
+        u(\theta) = \frac{F(m-\theta)}{F(K-\theta)} \psi(\theta) - 1 + q^{1/n}
+    \end{equation} such that $\theta_q$ satisfies $u(\theta_q) = 0$. By substituting $\psi$ with its Monte Carlo approximation $\hat\psi$, we can obtain $\hat{u}(\theta) = \frac{F(m-\theta)}{F(K-\theta)} \hat{\psi}(\theta) - 1 + q^{1/n}$ such that $\hat\theta_q$ satisfies $\hat{u}(\hat\theta_q) = 0$.
+    
+    Next, we consider the asymptotic distribution of $\hat\psi(\theta)$. By the Central Limit Theorem, we have \begin{equation} \label{eqn: psi_hat_CLT}
+        \sqrt{B} (\hat\psi(\theta) - \psi(\theta)) \Dconverge \cN\left(0, \sigma^2_{\psi(\theta)} \right)
+    \end{equation} and by extension we have \begin{equation}
+        \sqrt{B} (\hat{u}(\theta) - u(\theta)) \Dconverge \cN\left(0, \sigma^2_{\psi(\theta)} \left[ \frac{F(m-\theta)}{F(K-\theta)} \right]^2 \right)
+    \end{equation}
+    Note that to apply the CLT above, $\sigma^2_{\psi(\theta)}$ must be finite. Since $\psi(\theta) \in (0, 1]$ for all $\theta$, $\sigma^2_{\psi(\theta)}$ must be finite.
+    Since $u(\theta_q) = 0$ by assumption, we hence have \begin{equation}
+        \sqrt{B} \hat{u}(\theta_q) \Dconverge \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)} \right]^2 \right)
+    \end{equation}
+    Next, we apply a Taylor expansion to $\hat{u}(\hat\theta_q)$ about $\hat{u}(\theta_q)$ \begin{align*}
+        \hat{u}(\hat\theta_q) &\approx \hat{u}(\theta_q) + (\hat\theta_q - \theta_q) \hat{u}^\prime(\theta_q) \\
+        \implies \hat\theta_q - \theta_q &\approx -\frac{\hat{u}(\theta_q)}{\hat{u}^\prime(\theta_q)} \quad \text{since $\hat{u}(\hat\theta_q) = 0$} \numberthis \label{eqn: taylor-expansion}
+    \end{align*}
+    $\hat{u}^\prime(\theta)$ is the Monte Carlo approximation of $u^\prime(\theta)$:\begin{align*}
+        u(\theta) &= \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de - 1 + q^{1/n} \\
+        u^\prime(\theta)
+            &= \frac{f(K-\theta)}{\left[F(K-\theta)\right]^2} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de + \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{\del}{\del \theta} \frac{m-e-\theta}{K-e-\theta} f(e) de \\
+            &= \frac{f(K-\theta)}{\left[F(K-\theta)\right]^2} \int^{m-\theta}_{-\infty} \frac{m-e-\theta}{K-e-\theta} f(e) de + \frac{1}{F(K-\theta)} \int^{m-\theta}_{-\infty} \frac{m-K}{(K-e-\theta)^2} f(e) de \\
+            &= \frac{F(m-\theta)}{F(K-\theta)} \left[ \frac{f(K-\theta)}{F(K-\theta)} \psi(\theta) +\psi^\prime(\theta) \right] \\
+        \therefore \hat{u}^\prime(\theta) &= \frac{F(m-\theta)}{F(K-\theta)} \left[ \frac{f(K-\theta)}{F(K-\theta)} \hat\psi(\theta) +\hat\psi^\prime(\theta) \right]
+    \end{align*}
+    Since $\hat\psi(\theta)$ and $\hat\psi^\prime(\theta)$ are Monte Carlo integrals, we have $\hat\psi(\theta) \Pconverge \psi(\theta)$ and $\hat\psi^\prime(\theta) \Pconverge \psi^\prime(\theta)$. Since $\hat{u}^\prime$ is a linear function of $\hat\psi$ and $\hat\psi^\prime$, the continuous mapping theorem implies that $\hat{u}^\prime(\theta) \Pconverge u^\prime(\theta)$.
+    Now, applying Slutsky's Theorem to $\hat{u}(\theta) \Dconverge u(\theta)$ and $\hat{u}^\prime(\theta) \Pconverge u^\prime(\theta)$, we have $-\frac{\hat{u}(\theta_q)}{\hat{u}^\prime(\theta_q)} \Dconverge -\frac{{u}(\theta_q)}{{u}^\prime(\theta_q)}$ and therefore \begin{equation}
+        \sqrt{B}(\hat\theta_q - \theta_q) \sim \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2 \right)
+    \end{equation}
+\end{proof}
