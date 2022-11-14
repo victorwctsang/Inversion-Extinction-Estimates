@@ -28,7 +28,7 @@ estimate_CI.rm = function (W, K, alpha, max_iter, eps.mean, eps.sigma, .model, .
   
   # Apply RM process
   if (is.null(max_var)) {
-    max_var = 0.2*e(ps.sigma)^2
+    max_var = 0.2*(eps.sigma)^2
   }
   lower.iters = estimate_bound.rm(lower.iters, alpha/2, theta.hat, n, K, p, m, g$lower, max_var=max_var, max_iter, eps.mean, eps.sigma)
   upper.iters = estimate_bound.rm(upper.iters, 1-alpha/2, theta.hat, n, K, p, m, g$upper, max_var=max_var, max_iter, eps.mean, eps.sigma)
