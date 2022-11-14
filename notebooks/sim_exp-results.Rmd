@@ -16,17 +16,23 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r, warning=FALSE, message=FALSE}
 library(knitr)
 library(tidyverse)
+
+library(gridExtra)
 library(latex2exp)
 
 load("../data/synthetic-data.RData")
 attach(synthetic.data.config)
+```
 
+### Cleaning up and renaming things
+
+```{r}
 estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 estimates = estimates %>% filter(!(method %in% c("SI-RM", "GB-RM")))
 estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'),
-                                 method_cat = ifelse(method %in% c("SI-RM", "MINMI"),
-                                                     "Proposed",
-                                                     "Existing"),
+                                 method_cat = ifelse(!(method %in% c("SI-RM", "MINMI")),
+                                                     "Existing",
+                                                     method),
                                  method = ifelse(method == "GRIWM",
                                                  "GRIWM (q=0.05)",
                                                  ifelse(method == "GRIWM-corrected",
@@ -67,30 +73,90 @@ kable(performance.conf_int_estimates)
 ```{r results='asis'}
 library(kableExtra)
 for (err in error_factors) {
-  experiment.results.kbl = performance.point_estimates %>% 
-    filter(error_factor == err) %>% 
+  experiment.results = performance.point_estimates %>%
+    filter(error_factor == err) %>%
     ungroup() %>%
-    mutate(across(!c(method, avg_runtime, method_cat), round)) %>% 
-    mutate(avg_runtime=round(avg_runtime, digits=5)) %>%
+    mutate(across(!c(method, avg_runtime, method_cat), round)) %>%
+    mutate(avg_runtime = round(avg_runtime, digits = 5)) %>%
     arrange(MSE_000) %>%
-    select(-c(error_factor, method_cat)) %>%
-    kable(booktabs=T, col.names = c("", "(000's years)", "(years)", "(000's years)", "(seconds)"), format="latex") %>%
-    add_header_above(c("Method" = 1, "MSE" = 1, "Bias"=1, "Variance"=1, "Average Runtime"=1), line=F, align=c("l", "c", "c", "c", "c"))
-  writeLines(experiment.results.kbl, paste0("../figures/table-sim-exp-point-error", err, ".tex"))
-  print(experiment.results.kbl)
+    select(-c(error_factor, method_cat))
+  
+  print(kable(experiment.results))
+  
+  experiment.results.kbl = experiment.results %>%
+    kable(
+      booktabs = T,
+      col.names = c("", "(000's years)", "(years)", "(000's years)", "(seconds)"),
+      format = "latex"
+    ) %>%
+    add_header_above(
+      c(
+        "Method" = 1,
+        "MSE" = 1,
+        "Bias" = 1,
+        "Variance" = 1,
+        "Average Runtime" = 1
+      ),
+      line = F,
+      align = c("l", "c", "c", "c", "c")
+    )
+  
+  writeLines(
+    experiment.results.kbl,
+    paste0("../figures/table-sim-exp-point-error", err, ".tex")
+  )
 }
 ```
 
 
-```{r fig.width=12, fig.height=8}
-ggplot() +
-  geom_line(data = filter(performance.point_estimates, method_cat == "Existing"),
-            aes(x=error_factor, group=method, y=MSE_000, colour=method_cat), alpha=0.6) +
-  geom_line(data = filter(performance.point_estimates, method_cat == "Proposed"),
-            aes(x=error_factor, y=MSE_000, colour=method)) +
-  theme_bw() +
-  labs(x="Error Factor", y=NULL, title="MSE ('000 years) of each Method") +
-  scale_y_continuous(trans='log10')
+```{r}
+performance.point_estimates.long = performance.point_estimates %>%
+  rename(Error = error_factor,
+         Method = method,
+         Category = method_cat,
+         MSE = MSE_000,
+         Bias = bias,
+         Variance = variance_000,
+         Runtime = avg_runtime) %>%
+  pivot_longer(cols=c(MSE, Bias, Variance, Runtime),
+               names_to = "Metric") %>%
+  mutate(Method = factor(Method),
+         Category = factor(Category),
+         Metric = factor(Metric))
+
+head(performance.point_estimates.long)
+```
+
+```{r fig.width=15}
+metrics = unique(performance.point_estimates.long$Metric)
+performance.point_estimates.plots = lapply(metrics, function(met) {
+  p = ggplot(data = performance.point_estimates.long %>% filter(Metric == met),
+             aes(x = Error, y = value, colour = reorder(Method, value, decreasing = T))) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    labs(title = paste(met, "by Error"), ylab=NULL, colour = "Method")
+  if (met %in% c("MSE", "Runtime")) {
+    p = p+scale_y_log10()
+  }
+  p
+})
+
+performance.point_estimates.plots[[1]] = performance.point_estimates.plots[[1]] + ylab("000's")
+performance.point_estimates.plots[[2]] = performance.point_estimates.plots[[2]] + ylab("Years")
+performance.point_estimates.plots[[3]] = performance.point_estimates.plots[[3]] + ylab("000's")
+performance.point_estimates.plots[[4]] = performance.point_estimates.plots[[4]] + ylab("Seconds")
+
+do.call(grid.arrange, performance.point_estimates.plots)
+```
+
+
+```{r}
+for (i in 1:length(metrics)) {
+  ggsave(plot = performance.point_estimates.plots[[i]],
+         file = paste0("../figures/plot-sim-exp-point-est-", metrics[i], ".svg"),
+         dpi=320)
+}
 ```
 
 
