@@ -1,0 +1,49 @@
+% \begin{figure}[ht]
+%     \centering
+%     \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-lower.tex}}
+%     \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-upper.tex}}
+%     \caption{Sample variance of $\hat\theta_q$ (shown in \textcolor{red}{red}) plotted against the expected variance according to the asymptotic approximation (shown in \textcolor{blue}{blue}) on log-scales for both the $x$ and $y$ axes. The approximate variance obtained from the delta method approaches the sample variance as $B$ grows large; although the approximate variance tends to underestimate the variance (as indicated by the sample variance) for small $B$. Note the differences in the $x$ and $y$ axes; $\Var(\hat\theta_q)$ tends to grow disproportionately as $q$ becomes small.}
+%     \label{fig:asymptotics-plots}
+% \end{figure}
+
+\section{Simulation Experiments}
+
+\begin{table}[ht]
+    \centering
+    \caption{Point estimator performance, ordered by MSE (error = $0.5*\sigma$)}
+    \include{figures/table-sim-exp-point-error0.5.tex}
+    \label{tab:table-sim-exp-point-error0.5}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Point estimator performance, ordered by MSE (error = $2*\sigma$)}
+    \include{figures/table-sim-exp-point-error2.tex}
+    \label{tab:table-sim-exp-point-error2}
+\end{table}
+
+Interestingly, as measurement error increased in magnitude, \textbf{MLE became more accurate}, likely due to the fact that measurement error is negatively skewed since they cannot be greater than $K-\theta$ (see \autoref{fig: minmi_integral}). This means that as we increase the size of our measurement errors, the observed minimum becomes more likely to be less than $\theta$, which tends to cancel out with the positive bias of the MLE and produce fairly good estimates. Logically, this means the \textbf{MLE's estimates are much more varied}, which we can clearly see in \autoref{tab:table-sim-exp-point-error2} as it has the greatest sample variance.
+
+\begin{table}[ht]
+    \centering
+    \caption{Confidence Interval Width}
+    \include{figures/table-sim-exp-conf-int-average-width.tex}
+    \label{tab:table-sim-exp-width}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Confidence Interval Run Time}
+    \include{"figures/table-sim-exp-conf-int-average-runtime.tex"}
+    \label{tab:table-sim-exp-runtime}
+\end{table}
+
+\clearpage
+\section{Application}
+
+\begin{figure}[ht]
+    \centering
+    \includesvg[inkscapelatex=false, width=\linewidth]{figures/applications-hists.svg}
+    \caption{Histograms of the four megafauna species' datasets according to default \texttt{ggplot2} binning. Values of $K$ and $\bm{\theta}$ were chosen by inspection of these histograms. From left to right: the cave bear, cave hyena, Eurasian woolly mammoth, and steppe bison.}
+    \label{fig:applications-histograms}
+\end{figure}
