@@ -31,8 +31,8 @@ estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 estimates = estimates %>% filter(!(method %in% c("SI-RM", "GB-RM")))
 estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'),
                                  method_cat = ifelse(method %in% c("SI-RM", "MINMI"),
-                                                     "Proposed",
-                                                     "Existing"),
+                                                     "Proposed Methods",
+                                                     "Existing Methods"),
                                  method = ifelse(method == "GRIWM",
                                                  "GRIWM (q=0.05)",
                                                  ifelse(method == "GRIWM-corrected",
@@ -65,7 +65,7 @@ performance.conf_int_estimates = estimates %>%
   group_by(error_factor, method, method_cat) %>%
   summarise(Coverage = round(mean(contains_theta) * 100, 1),
             `Average Width` = round(mean(width), 2),
-            `Average Runtime` = round(mean(conf_int_runtime), 4)) %>%
+            `Average Runtime` = round(mean(conf_int_runtime), 5)) %>%
   ungroup() %>%
   arrange(desc(Coverage), `Average Width`, `Average Runtime`)
 kable(performance.conf_int_estimates)
@@ -163,7 +163,7 @@ for (i in 1:length(metrics)) {
 }
 ```
 
-```{r, fig.height=7, fig.width=15}
+```{r, fig.height=6, fig.width=12}
 perf.point_estimates.bias_var.plot = performance.point_estimates.long %>%
   filter(Metric %in% c("Bias", "Variance")) %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing = T))) +
@@ -171,7 +171,9 @@ perf.point_estimates.bias_var.plot = performance.point_estimates.long %>%
   geom_point() +
   facet_grid(Metric ~ Category, scale="free_y") +
   labs(colour = "Method", y=NULL) +
-  theme_bw()
+  theme_bw() +
+  theme(text=element_text(size=15),
+        strip.text.x = element_text(size = 15))
 
 perf.point_estimates.bias_var.plot
 ```
@@ -179,7 +181,7 @@ perf.point_estimates.bias_var.plot
 ```{r}
 ggsave(plot = perf.point_estimates.bias_var.plot,
        file = "../figures/plot-sim-exp-point-est-Bias-Variance.svg",
-       width=15, height=7,
+       width=12, height=6,
        dpi = 320)
 ```
 
@@ -258,6 +260,54 @@ p
 ```{r}
 ggsave(filename="../figures/sim-exp-intervals.svg", plot=p, height=5, width=8)
 ```
+
+
+```{r}
+performance.conf_int_estimates.long = performance.conf_int_estimates %>%
+  rename(Error = error_factor, Method = method, Category = method_cat, Width = `Average Width`, Runtime = `Average Runtime`) %>%
+  pivot_longer(cols=c(Coverage, Width, Runtime),
+               names_to = "Metric")
+  
+head(performance.conf_int_estimates.long)
+``` 
+
+```{r fig.height=4, fig.width=10}
+conf_int.widths.plot = performance.conf_int_estimates.long %>%
+  filter(Metric == "Width") %>%
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Metric ~ Category, scale="free_y") +
+  theme_bw() +
+  labs(y = "Years", colour="Method", title="Average Width of Estimated Confidence Intervals")
+
+conf_int.widths.plot
+
+conf_int.runtime.plot = performance.conf_int_estimates.long %>%
+  filter(Metric == "Runtime") %>%
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Metric ~ Category, scale="free_y") +
+  theme_bw() +
+  scale_y_continuous(trans=scales::log10_trans()) +
+  labs(y = "Seconds", colour="Method", title="Average Runtime of Confidence Interval Estimation")
+
+conf_int.runtime.plot
+```
+
+```{r}
+ggsave(plot = conf_int.widths.plot,
+       filename = "../figures/plot-sim-exp-conf-widths.svg",
+       dpi=320,
+       height=4, width=10)
+
+ggsave(plot = conf_int.runtime.plot,
+       filename = "../figures/plot-sim-exp-conf-runtime.svg",
+       dpi=320,
+       height=4, width=10)
+```
+
 
 ## Monte Carlo Samples for MINMI
 
