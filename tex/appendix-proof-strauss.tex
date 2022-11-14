@@ -1,0 +1,26 @@
+
+\begin{proof}
+    The MLE for the lower bound $\theta$ is the first order statistic $X_{(1)}$ as shown in \autoref{section:MLE} --- by symmetry, the MLE for the upper bound $K$ is the $n$\textsuperscript{th} order statistic $X_{(n)}$.
+
+    The marginal density function of $X_{(1)}$ is $f_{X_{(1)}}(y) = \frac{n(K-y)^{n-1}}{(K-\theta)^n} \mathbbm{1}_{\left\{ y \in [\theta, K] \right\}}$, as per \autoref{apx:mle-bias-proof}. Hence, the expectation is $\E[X_{(1)}] = \frac{K +n\theta}{n+1}$.
+    
+    In similar fashion, we can use the CDF to find the marginal density for $X_{(n)}$:
+    \begin{align*}
+        \PP_\theta (X_{(n)} \leq x) &= \prod_{i=1}^n \PP_\theta (X_i \leq x) = \begin{cases}
+            1 & \text{if $x > K$}  \\
+            \left(\frac{x}{K-\theta}\right)^n & \text{if $x \in [\theta, K]$}  \\
+            0 & \text{if $x < \theta$}  \\
+        \end{cases} \\
+        \therefore f_{X_{(n)}}(x) &=\frac{n x^{n-1}}{(K-\theta)^n} \mathbbm{1}_{\left\{ x \in [\theta, K] \right\}} \\
+        \implies \E[X_{(n)}] &= \int_\theta^K \frac{n x^{n-1}}{(K-\theta)^n} x dx = \frac{nK + \theta}{n+1}
+    \end{align*}
+    Rearranging the expectation terms gives:
+    \[
+        \E\left[\frac{nX_{(1)} - X_{(n)}}{n-1}\right] = \theta, \quad 
+        \E\left[\frac{nX_{(n)} - X_{(1)}}{n-1}\right] = K
+    \]
+    Thus, bias-adjusted estimates of $\theta$ and $K$ are, respectively,\[
+    \hat\theta_{\text{Strauss}} = \frac{nX_{(1)} - X_{(n)}}{n-1}, \quad
+    \hat{K}_{\text{Strauss}} = \frac{nX_{(n)} - X_{(1)}}{n-1}
+    \]
+\end{proof}
