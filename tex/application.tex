@@ -27,7 +27,9 @@ The proposed estimators (MINMI and SI-RM) also have some considerations when app
 \end{table}
 
 \section{Discussion}
-All three methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results further confirm the results from the simulation experiments, with the MINMI, SI-RM, and SI-UGM estimators producing similar point estimates and confidence intervals while both the uncorrected and corrected versions of GRIWM produced narrower intervals and substantially different point estimates. Another observation of note is the width of the intervals, which tend to narrow as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
+All three methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
+
+Another observation of note is the narrowing of the intervals as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/applications.svg}
@@ -39,22 +41,22 @@ All three methods produced comparable confidence intervals, with similar widths,
 
 To put our results in context, we considered the cave bear as an example of extinct megafauna from the Pleistocene era and compared our results to those obtained by \citet{Baca2016}, who estimated extinction times using a dataset of over 200 fossils. Unfortunately, we were unable to get access to the dataset used in the paper, instead using the dataset from \citet{Cooper2015} containing 30 samples.
 
-Having disappeared towards the end of the last glacial period, the cave bear's causes of extinction and precise extinction time have been in debate over the years. In their 2016 study, \citet{Baca2016} used the eight methods (including the Strauss, McInerny et al, and GRIWM estimators) to construct 95\% confidence intervals for the extinction time, concluding that extinction likely occurred between $25,234 - 24,291$ calendar years before present (BP). The authors also considered a more conservative approach, excluding younger dates that had received criticism for not having certain chemical data. This resulted in more conservative estimates of between $27,007 - 26,117$ years BP \cite{Baca2016}. % Both of these estimates coincide with the last glacial period which, along with anatomical evidence pointing to a vegetarian diet, suggests their disappearance was largely due to the scarcity of food during the onset of the last glacial period rather than the result of climate change inflicted habitat loss or over hunting from humans \cite{Pacher2009}.
+Having disappeared towards the end of the last glacial period, the cave bear's causes of extinction and precise extinction time have been in debate over the years. In their 2016 study, \citet{Baca2016} used the original implementation of GRIWM estimator with threshold probability $q = 0.05$ to construct 95\% confidence intervals for the extinction time, concluding that extinction likely occurred between $25,234 - 24,291$ calendar years before present (BP). The authors also considered a more conservative approach, excluding younger dates that were missing certain chemical data. This resulted in more conservative estimates of between $27,007 - 26,117$ years BP \cite{Baca2016}. % Both of these estimates coincide with the last glacial period which, along with anatomical evidence pointing to a vegetarian diet, suggests their disappearance was largely due to the scarcity of food during the onset of the last glacial period rather than the result of climate change inflicted habitat loss or over hunting from humans \cite{Pacher2009}.
+
+For our analysis, we used a different dataset of cave bear fossils, obtained from \citet{Cooper2015}. This dataset had 30 samples with the youngest sample dated to approximately $27,832$ years BP, compared to the dataset of 207 used by \citet{Baca2016} with the youngest sample dated to approximately $26,000$ years BP. Using the MINMI, SI-RM, and SI-UGM methods, we constructed confidence intervals that suggest extinction occurred between $29,166 - 26,900$ years BP.
 \begin{table}[ht]
     \centering
-    \caption{Caption}
+    \caption{Table of estimated intervals and widths for the cave bear. Note that \citet{Baca2016} used the original implementation of GRIWM with $q=0.05$ and the ``conservative" estimate was found using a subset of their data. Estimates for MINMI, SI-RM, and GRIWM-BA were found using the dataset from \citet{Cooper2015}.}
     \include{figures/table-case-study-results.tex}
     \label{tab:case-study-intervals}
     \vspace{-4mm}
 \end{table}
 
-For our analysis, we used a different dataset of cave bear fossils, obtained from \citet{Cooper2015}. This dataset had 30 samples with the youngest sample dated to approximately $27,832$ years BP, compared to the dataset of 207 used by \citet{Baca2016} with the youngest sample dated to approximately $26,000$ years BP. Using the MINMI, SI-RM, and SI-UGM methods, we constructed confidence intervals that suggest extinction occurred between $29,166 - 26,900$ years BP.
-
-The intervals estimated by \citet{Baca2016} using GRIWM are narrower than those estimated by the MINMI and SI-RM methods (\autoref{tab:case-study-intervals}). This can be attributed to the fact that our dataset is significantly smaller --- a smaller sample size means estimates have greater uncertainty, and thus we can expect wider intervals. This is consistent with results that we saw earlier.
+The intervals estimated by \citet{Baca2016} using GRIWM are narrower than those estimated by the MINMI and SI-RM methods (\autoref{tab:case-study-intervals}). One reason is the fact that our dataset is significantly smaller --- a smaller sample size means estimates have greater uncertainty, and thus we can expect wider intervals. Additionally, our simulation study results are consistent with this application, as the estimates using both the original and bias-adjusted implementations of GRIWM consistently yielded narrower intervals.
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-cave-bear.svg}
-    \caption{Confidence intervals found for the cave bear. GRIWM and GRIWM (conservative) intervals are as published in \citet{Baca2016}.}
+    \caption{Confidence intervals found for the cave bear, where the \citet{Cooper2015} dataset with $n=30$ was used for the MINMI, SI-RM, and GRIWM-BA methods. Intervals for the \citet{Baca2016} results were taken from the original paper.}
     \label{fig:application-cave-bear}
 \end{figure}
 
