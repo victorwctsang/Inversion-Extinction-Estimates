@@ -48,8 +48,8 @@ p.joint_density = ggplot() +
   geom_abline(intercept=w, slope=-1) +
   geom_ribbon(data=shade_df,
               mapping=aes(x=x, ymin=bottom, ymax=top),
-              fill="cyan",
-              alpha=0.3) +
+              fill="black",
+              alpha=0.2) +
   # Annotations
   geom_hline(yintercept=theta, alpha=0.8) +
   geom_hline(yintercept=K, linetype="dashed") +
