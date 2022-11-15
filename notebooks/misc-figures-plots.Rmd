@@ -1,0 +1,104 @@
+---
+title: "Figures/Plots"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(latex2exp)
+theme_set(theme_bw())
+```
+
+#### Sketch of Joint Density
+
+```{r fig.width=8, height=4}
+yaxis.offset = 0.2
+xaxis.offset = 0.2
+
+theta = 1
+K = 4
+w = 2
+
+shade_df = data.frame(
+  x=seq(-10, K-theta, by=0.1)
+)
+shade_df = shade_df %>% mutate(top = K-x, bottom = ifelse(x < w-theta, w-x, theta))
+
+p.joint_density = ggplot() +
+  # Draw axes
+  theme_bw() +
+  theme(axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_segment(aes(x=-10, y=0, xend=K-theta+1.8, yend=0), arrow=arrow(length = unit(0.5, "cm")), size = 1) +
+  geom_segment(aes(x=0, y=-0.5, xend=0, yend=6.3), arrow=arrow(length = unit(0.5, "cm")), size = 1) +
+  annotate(label="X", geom="text", x=0.3, y=6.1, size=7) +
+  annotate(label=TeX("$\\epsilon$"), geom="text", x=K-theta+1.75, y=-0.3, size=9) +
+  coord_cartesian(ylim = c(-0.5, 6), xlim = c(w-K-1, K-theta+1.5)) +
+  # Draw limits and shade
+  geom_abline(intercept=K, slope=-1) +
+  geom_abline(intercept=w, slope=-1) +
+  geom_ribbon(data=shade_df,
+              mapping=aes(x=x, ymin=bottom, ymax=top),
+              fill="cyan",
+              alpha=0.3) +
+  # Annotations
+  geom_hline(yintercept=theta, alpha=0.8) +
+  geom_hline(yintercept=K, linetype="dashed") +
+  geom_segment(aes(x=w-theta, y=0, xend=w-theta, yend=theta), linetype="dashed") +
+  geom_segment(aes(x=K-theta, y=0, xend=K-theta, yend=theta), linetype="dashed") +
+  annotate(size=6, label="K", geom="text", x=xaxis.offset, y=K+yaxis.offset) +
+  annotate(size=6, label=TeX("$\\theta$"), geom="text", x=-xaxis.offset, y=theta-yaxis.offset) +
+  annotate(size=6, label="w", geom="text", x=-xaxis.offset, y=w-0.1) +
+  annotate(size=6, label=0, geom="text", x=-xaxis.offset, y=-yaxis.offset) +
+  annotate(size=6, label=TeX("$w-\\theta$"), geom="text", x=w-theta, y=-yaxis.offset) +
+  annotate(size=6, label=TeX("$K-\\theta$"), geom="text", x=K-theta, y=-yaxis.offset) +
+  annotate(size=6, label=TeX("$X + \\epsilon = K$"), geom="text", x=1.2, y=K-1.2+0.25, hjust="left") +
+  annotate(size=6, label=TeX("$X + \\epsilon = w$"), geom="text", x=-0.8, y=w+0.8-0.1, hjust="right")
+
+p.joint_density
+```
+
+```{r}
+ggsave(filename="../figures/plot_minmi_joint_density.svg", plot=p.joint_density, dpi=320, width=8, height=5)
+```
+
+```{r}
+p.boundsggplot() +
+  # Draw axes
+  theme_bw() +
+  theme(axis.title = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_segment(aes(x=-10, y=0, xend=K-theta+1.8, yend=0), arrow=arrow(length = unit(0.5, "cm")), size = 1) +
+  geom_segment(aes(x=0, y=-0.5, xend=0, yend=6.3), arrow=arrow(length = unit(0.5, "cm")), size = 1) +
+  annotate(label="X", geom="text", x=0.3, y=6.1, size=7) +
+  annotate(label=TeX("$\\epsilon$"), geom="text", x=K-theta+1.75, y=-0.3, size=9) +
+  coord_cartesian(ylim = c(-0.5, 6), xlim = c(w-K-1, K-theta+1.5)) +
+  # Draw limits and shade
+  geom_abline(intercept=K, slope=-1) +
+  geom_ribbon(data=mutate(data.frame(x=seq(-10, K-theta, by=0.1)), bottom= theta, top=K-x),
+              mapping=aes(x=x, ymin=bottom, ymax=top),
+              fill="cyan",
+              alpha=0.3) +
+  # Annotations
+  geom_hline(yintercept=theta, alpha=0.8) +
+  geom_hline(yintercept=K, linetype="dashed") +
+  geom_segment(aes(x=K-theta, y=0, xend=K-theta, yend=theta), linetype="dashed") +
+  annotate(size=6, label="K", geom="text", x=xaxis.offset, y=K+yaxis.offset) +
+  annotate(size=6, label=TeX("$\\theta$"), geom="text", x=-xaxis.offset, y=theta-yaxis.offset) +
+  annotate(size=6, label=0, geom="text", x=-xaxis.offset, y=-yaxis.offset) +
+  annotate(size=6, label=TeX("$K-\\theta$"), geom="text", x=K-theta, y=-yaxis.offset) +
+  annotate(size=6, label=TeX("$X + \\epsilon = K$"), geom="text", x=1.2, y=K-1.2+0.25, hjust="left")
+```
+

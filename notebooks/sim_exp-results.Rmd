@@ -1,0 +1,328 @@
+---
+title: "Simulation Experiment Results"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    keep_tex: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Load in the results
+
+```{r, warning=FALSE, message=FALSE}
+library(knitr)
+library(tidyverse)
+
+library(gridExtra)
+library(latex2exp)
+
+load("../data/synthetic-data.RData")
+attach(synthetic.data.config)
+```
+
+### Cleaning up and renaming things
+
+```{r}
+estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
+estimates = estimates %>% filter(!(method %in% c("SI-RM", "GB-RM")))
+estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'),
+                                 method_cat = ifelse(method %in% c("SI-RM", "MINMI"),
+                                                     "Proposed Methods",
+                                                     "Existing Methods"),
+                                 method = ifelse(method == "GRIWM",
+                                                 "GRIWM (q=0.05)",
+                                                 ifelse(method == "GRIWM-corrected",
+                                                        "GRIWM-BA (q=0.5)",
+                                                        ifelse(method == "STRAUSS",
+                                                          "Strauss",
+                                                          method
+                                                        ))))
+estimates = estimates %>% filter(error_factor != 4)
+head(estimates)
+```
+
+
+```{r}
+# Point estimates
+performance.point_estimates = estimates %>%
+  filter(!is.na(point)) %>%
+  group_by(error_factor, method, method_cat) %>%
+  summarise(MSE_000 = mean((point - theta.true)^2)/1000,
+            bias = mean(point)-theta.true,
+            variance_000 = var(point)/1000,
+            avg_runtime = round(mean(point_runtime), 5))
+kable(performance.point_estimates)
+
+# Confidence Intervals
+performance.conf_int_estimates = estimates %>%
+  filter(!is.na(conf_int_runtime)) %>%
+  mutate(width = upper - lower,
+         contains_theta = ifelse(theta.true > lower & theta.true < upper, 1, 0)) %>%
+  group_by(error_factor, method, method_cat) %>%
+  summarise(Coverage = round(mean(contains_theta) * 100, 1),
+            `Average Width` = round(mean(width), 2),
+            `Average Runtime` = round(mean(conf_int_runtime), 5)) %>%
+  ungroup() %>%
+  arrange(desc(Coverage), `Average Width`, `Average Runtime`)
+kable(performance.conf_int_estimates)
+```
+
+### Point Estimates
+
+```{r results='asis'}
+library(kableExtra)
+for (err in error_factors) {
+  experiment.results = performance.point_estimates %>%
+    filter(error_factor == err) %>%
+    ungroup() %>%
+    mutate(across(!c(method, avg_runtime, method_cat), round)) %>%
+    mutate(avg_runtime = round(avg_runtime, digits = 5)) %>%
+    arrange(MSE_000) %>%
+    select(-c(error_factor, method_cat))
+  
+  print(kable(experiment.results))
+  
+  experiment.results.kbl = experiment.results %>%
+    kable(
+      booktabs = T,
+      col.names = c("", "(000's years)", "(years)", "(000's years)", "(seconds)"),
+      format = "latex"
+    ) %>%
+    add_header_above(
+      c(
+        "Method" = 1,
+        "MSE" = 1,
+        "Bias" = 1,
+        "Variance" = 1,
+        "Average Runtime" = 1
+      ),
+      line = F,
+      align = c("l", "c", "c", "c", "c")
+    )
+  
+  writeLines(
+    experiment.results.kbl,
+    paste0("../figures/table-sim-exp-point-error", err, ".tex")
+  )
+}
+```
+
+
+```{r}
+performance.point_estimates.long = performance.point_estimates %>%
+  rename(Error = error_factor,
+         Method = method,
+         Category = method_cat,
+         MSE = MSE_000,
+         Bias = bias,
+         Variance = variance_000,
+         Runtime = avg_runtime) %>%
+  pivot_longer(cols=c(MSE, Bias, Variance, Runtime),
+               names_to = "Metric") %>%
+  mutate(Method = factor(Method),
+         Category = factor(Category),
+         Metric = factor(Metric)) %>%
+  filter(Method != "MLE")
+
+head(performance.point_estimates.long)
+```
+
+```{r fig.width=15}
+metrics = unique(performance.point_estimates.long$Metric)
+performance.point_estimates.plots = lapply(metrics, function(met) {
+  p = ggplot(data = performance.point_estimates.long %>% filter(Metric == met),
+             aes(x = Error, y = value, colour = reorder(Method, value, decreasing = T))) +
+    geom_line() +
+    geom_point() +
+    theme_bw() +
+    labs(title = paste(met, "by Error"), ylab=NULL, colour = "Method")
+  if (met %in% c("MSE", "Runtime")) {
+    p = p+scale_y_log10()
+  }
+  p
+})
+
+performance.point_estimates.plots[[1]] = performance.point_estimates.plots[[1]] + ylab("000's")
+performance.point_estimates.plots[[2]] = performance.point_estimates.plots[[2]] + ylab("Years")
+performance.point_estimates.plots[[3]] = performance.point_estimates.plots[[3]] + ylab("000's")
+performance.point_estimates.plots[[4]] = performance.point_estimates.plots[[4]] + ylab("Seconds")
+
+do.call(grid.arrange, performance.point_estimates.plots)
+```
+
+
+```{r}
+for (i in 1:length(metrics)) {
+  ggsave(plot = performance.point_estimates.plots[[i]],
+         file = paste0("../figures/plot-sim-exp-point-est-", metrics[i], ".svg"),
+         dpi=320)
+}
+```
+
+```{r, fig.height=6, fig.width=12}
+perf.point_estimates.bias_var.plot = performance.point_estimates.long %>%
+  filter(Metric %in% c("Bias", "Variance")) %>%
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing = T))) +
+  geom_line() +
+  geom_point() +
+  facet_grid(Metric ~ Category, scale="free_y") +
+  labs(colour = "Method", y=NULL) +
+  theme_bw() +
+  theme(text=element_text(size=15),
+        strip.text.x = element_text(size = 15))
+
+perf.point_estimates.bias_var.plot
+```
+
+```{r}
+ggsave(plot = perf.point_estimates.bias_var.plot,
+       file = "../figures/plot-sim-exp-point-est-Bias-Variance.svg",
+       width=12, height=6,
+       dpi = 320)
+```
+
+
+### Confidence Intervals
+
+```{r results='asis'}
+options(scipen = 9)
+for (metric in c("Coverage", "Average Width", "Average Runtime")) {
+  experiment.results.conf_int = performance.conf_int_estimates %>%
+    select(c(method, error_factor, one_of(metric))) %>%
+    pivot_wider(
+      id_cols = method,
+      names_from = error_factor,
+      values_from = one_of(metric),
+      names_prefix = paste(metric, "| error = sigma*")
+    ) %>%
+    arrange(!!syms(paste(metric, "| error = sigma*0")))
+  print(kable(experiment.results.conf_int))
+  
+  experiment.results.kbl = experiment.results.conf_int %>%
+    kable(
+      col.names = c("", paste0(c(0, 0.5, 1, 2), r"{*$\sigma$}")),
+      booktabs = T,
+      format = "latex",
+      escape = FALSE
+    ) %>%
+    add_header_above(unlist(lst("Method" = 1,!!metric := 4)), line = F)
+  writeLines(
+    experiment.results.kbl,
+    paste0(
+      "../figures/table-sim-exp-conf-int-",
+      str_replace(tolower(metric), " ", "-"),
+      ".tex"
+    )
+  )
+}
+```
+
+
+```{r fig.width=25, fig.height=4}
+estimates %>%
+  filter(!is.na(lower)) %>%
+  select(method, lower, upper) %>%
+  pivot_longer(cols=c(lower, upper)) %>%
+  filter(!is.na(value)) %>%
+  ggplot(aes(x=value, fill=name)) +
+  geom_density(alpha=0.25) +
+  geom_vline(aes(xintercept=theta.true)) +
+  facet_wrap(method ~ ., nrow=1) +
+  theme_minimal() +
+  labs(x=NULL, y=NULL)
+```
+
+
+```{r fig.width=8, fig.height=5}
+p = estimates %>%
+  filter(!is.na(lower) & error_factor == 1) %>%
+  group_by(method_cat, method) %>%
+  summarise(lower = mean(lower), upper=mean(upper), point=mean(point)) %>%
+  mutate(width=upper-lower) %>%
+  mutate(method_cat_int = ifelse(method_cat == "Existing", 0, 1)) %>%
+  ggplot(aes(colour=method_cat)) +
+  geom_pointrange(aes(xmin=lower, xmax=upper, x=point, y=reorder(method, method_cat_int))) +
+  guides(colour = guide_legend(reverse=TRUE)) +
+  labs(y=NULL, x="Years (BP)",
+       title="Simulation Experiment Confidence Intervals",
+       colour="Method",
+       subtitle="(Average of Interval Endpoints and Point Estimates)") +
+  scale_x_continuous(breaks = seq(from=8000, to=11500, by=500)) +
+  theme_bw()
+p
+```
+
+
+```{r}
+ggsave(filename="../figures/sim-exp-intervals.svg", plot=p, height=5, width=8)
+```
+
+
+```{r}
+performance.conf_int_estimates.long = performance.conf_int_estimates %>%
+  rename(Error = error_factor, Method = method, Category = method_cat, Width = `Average Width`, Runtime = `Average Runtime`) %>%
+  pivot_longer(cols=c(Coverage, Width, Runtime),
+               names_to = "Metric")
+  
+head(performance.conf_int_estimates.long)
+``` 
+
+```{r fig.height=4, fig.width=10}
+conf_int.widths.plot = performance.conf_int_estimates.long %>%
+  filter(Metric == "Width") %>%
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Metric ~ Category, scale="free_y") +
+  theme_bw() +
+  labs(y = "Years", colour="Method", title="Average Width of Estimated Confidence Intervals")
+
+conf_int.widths.plot
+
+conf_int.runtime.plot = performance.conf_int_estimates.long %>%
+  filter(Metric == "Runtime") %>%
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
+  geom_point() +
+  geom_line() +
+  facet_grid(Metric ~ Category, scale="free_y") +
+  theme_bw() +
+  scale_y_continuous(trans=scales::log10_trans()) +
+  labs(y = "Seconds", colour="Method", title="Average Runtime of Confidence Interval Estimation")
+
+conf_int.runtime.plot
+```
+
+```{r}
+ggsave(plot = conf_int.widths.plot,
+       filename = "../figures/plot-sim-exp-conf-widths.svg",
+       dpi=320,
+       height=4, width=10)
+
+ggsave(plot = conf_int.runtime.plot,
+       filename = "../figures/plot-sim-exp-conf-runtime.svg",
+       dpi=320,
+       height=4, width=10)
+```
+
+
+## Monte Carlo Samples for MINMI
+
+```{r}
+B.minmi = readRDS("../data/sim_exp-B-minmi.RDS")
+B.minmi = B.minmi %>% arrange(error_factor) %>% mutate(error_factor = paste0(error_factor, r"{*$\sigma$}"))
+
+B.minmi.kbl = B.minmi %>%
+  filter(error_factor != 0) %>%
+  kable(col.names = c("Variation", "$q = 0.025$", "$q = 0.5$", "$q = 0.975$"),
+        booktabs=T, format="latex", escape = FALSE) %>%
+  add_header_above(c(`Measurement Error`=1, `$B$`=3), line=F)
+
+print(B.minmi.kbl)
+
+writeLines(B.minmi.kbl, "../figures/table-sim-exp-minmi-Bs.tex")
+```
+

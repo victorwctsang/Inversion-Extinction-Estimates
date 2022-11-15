@@ -1,0 +1,234 @@
+---
+title: "SI-RM Scrapbook"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gridExtra)
+```
+
+```{r}
+load("../data/synthetic-data.RData")
+
+attach(synthetic.data.config)
+set.seed(3)
+
+alpha = 0.05
+
+datasets.err1 = datasets %>% filter(error_factor == 2)
+datasets.err1_sample = datasets.err1[sample(1:nrow(datasets.err1), 50, ), ]
+head(datasets.err1_sample)
+```
+
+## Stopping Criteria behaviour
+
+```{r}
+source("../src/simulated-inversion.R")
+source("../src/garthwaite-robbins-munro-functions.R")
+
+theta.test_vec = seq(4000, 14000) # true theta is 10,000
+
+SI_RM.iters = data.frame(
+  Dataset_id = integer(),
+  Error_Factor = integer(),
+  Iteration = integer(),
+  Endpoint = factor(),
+  Estimate = numeric()
+)
+
+sd = fossil.sd
+for (i in 1:nrow(datasets.err1_sample)) {
+  iter = datasets.err1_sample[i,]
+  W = as.numeric(iter$W[[1]])
+  
+  # Use Simulated Inversion to estimate the quantile function
+  SI_results = simulated_inversion(alpha, W, sd, K, theta.test_vec,
+                                   dating_error.mean=0, return_model = T)
+  
+  # Apply SI_RM
+  SI_RM = estimate_CI.rm(W=W, K=K, alpha=alpha, max_iter=1000,
+                         eps.mean=dating_error.mean, eps.sigma=mean(sd),
+                         .CI_estimates = SI_results, .model=SI_results$model, 
+                         return_iters = T)
+  lower_iters = data.frame(Dataset_id = i,
+                           Error_Factor = iter$error_factor,
+                           Iteration=1:length(SI_RM$lower.iters),
+                           Endpoint="lower",
+                           Estimate=SI_RM$lower.iters)
+  upper_iters = data.frame(Dataset_id = i,
+                           Error_Factor = iter$error_factor,
+                           Iteration=1:length(SI_RM$upper.iters),
+                           Endpoint="upper",
+                           Estimate=SI_RM$upper.iters)
+  
+  # Append to our results df
+  SI_RM.iters = rbind(SI_RM.iters, lower_iters, upper_iters)
+}
+```
+
+```
+# SI_RM.iters %>%
+#   mutate(Endpoint = ifelse(Endpoint == "lower", "q=0.025", "q=0.975")) %>%
+#   ggplot(mapping=aes(x=Iteration, y=Estimate, group=Dataset_id, colour=Endpoint)) +
+#   geom_line(alpha=0.5) +
+#   facet_wrap(Endpoint ~ ., scales="free_x") +
+#   theme_bw() +
+#   guides(colour="none")
+```
+
+```{r}
+SI_RM.iters %>%
+  group_by(Dataset_id, Endpoint) %>%
+  summarise(Iters = max(Iteration)) %>%
+  mutate(Endpoint = ifelse(Endpoint == "lower", "q=0.025", "q=0.975")) %>%
+  ggplot(mapping=aes(x=Iters)) +
+  geom_histogram() +
+  facet_wrap(Endpoint ~ ., scales="free_x") +
+  ggtitle("Distribution of Number of Iterations used")
+```
+
+```{r}
+tmp = SI_RM.iters %>%
+  group_by(Dataset_id, Endpoint) %>%
+  summarise(Iters = max(Iteration))
+```
+```{r}
+for (level in unique(tmp$Endpoint)) {
+  print(summary(tmp[tmp$Endpoint == level, ]))
+}
+```
+
+
+
+## Performance with "bad" estimates and fixed number of iterations
+
+```{r}
+max_iter = 1000
+
+tmp.data = datasets.err1_sample[1, ]
+tmp.W = as.numeric(tmp.data$W[[1]])
+tmp.sd = as.numeric(tmp.data$error_factor*fossil.sd)
+
+tmp.SI_results = simulated_inversion(alpha, tmp.W, tmp.sd, K, theta.test_vec,
+                                 dating_error.mean=0, return_model = T)
+
+tmp.SIRM_results.GB_start = estimate_CI.rm(
+  W=tmp.W, K=K, alpha=alpha, max_iter=max_iter, eps.mean=dating_error.mean,
+  eps.sigma=mean(tmp.sd), .CI_estimates=tmp.SI_results,
+  .model=tmp.SI_results$model, return_iters = T, max_var=-1
+)
+```
+
+```{r fig.height=6, fig.width=20}
+# Combine all results tidily
+tmp.results = rbind(
+  # Garthwaite & Buckland Heuristic
+  data.frame(`Starting Value` = "SI-RM",
+             Iteration = 1:length(tmp.SIRM_results.GB_start$lower.iters),
+             Endpoint = "Lower Endpoint (q=0.025)",
+             Estimate = tmp.SIRM_results.GB_start$lower.iters,
+             group_id = "SI-RM"),
+  data.frame(`Starting Value` = "SI-RM",
+             Iteration = 1:length(tmp.SIRM_results.GB_start$upper.iters),
+             Endpoint = "Upper Endpoint (q=0.975)",
+             Estimate = tmp.SIRM_results.GB_start$upper.iters,
+             group_id = "SI-RM")
+)
+
+starting_values = cbind(
+  lower = c(3000, 5000, 8000, 10000, 15000, 18000),
+  upper = c(18000, 15000, 10000, 8000, 5000, 3000)
+)
+
+for (row_idx in 1:nrow(starting_values)) {
+  label = paste("Manual:", paste(starting_values[row_idx, ], collapse=","))
+  estimates = estimate_CI.rm(
+    W = tmp.W,
+    K = K,
+    alpha = alpha,
+    max_iter = max_iter,
+    eps.mean = dating_error.mean,
+    eps.sigma = mean(tmp.sd),
+    .CI_estimates = tmp.SI_results,
+    .model = tmp.SI_results$model,
+    return_iters = T,
+    max_var = -1,
+    .starting_vals = starting_values[row_idx, ]
+  )
+  
+  tmp.results = rbind(
+    tmp.results,
+    data.frame(`Starting Value` = label,
+               Iteration = 1:length(estimates$lower.iters),
+               Endpoint = "Lower Endpoint (q=0.025)",
+               Estimate = estimates$lower.iters,
+               group_id = "Manual"),
+    data.frame(`Starting Value` = label,
+               Iteration = 1:length(estimates$upper.iters),
+               Endpoint = "Upper Endpoint (q=0.975)",
+               Estimate = estimates$upper.iters,
+               group_id = "Manual")
+  )
+}
+
+tmp.results = tmp.results %>%
+  mutate(group_id2 = paste(Starting.Value, Endpoint))
+
+dim(tmp.results)
+```
+
+```{r fig.width=14, fig.height=5}
+SI_RM.starting_estimate_plot = tmp.results %>%
+  ggplot() +
+  geom_line(data=filter(tmp.results, group_id=="SI-RM"),
+            aes(x=Iteration, y=Estimate), colour="red") +
+  geom_line(data=filter(tmp.results, group_id=="Manual"),
+            aes(x=Iteration, y=Estimate, group=Starting.Value),
+            alpha=0.3) +
+  facet_wrap(Endpoint ~ ., scales="free", ncol=2) +
+  theme_bw() +
+  xlim(0, 500)
+SI_RM.starting_estimate_plot
+```
+
+
+```{r}
+ggsave(filename="../figures/SI-RM-starting-estimate-convergence.svg",
+       plot=SI_RM.starting_estimate_plot,
+       width=14,
+       height=5)
+```
+
+
+$$
+\eta = -\ln(K-\theta) \quad \theta = K - \exp(-\eta)
+$$
+
+
+## Performance with the same starting estimates but bad step sizes
+
+```{r}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,135 @@
+---
+title: "Monte Carlo Estimation Simulation Tests"
+author: "Victor Tsang"
+date: "`r format(Sys.Date(), '%d %B %Y')`"
+output:
+  html_document:
+    highlight: pygments
+    toc: true
+    toc_float: true
+    toc_collapsed: false
+    toc_smooth_scroll: false
+    toc_depth: 5
+header_includes:
+  - \newcommand{\Var}{\mathrm{Var}}
+  - \newcommand{\E}{\mathbb{E}}
+---
+
+```{=html}
+<style>
+body
+  { counter-reset: source-line 0; }
+pre.numberSource code
+  { counter-reset: none; }
+</style>
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  attr.source='.numberLines',
+  class.source = "numberLines lineAnchors",
+  root.dir='C:/Users/victo/Documents/c-git-repos/HonoursThesis2022',
+  error=TRUE
+)
+```
+
+```{r}
+source("meme-functions.R")
+
+library(ggplot2)
+library(latex2exp)
+
+simulateConfidenceIntervals.mc = function (
+    nSim, alpha, n, theta, K, B=0, eps.mean=0, eps.sigma=0, uniroot.interval=NA
+) {
+  CI.df = data.frame(i=1:nSim,
+                     L=rep(NA, nSim),
+                     U=rep(NA, nSim),
+                     mean=rep(NA, nSim),
+                     width=rep(NA, nSim),
+                     containsTheta=FALSE)
+  u = matrix(runif(n*B, min=0, max=1), ncol=B)
+  
+  for (i in 1:nSim) {
+    sim.data = simulateFossils(n, theta, K, eps.mean, eps.sigma)
+    CI.df[i, 2:5] = getConfidenceInterval.mc(alpha, n, K, sim.data$W, u, eps.sigma, eps.mean, uniroot.interval)
+    CI.df[i, 6] = (CI.df[i, 2] < theta) & (theta < CI.df[i, 3])
+  }
+  return(CI.df)
+}
+
+plot.simCIs = function(df, theta) {
+  ggplot(data=df, aes(x=i, y=mean)) +
+    geom_errorbar(aes(ymax = U, ymin = L, colour=containsTheta)) +
+    geom_hline(yintercept=theta) +
+    labs(title=paste("Confidence interval;", TeX("\\theta"), "=", theta),
+         y=TeX("\\theta"))
+}
+```
+
+
+## Example: No measurement error
+
+We want to see that for a 95% confidence interval ($\alpha = 0.05$), our coverage probability should be approximately 95%
+
+```{r}
+set.seed(2022)
+
+nSim = 1000
+alpha = 0.05
+n = 30
+theta = 12500
+K = 18000
+
+sim.no_error = simulateConfidenceIntervals(nSim, alpha, n, theta, K)
+
+mean(sim.no_error$containsTheta)
+```
+
+```{r example1_plot}
+plot.simCIs(sim.no_error[1:100, ], theta)
+```
+
+Our coverage is decent, although it does look like our intervals tend to underestimate $\theta$ fairly often.
+
+## Example: Measurement error
+
+We will keep the same parameters as above, but now we introduce measurement error.
+
+Let's assume our measurement errors are normally distributed with zero-mean, and set the standard deviation to the **average standard deviation from some real data**
+
+We will use $B = 10000$ for our monte carlo step.
+
+```{r}
+library(readxl)
+
+# Import mammoth data from fossildata.xlsx
+fossil_dataframe = read_excel(
+  path='../data/fossildata.xlsx', 
+  sheet="MammothPrimEBer", 
+  range="M3:N36", 
+  col_names=c("age", "sd"), 
+  col_types=c('numeric', 'numeric')
+)
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+```
+
+
+```{r example2_setup}
+set.seed(2022)
+
+B = 1000
+eps.mean = 0
+eps.sigma = mean(fossil_dataframe$sd)
+uniroot.interval=c(10000, 16000)
+
+sim.error = simulateConfidenceIntervals(nSim, alpha, n, theta, K, B, eps.mean, eps.sigma, uniroot.interval)
+plot.simCIs(sim.error[1:100, ], theta)
+```
+
+```{r}
+mean(sim.error$containsTheta)
+```
+
+

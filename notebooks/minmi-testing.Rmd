@@ -1,0 +1,79 @@
+---
+title: "MINMI-testing"
+author: "Victor Tsang (z5209633)"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+load("../data/synthetic-data.RData")
+
+# Import mammoth data from fossildata.xlsx
+fossil_dataframe = read_excel(
+  path='../data/fossildata.xlsx', 
+  sheet="MammothPrimEBer", 
+  range="M3:N36", 
+  col_names=c("age", "sd"), 
+  col_types=c('numeric', 'numeric')
+)
+fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
+
+attach(synthetic.data.config)
+
+dates = datasets[1, ]$W[[1]]
+m = min(dates)
+
+standard_errors = fossil_dataframe$sd[1:n]
+print(K)
+print(theta.true)
+```
+
+```{r}
+source("../src/minmi-functions.R")
+estimate_extinction.minmi(W=dates, sd=standard_errors, K=K, level=0.05, time=T, return_Bs = T)
+```
+
+```{r}
+estimate_extinction.minmi(W=dates, sd=standard_errors, K=K, level=0.05, time=T, return_Bs = T)
+```
+
+```{r}
+eps.mean = 0
+eps.sigma = mean(standard_errors)
+
+0.2*eps.sigma^2
+
+estimate_var.delta_method = function (B, q) {
+  theta_q.hat = K - q ^ (-1 / n) * (K - m)
+  
+  # pdfs and CDF evaluations (for convenience)
+  f_eps.K = dnorm(K-theta_q.hat, eps.mean, eps.sigma)
+  f_eps.m = dnorm(m-theta_q.hat, eps.mean, eps.sigma)
+  
+  F_eps.K = pnorm(K-theta_q.hat, eps.mean, eps.sigma)
+  F_eps.m = pnorm(m-theta_q.hat, eps.mean, eps.sigma)
+  
+  # Estimate sigma^2_var
+  e = rtnorm(B, eps.mean, eps.sigma, a=-Inf, b=m-theta_q.hat)
+  sample_var.psi_hat = var((m-e-theta_q.hat)/(K-e-theta_q.hat))
+  
+  # Estimate \hat\psi and \hat\psi prime
+  psi_hat = mean((m-e-theta_q.hat)/(K-e-theta_q.hat))
+  psi_hat.prime = - mean((K-m)/(K-e-theta_q.hat)^2)
+  
+  var_estimate = 1/B * sample_var.psi_hat * ( f_eps.K/F_eps.K * psi_hat + psi_hat.prime )^(-2)
+  
+  return(var_estimate)
+}
+
+pracma::newtonRaphson(fun = function(x) estimate_var.delta_method(B=x, q=0.025) - 0.2*eps.sigma^2,
+                      x0 = 100,
+                      maxiter = 1000)
+```
+
+
