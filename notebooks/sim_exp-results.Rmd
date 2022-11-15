@@ -45,6 +45,19 @@ estimates = estimates %>% filter(error_factor != 4)
 head(estimates)
 ```
 
+```{r}
+estimates %>%
+  select(error_factor, method, point) %>%
+  mutate(sq_err= (point - theta.true)^2) %>%
+  group_by(error_factor, method) %>%
+  summarise(SE_SD_000 = sd(sq_err)/1000, .groups='drop') %>%
+  mutate(error_factor = paste0(error_factor, "*sigma")) %>%
+  pivot_wider(id_cols=method,
+              names_from=error_factor,
+              values_from=SE_SD_000) %>%
+  mutate(across(where(is.numeric), function(x) paste0(round(x, 1), "k")))
+```
+
 
 ```{r}
 # Point estimates
@@ -288,13 +301,15 @@ conf_int.widths.plot = performance.conf_int_estimates.long %>%
   labs(y = "Years", colour="Method", title="Average Width of Estimated Confidence Intervals")
 
 conf_int.widths.plot
+```
 
+```{r fig.height=5, fig.width=8}
 conf_int.runtime.plot = performance.conf_int_estimates.long %>%
   filter(Metric == "Runtime") %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
   geom_point() +
   geom_line() +
-  facet_grid(Metric ~ Category, scale="free_y") +
+  # facet_grid(Metric ~ Category, scale="free_y") +
   theme_bw() +
   scale_y_continuous(trans=scales::log10_trans()) +
   labs(y = "Seconds", colour="Method", title="Average Runtime of Confidence Interval Estimation")
@@ -311,7 +326,7 @@ ggsave(plot = conf_int.widths.plot,
 ggsave(plot = conf_int.runtime.plot,
        filename = "../figures/plot-sim-exp-conf-runtime.svg",
        dpi=320,
-       height=4, width=10)
+       height=5, width=8)
 ```
 
 
