@@ -102,7 +102,7 @@ Using the delta method, we were able to show how the Monte Carlo error changes a
     \]
 \end{restatable}
 
-Since this is a delta method approximation of the Monte Carlo error variance, \autoref{theorem: delta-method-variance} is only true as $B$ approaches infinity where the estimating equation (\autoref{eqn: minmi-ee-u(theta)}) becomes approximately linear in $\theta_q$. We were able to verify these results numerically, comparing the variance estimated by \autoref{theorem: delta-method-variance} to the sample variance from 250 estimates for the upper and lower endpoints of a central $95\%$ confidence interval at different values of $B$. We observed the delta method variance to be accurate to within 15\% for $B > 100$ (See \autoref{fig: minmi-delta-method-variance}).
+Since this is a delta method approximation of the Monte Carlo error variance, \autoref{theorem: delta-method-variance} is only true as $B$ approaches infinity where the estimating equation (\autoref{eqn: minmi-ee-u(theta)}) becomes approximately linear in $\theta_q$. We were able to verify this results numerically, comparing the variance estimated by \autoref{theorem: delta-method-variance} to the sample variance from 250 estimates for the upper and lower endpoints of a central $95\%$ confidence interval at different values of $B$. We observed the delta method variance to be accurate to within 15\% for $B > 100$ (See \autoref{fig: minmi-delta-method-variance}).
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false, width=0.7\linewidth]{figures/minmi-delta-method_variance.svg}
@@ -119,7 +119,7 @@ Suppose we would like estimates with Monte Carlo error variance that is no large
 \begin{equation}\label{eqn:minmi-optimal-b}
     B^* \approx \frac{1}{A}\sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2
 \end{equation}
-Note that we must approximate $\theta_q$ and $\sigma^2_{\psi(\theta_q)}$ as their true values are unknown. For our purposes, pilot estimates for each will suffice: for instance, $\theta_q$ can be estimated using the MINMI estimator under the $\delta$-model as per \autoref{eq:minmi-no-measurement-error}, and a Monte Carlo estimate of $\sigma^2_{\psi(\theta_q)}$ can be obtained using some pilot number of Monte Carlo samples, such as $B=100$. For this thesis, we aimed to find estimates with Monte Carlo error variance no more than 20\% of our assumed measurement error variation.
+Note that we must approximate $\theta_q$ and $\sigma^2_{\psi(\theta_q)}$ as their true values are unknown. For our purposes, pilot estimates for each will suffice: for instance, $\theta_q$ can be estimated using the MINMI estimator under the $\delta$-model as per \autoref{eq:minmi-no-measurement-error}, and a Monte Carlo estimate of $\sigma^2_{\psi(\theta_q)}$ can be obtained using some pilot number of Monte Carlo samples, such as $B=100$. For this thesis, we aimed to find estimates with Monte Carlo error variance no more than 20\% of our assumed measurement error variation, setting $A = 0.2*\sigma^2$.
 
 \section{Simulated Inversion - Robbins Monro Process (SI-RM)}
 
