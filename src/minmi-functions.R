@@ -156,7 +156,8 @@ find_optimal_B = function (max_var, q, K, m, n, u, eps.mean, eps.sigma) {
   
   optimal_B = 1 / max_var * sample_var.psi_hat * (f_eps.K / F_eps.K * psi_hat + psi_hat.prime) ^
     (-2)
-  return(ceiling(optimal_B))
+  
+  return(max(ceiling(optimal_B), 100))
 }
 
 # Estimating equation for Newton-Raphson's
