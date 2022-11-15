@@ -253,11 +253,11 @@ all_results = rbind(cave_bear.estimates, mammoth.estimates, bison.estimates, cav
 ```{r fig.height=5, fig.width=8}
 p = all_results %>%
   mutate(method_cat = ifelse(method == "MINMI", 2, ifelse(method == "SI-RM", 1, 0))) %>%
-  pivot_longer(cols = c(lower, upper),
-               names_to = "endpoints") %>%
+  # pivot_longer(cols = c(lower, upper),
+  #              names_to = "endpoints") %>%
   ggplot(aes(colour=method)) +
-  geom_line(aes(y=reorder(method, method_cat), x=value)) +
-  # geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
+  # geom_line(aes(y=reorder(method, method_cat), x=value)) +
+  geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
   guides(colour="none") +
   labs(x="Years (BP)", y=NULL) +
   facet_wrap(fct_reorder(dataset, n) ~ ., ncol=2, dir='v', scale="free_x")
@@ -326,5 +326,24 @@ ggsave(plot=cave_bear.conf_int.plot,
        dpi=320,
        height=3,
        width=7)
+```
+
+```{r}
+case_study_tbl = case_study %>%
+  pivot_wider(id_cols=method, names_from = endpoints) %>%
+  mutate(across(where(is.numeric), round, 1)) %>%
+  mutate(width = upper - lower,
+         interval = paste(lower, "---", upper)) %>%
+  select(method, interval, width) %>%
+  rename(Method = method,
+         `95% CI` = interval,
+         Width = width)
+case_study_tbl
+```
+
+```{r}
+case_study_tbl %>%
+  kable(booktabs=T, format="latex") %>%
+  writeLines("../figures/table-case-study-results.tex")
 ```
 
