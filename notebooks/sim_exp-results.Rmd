@@ -262,7 +262,7 @@ p = estimates %>%
   group_by(method_cat, method) %>%
   summarise(lower = mean(lower), upper=mean(upper), point=mean(point)) %>%
   mutate(width=upper-lower) %>%
-  mutate(method_cat_int = ifelse(method_cat == "Existing", 0, 1)) %>%
+  mutate(method_cat_int = ifelse(method_cat == "Existing Methods", 0, 1)) %>%
   ggplot(aes(colour=method_cat)) +
   geom_pointrange(aes(xmin=lower, xmax=upper, x=point, y=reorder(method, method_cat_int))) +
   guides(colour = guide_legend(reverse=TRUE)) +
