@@ -26,7 +26,7 @@ In these experiments, we compared the performance of the different methods' poin
 We first considered the scenario under the \hyperref[model: no-measurement-error]{$\delta$-model} in order to form a baseline comparison against the MLE, BA-MLE, and Strauss estimators which do not account for measurement error. The best methods were BA-MLE and Strauss estimator, which were both designed to be optimal under uniformity and negligible measurement error assumptions. These two estimators showed little to no bias with the best MSE (\autoref{tab:table-sim-exp-point-error0}). SI-RM produced identical results to the MLE, as the method will always converge to the chosen test-statistic (the MLE here) \cite{Garthwaite1992}.
 \begin{table}[ht]
     \centering
-    \caption{Point estimator performance, ordered by MSE (error = $0*\sigma$)}
+    \caption{Point estimator performance, ordered by MSE (Under the \hyperref[model: no-measurement-error]{$\delta$-model})}
     \include{figures/table-sim-exp-point-error0.tex}
     \label{tab:table-sim-exp-point-error0}
 \end{table}
@@ -66,7 +66,7 @@ With regards to the confidence interval widths, we found that SI-UGM tended to p
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-sim-exp-conf-widths.svg}
-    \caption{Average widths of confidence intervals as the magnitude of error increases. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM). We see that SI-UGM produces wider confidence intervals, while GRIWM produces very narrow intervals. Table of results provided in appendix.}
+    \caption{Average widths of confidence intervals as the magnitude of error increases. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM). We see that SI-UGM produces wider confidence intervals, while GRIWM produces very narrow intervals. Table of results provided in \autoref{apx:extra-tables-figures}.}
     \label{fig:sim-exp-conf-int-widths}
 \end{figure}
 
@@ -74,6 +74,6 @@ Finally, we investigated the computational cost of the methods. We found that th
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-sim-exp-conf-runtime.svg}
-    \caption{Average run times of methods when estimating confidence intervals with increasing magnitudes of error. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM); $\log_10$ scale used for y-axis. We see that MINMI and SI-RM are significantly faster than any other available methods. Table of results provided in appendix.}
+    \caption{Average run times of methods when estimating confidence intervals with increasing magnitudes of error. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM); $\log_{10}$ scale used for y-axis. We see that MINMI and SI-RM are significantly faster than any other available methods (See table in \autoref{apx:extra-tables-figures}).}
     \label{fig:sim-exp-conf-int-runtime}
 \end{figure}
