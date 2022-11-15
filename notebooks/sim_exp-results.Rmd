@@ -346,4 +346,3 @@ print(B.minmi.kbl)
 
 writeLines(B.minmi.kbl, "../figures/table-sim-exp-minmi-Bs.tex")
 ```
-
