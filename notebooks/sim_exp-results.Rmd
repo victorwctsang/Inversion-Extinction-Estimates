@@ -151,11 +151,17 @@ performance.point_estimates.plots[[2]] = performance.point_estimates.plots[[2]] 
 performance.point_estimates.plots[[3]] = performance.point_estimates.plots[[3]] + ylab("000's")
 performance.point_estimates.plots[[4]] = performance.point_estimates.plots[[4]] + ylab("Seconds")
 
-do.call(grid.arrange, performance.point_estimates.plots)
+performance.point_estimates.plot.grid = do.call(grid.arrange, performance.point_estimates.plots)
+performance.point_estimates.plot.grid
 ```
 
 
 ```{r}
+ggsave(plot = performance.point_estimates.plot.grid,
+       file = "../figures/plot-sim-exp-point-est-grid.svg",
+       dpi=320,
+       width=12)
+
 for (i in 1:length(metrics)) {
   ggsave(plot = performance.point_estimates.plots[[i]],
          file = paste0("../figures/plot-sim-exp-point-est-", metrics[i], ".svg"),
