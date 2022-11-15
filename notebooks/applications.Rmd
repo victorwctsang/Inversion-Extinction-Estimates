@@ -366,5 +366,3 @@ ggsave(plot=cave_bear.conf_int.plot,
        height=3,
        width=7)
 ```
-
-
