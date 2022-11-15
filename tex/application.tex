@@ -17,14 +17,14 @@ One difficulty when applying the SI-UGM estimator is the choice of $\bm{\theta}$
     \vspace{-4mm}
 \end{table}
 
-The proposed estimators (MINMI and SI-RM) also have some considerations when applying them to datasets. Similar to the simulation studies, we aimed for estimates with Monte Carlo error variance less than 20\% of $\sigma^2$. The number of Monte Carlo samples used for MINMI have been summarised in \autoref{tab:table-applications-minmi-Bs}, while the choice of starting values, step length constants, and stopping criteria in SI-RM followed the choices outlined previously.
-\begin{table}[ht]
-    \centering
-    \caption{Number of Monte Carlo samples ($B$) used in each scenario for MINMI estimates of the lower ($q=0.025$) and upper ($q=0.975$) endpoints of 95\% confidence intervals. Point estimates are found at $q = 0.5$.}
-    \vspace{4mm}
-    \include{figures/table-applications-minmi-Bs.tex}
-    \label{tab:table-applications-minmi-Bs}
-\end{table}
+The proposed estimators (MINMI and SI-RM) also have some considerations when applying them to datasets. Similar to the simulation studies, we aimed for estimates with Monte Carlo error variance less than 20\% of $\sigma^2$. The number of Monte Carlo samples used for MINMI were found in the same way as the simulation studies; however, solving for $B$ using \autoref{eqn:minmi-optimal-b} gave values that were less than 10 in all cases. As such, we used $B=100$ to be conservative. %while the choice of starting values, step length constants, and stopping criteria in SI-RM followed the choices outlined previously.
+% \begin{table}[ht]
+%     \centering
+%     \caption{Number of Monte Carlo samples ($B$) used in each scenario for MINMI estimates of the lower ($q=0.025$) and upper ($q=0.975$) endpoints of 95\% confidence intervals. Point estimates are found at $q = 0.5$.}
+%     \vspace{4mm}
+%     \include{figures/table-applications-minmi-Bs.tex}
+%     \label{tab:table-applications-minmi-Bs}
+% \end{table}
 
 \section{Results}
 All three methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.

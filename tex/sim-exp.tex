@@ -9,10 +9,12 @@ For datasets generated under the \hyperref[model: measurement-error]{$\varepsilo
 
 The Simulated Inversion - Uniform Gaussian Minimum (SI-UGM) estimator proposed by \citet{Huang2019} requires a predetermined vector $\bm{\theta}$ of candidate values for $\theta$. The challenge with implementing SI-UGM therefore lies in choosing $\bm{\theta}$, as it affects the regression fit used to estimate the quantile function $\PP_\theta(S(\bm{W}) > S(\bm{x}))$. For the purposes of these simulation studies, $\bm{\theta}$ was arbitrarily chosen as the set of all integers between $[4000, 17000]$.
 
-The number of Monte Carlo samples used by the MINMI estimator and the stopping criteria of SI-RM rely on some target variance $A$ that we consider ``negligible". For these simulation studies, we let $A = 0.2\sigma^2$. For MINMI, this target variance was substituted into \autoref{eqn:minmi-optimal-b} under each of the four scenarios to find the number of Monte Carlo samples to use in each scenario (see \autoref{tab:table-sim-exp-minmi-Bs}), while we allowed SI-RM to iterate until the estimated RM variance was less than this target value according to the stopping criteria defined in \autoref{subsec:si-rm-stopping-criteria}.
+The number of Monte Carlo samples used by the MINMI estimator and the stopping criteria of SI-RM rely on some target variance $A$ that we consider ``negligible".
+
+For these simulation studies, we let $A = 0.2\sigma^2$. For MINMI, this target variance was substituted into \autoref{eqn:minmi-optimal-b} under each of the four scenarios to find the number of Monte Carlo samples to use in each scenario (see \autoref{tab:table-sim-exp-minmi-Bs}). However, since \autoref{eqn:minmi-optimal-b} is based on a delta method approximation, the result only holds for $B \rightarrow \infty$. To be conservative, we set $B=100$ in scenarios where the value found by solving \autoref{eqn:minmi-optimal-b} was less than 100. %while we allowed SI-RM to iterate until the estimated RM variance was less than this target value according to the stopping criteria defined in \autoref{subsec:si-rm-stopping-criteria}.
 \begin{table}[ht]
     \centering
-    \caption{Number of Monte Carlo samples ($B$) used in each scenario for MINMI estimates of the lower ($q=0.025$) and upper ($q=0.975$) endpoints of 95\% confidence intervals. Point estimates are found at $q = 0.5$.}
+    \caption{Number of Monte Carlo samples ($B$) used in each scenario for MINMI estimates. For values less than 100, $B = 100$ was used instead. Point estimates were found by setting $q = 0.5$, and the upper and lower endpoints of 95\% confidence intervals were found by setting $q=0.025$ and $q=0.975$, respectively.}
     \vspace{4mm}
     \include{figures/table-sim-exp-minmi-Bs.tex}
     \label{tab:table-sim-exp-minmi-Bs}
