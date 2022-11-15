@@ -26,7 +26,7 @@ The proposed estimators (MINMI and SI-RM) also have some considerations when app
     \label{tab:table-applications-minmi-Bs}
 \end{table}
 
-\section{Discussion}
+\section{Results}
 All three methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
 
 Another observation of note is the narrowing of the intervals as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
@@ -60,4 +60,4 @@ The intervals estimated by \citet{Baca2016} using GRIWM are narrower than those 
     \label{fig:application-cave-bear}
 \end{figure}
 
-Another difference in our results is the interval estimated, as the periods estimated by \citet{Baca2016} are clearly more recent than those estimated by MINMI and SI-RM (\autoref{fig:application-cave-bear}). This is likely due to \citet{Baca2016} having used the original implementation of GRIWM with $q = 0.05$, which we found to be downwards biased due to the bias present introduced by the recovery rate from \citet{Mcinerny2006} as well as the choice of threshold probability $q=0.05$. Another reason is related to the datasets used: the \citet{Cooper2015} dataset contained older samples, which likely contributed to our estimates being somewhat older.
+Another difference in our results is the interval estimated, as the periods estimated by \citet{Baca2016} are clearly more recent than those estimated by MINMI and SI-RM (\autoref{fig:application-cave-bear}). This is likely due to \citet{Baca2016} having used the original implementation of GRIWM with $q = 0.05$, which we found to be downwards biased due to the bias present introduced by the recovery rate from \citet{Mcinerny2006} as well as the choice of threshold probability $q=0.05$. Another reason is related to the datasets used: the youngest sample in the dataset used by \citet{Baca2016} was approximately 1000 years more recent than the youngest sample in the dataset we used, contributing to their estimated confidence intervals being more recent.

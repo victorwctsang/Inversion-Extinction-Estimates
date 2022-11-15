@@ -22,13 +22,16 @@ where $\hat\theta_q$ is the MINMI estimate of $\theta_q$, such that $\PP_{\theta
 
 \subsection{Measurement Error Scenario}
 
-Under the \hyperref[model: measurement-error]{$\varepsilon$-model} proposed in \autoref{section: varepsilon-model} where measurement error is assumed to be substantial, we first consider the joint density of $(X, \varepsilon)$:
+Let us next consider a scenario where measurement error is substantial. Under the \hyperref[model: measurement-error]{$\varepsilon$-model} proposed in \autoref{section: varepsilon-model}, where measurement error is assumed to be substantial, we have conditionally uniform fossil ages.
+
+Consider the joint density of $(X, \varepsilon)$:
 \[
     f_{X, \varepsilon} ( x , \varepsilon) = c f_{X | \varepsilon} ( x | \varepsilon=e) f(e)
 \] where $x > \theta$, $x+e \leq K$, and $c$ is a normalising constant. Rearranging to find $c$:
 \begin{align*}
     c^{-1}
-        &= \int_{-\infty}^{K-\theta} \int_{\theta}^{K-e} f_{X | \varepsilon} ( x | \varepsilon=e) f(e) dx de = \int_{-\infty}^{K-\theta} f(e) de \\
+        &= \int_{-\infty}^{K-\theta} \int_{\theta}^{K-e} f_{X | \varepsilon} ( x | \varepsilon=e) f(e) dx de\\
+        &= \int_{-\infty}^{K-\theta} f(e) de \\
     \therefore c^{-1} &= F(K - \theta)
 \end{align*}
 where $F(y)=\int_{-\infty}^{y} f(e) de$ is the CDF of the measurement error.
@@ -190,7 +193,7 @@ Although the Robbins-Monro process is robust to the choice of starting values, g
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false, width=\linewidth]{figures/SI-RM-starting-estimate-convergence.svg}
-    \caption{Left: SI-RM searches for the lower endpoint of a 95\% confidence interval. Right: SI-RM searches for the upper endpoint. \textcolor{red}{Red} is the search with starting values chosen by Garthwaite \& Buckland's percentile method \cite{Garthwaite1992}. Each line is a separate RM process performed on the same simulated dataset with different starting values. Note that the RM process converges to similar estimates regardless of the starting value, with the only difference being convergence speed. If starting estimates are too far away, estimates may be "sent" too far away and substantially impact convergence.}
+    \caption{Left: SI-RM searches for the lower endpoint of a 95\% confidence interval. Right: SI-RM searches for the upper endpoint. \textcolor{red}{Red} is the search with starting values chosen by Garthwaite \& Buckland's percentile method \cite{Garthwaite1992}. Each line is a separate RM process performed on the same simulated dataset with different starting values. Note that the RM process converges to similar estimates regardless of the starting value, with the only difference being convergence speed. If starting estimates are too far away, estimates may be ``sent" too far away and substantially impact convergence.}
     \label{fig:SI-RM-starting-values}
 \end{figure}
 
