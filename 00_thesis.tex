@@ -93,10 +93,16 @@
 \input{tex/appendix-extras.tex}
 
 \chapter{MINMI Implementation Code}\label{apx:code-minmi}
-\input{tex/appendix-code-minmi.tex}
+\lstinputlisting[language=R, caption = {Functions implementing MINMI in R.}]{src/minmi-functions.R}
 
 \chapter{SI-RM Implementation Code}\label{apx:code-si-rm}
-\input{tex/appendix-code-si-rm.tex}
+\lstinputlisting[language=R, caption = {Code for implementing SI-RM.}]{src/garthwaite-robbins-munro-functions.R}
+
+% \chapter{Simulation Study Code}\label{apx:code-sim-exp}
+% \lstinputlisting[language=R, caption = {Script for generating synthetic data for simulation experiments}]{src/sim_exp-simulate_data.R}
+% \lstinputlisting[language=R, caption = {Script for applying various methods on synthetic data.}]{src/sim_exp-estimate_extinction.R}
+% \lstinputlisting[language=R, caption = {Helper functions for running simulation experiments.}]{src/helpers-simulation-experiments.R}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 \end{document}

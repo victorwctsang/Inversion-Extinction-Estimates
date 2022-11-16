@@ -44,11 +44,11 @@ Thus our joint density function is given by
 \end{align*}
 since $X_i | \varepsilon_i \sim \mathcal{U}(\theta, K-\varepsilon_i)$. 
 
-From this, we can geometrically identify our region of interest as shown by the shaded region of \autoref{fig: minmi_integral}.
+From this, we can geometrically identify our region of interest for finding $\PP_\theta ( X + \varepsilon \geq w)$, indicated by the shaded region in \autoref{fig: minmi_integral}.
 \begin{figure}[ht]
     \centering
-    \includesvg[inkscapelatex=false,width=0.85\linewidth]{figures/plot_minmi_joint_density.svg}
-    \caption{Sketch of the region of the joint density $(X, \varepsilon)$, indicated by the shaded area bounded by  $X+\varepsilon = K$ and $X + \varepsilon = w$, where $X \in [\theta, K]$ and $\varepsilon <= K-\theta$.}
+    \includesvg[inkscapelatex=false,width=0.8\linewidth]{figures/plot_minmi_joint_density.svg}
+    \caption{Sketch of the region over which an integral should be taken to find $\PP_\theta ( X + \varepsilon \geq w)$. This region is indicated by the shaded area bounded by  $X+\varepsilon = K$ and $X + \varepsilon = w$, where $X \in [\theta, K]$ and $\varepsilon <= K-\theta$.}
     \label{fig: minmi_integral}
 \end{figure}
 
@@ -165,9 +165,9 @@ However, there are still some disadvantages to the SI-RM estimator. The flexibil
 
 The choice of $c$ has a significant impact on the performance of the RM process: too large, and the algorithm may oscillate back and forth without approaching the optimum; too small (relative to the magnitude of the gradient), and the iterates may never move, preventing convergence.
 
-The optimal step length (let this be $c^*$) is dependent on $M^\prime(\theta)$ \cite{LlyodBotev2015}, which is typically unknown. As such, \citet{Garthwaite1992} proposed an \textit{adaptive} step length where $c_i$ is proportional to the distance between the point estimate $\hat\theta(\bm{y})$ and the current estimate $\theta_{q; i}$:\begin{equation} c_i = \begin{cases}
-    k\left(\theta_{q; i} - \hat\theta(\bm{y}) \right) &\text{if $q \geq 0.5$} \\
-    k\left(\hat\theta(\bm{y}) - \theta_{q; i}\right) &\text{if $q < 0.5$}
+The optimal step length (let this be $c^*$) is dependent on $M^\prime(\theta)$ \cite{LlyodBotev2015}, which is typically unknown. As such, \citet{Garthwaite1992} proposed an \textit{adaptive} step length where $c_i$ is proportional to the distance between $S(\bm{w})$, which is the observed point estimate of $\theta$, and the current estimate of $\theta_q$, denoted by $\theta_{q; i}$:\begin{equation} c_i = \begin{cases}
+    k\left(\theta_{q; i} - S(\bm{w}) \right) &\text{if $q \geq 0.5$} \\
+    k\left(S(\bm{w}) - \theta_{q; i}\right) &\text{if $q < 0.5$}
 \end{cases}
 \end{equation}
 where $k$ is a proportionality constant dependent on the distribution of $S(\bm{w})$.
