@@ -1,5 +1,4 @@
 
-
 library(readxl)
 source("../src/minmi-functions.R")
 source("../src/GRIWM.R")
@@ -11,7 +10,7 @@ getFossilData = function (path, sheet, range, col_names, col_types) {
 }
 
 boundFossilData = function (fossil.df, K) {
-  return(fossil.df[fossil.df$age < K, ])
+  return(fossil.df[fossil.df$age < K,])
 }
 
 getStdDevFromFossilData = function (path, K, n, ...) {
@@ -70,7 +69,6 @@ simulate_datasets = function (n.sims,
   dataset.df$W = W
   return(dataset.df)
 }
-
 
 estimate_extinction = function (W, sd, method, K, dating_error.mean) {
   estimate = NA
@@ -136,7 +134,7 @@ estimate_conf_int = function (W,
       K = K,
       dating_error.mean = dating_error.mean,
       theta.test_vec = theta.test_vec
-    ), 
+    ),
     `SI-RM` = SI_RM_process(
       alpha = alpha,
       dates = W,
