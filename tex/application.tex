@@ -25,6 +25,8 @@ Finally, 1000 iterations were used for the SI-RM estimator. Initially, we attemp
 \section{Results}
 
 The methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
+
+For some datasets, MINMI, SI-RM, and SI-UGM estimate extinction time to overlap somewhat with the youngest samples, which seems to conflict with our intuition with regards to sampling error. One example of this is the cave hyena (top right plot in \autoref{fig:applications-confidence-intervals}). This is most likely due to the measurement error variation being substantial relative to the sampling error variation: we estimated $\sigma = 1117.92$, which is 
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/applications.svg}
@@ -36,7 +38,7 @@ Another observation of note is the different widths of the intervals for each da
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-widths-samplesize.svg}
-    \caption{Confidence interval widths plotted against sample size.}
+    \caption{Confidence interval widths plotted against measurement error variation (top) and against sample size (bottom). Notice that width is positively correlated with measurement error variation, while it is negatively correlated with sample size. These are in line with our expectations in regards to precision and the availability of information.}
     \label{fig:application-widths-lineplot}
 \end{figure}
 
