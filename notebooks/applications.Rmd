@@ -352,7 +352,7 @@ all_widths
 ```
 
 
-```{r fig.width=10, fig.height=4}
+```{r fig.width=8, fig.height=8}
 
 all_widths_width.lineplot = all_widths %>%
   merge(describe_tbl, by.x="species", by.y="dataset") %>%
@@ -363,7 +363,7 @@ all_widths_width.lineplot = all_widths %>%
   ggplot(aes(x=value, y=Width, colour=reorder(Method, desc(value)))) +
   geom_line(size=0.5) +
   geom_point() +
-  facet_wrap(name ~ ., scales="free_x") +
+  facet_wrap(name ~ ., scales="free_x", ncol=1) +
   labs(y="Width (Years)",
        x=NULL,
        colour="Method")
