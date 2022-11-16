@@ -96,9 +96,8 @@ describe_tbl = all_data %>%
   group_by(dataset) %>%
   summarise(
     .min = min(age),
-    .max = sort(unique(age), decreasing = TRUE)[2L],
     .K = max(age),
-    .range = .max - .min,
+    .range = .K - .min,
     .sigma = mean(sd),
     .ratio = .sigma/.range
   ) %>%
@@ -113,11 +112,11 @@ describe_tbl
 sigma.range.ratio = describe_tbl %>%
   select(dataset, .sigma, .range, .ratio) %>%
   arrange(.ratio) %>%
-  mutate(.ratio = scales::percent(.ratio))
+  mutate(.ratio = scales::percent(.ratio, suffix=r"{\%}"))
 sigma.range.ratio
 
 sigma.range.ratio %>%
-  kable(booktabs=T, col.names = c("Dataset", "$\\sigma$", "$K$", "$\\sigma/K$"), format="latex", escape=F) %>%
+  kable(booktabs=T, col.names = c("Dataset", "$\\sigma$", "$K - X_{(1)}", "$\\sigma/(K - X_{(1)})$"), format="latex", escape=F) %>%
   writeLines("../figures/table-applications-sigma-range-ratios.tex")
 ```
 
@@ -329,8 +328,8 @@ lapply(estimate.list, \(x) c(length(x$SIRM[[4]]), length(x$SIRM[[5]])))
 ```{r fig.height=7, fig.width=10}
 tmp = all_data %>%
   arrange(age) %>%
-  group_by(dataset) %>%
-  slice_head(n=10) %>%
+  # group_by(dataset) %>%
+  # slice_head(n=10) %>%
   merge(y=all_results, by.x="dataset", by.y="species") %>%
   mutate(method_cat = ifelse(method == "MINMI", 2, ifelse(method == "SI-RM", 1, 0)))
 
