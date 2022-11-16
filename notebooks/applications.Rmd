@@ -91,6 +91,18 @@ p
 ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
 ```
 
+```{r}
+all_data %>%
+  group_by(dataset) %>%
+  summarise(
+    .min = min(age),
+    .sd = sd(age),
+    .range = max(age) - min(age)
+  ) %>%
+  arrange(.range)
+```
+
+
 ## Method Setup
 
 ```{r}
@@ -99,7 +111,6 @@ alpha = 0.05
 K_df = all_data %>%
   group_by(dataset) %>%
   summarise(
-    # .MLE = min(age),
     .K = max(age),
     .sigma = mean(sd),
     .thetas_lower = ba_mle(age, .K) - 10*sd(age),
@@ -327,10 +338,34 @@ ggsave(file="../figures/applications.svg", plot=p, height=5, width=8)
 #### CI Widths
 
 ```{r}
-all_results %>%
+all_widths = all_results %>%
   mutate(Width = round(upper - lower, 1)) %>%
   rename(Method = method) %>%
-  select(Method, dataset, Width) %>%
+  select(dataset, Method, Width, n) %>%
+  group_by(dataset, Method) %>%
+  arrange(n, desc(Width))
+
+all_widths
+```
+
+```{r fig.width=5, fig.height=3}
+all_widths.plot = all_widths %>%
+  ggplot(aes(y=reorder(Method, Width), x=Width, fill=Method)) +
+  geom_col() +
+  facet_wrap(reorder(dataset, n) ~ ., nrow=2) +
+  labs(y=NULL, x="Width (Years)") +
+  guides(fill="none")
+
+all_widths.plot
+ggsave(filename="../figures/plot-application-all-widths.svg",
+       plot = all_widths.plot,
+       dpi=320,
+       width=5,
+       height=3)
+```
+
+
+```
   pivot_wider(id_cols = Method, names_from = dataset, values_from = Width) %>%
   arrange(desc(`Cave Bear (n=30)`)) %>%
   kable(booktabs=T, format="latex") %>%
@@ -341,11 +376,14 @@ all_results %>%
 #### Summary Table of Estimates and CIs
 
 ```{r}
-all_results %>%
+summary_table = all_results %>%
   mutate(Extinction = paste0(scales::label_comma()(round(point, 1)), " (", scales::label_comma()(round(lower, 1)), " - ", scales::label_comma()(round(upper, 1)), ")"),
          Method = method) %>%
-  select(Method, dataset, Extinction) %>%
-  pivot_wider(names_from=dataset, values_from=Extinction) %>%
+  select(Method, dataset, Extinction)
+
+summary_table
+
+summary_table %>%
   kable(booktabs=T, format="latex") %>%
   writeLines("../figures/table-applications-CIs.tex")
 ```
