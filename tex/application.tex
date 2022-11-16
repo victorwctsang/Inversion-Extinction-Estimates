@@ -24,20 +24,27 @@ Finally, 1000 iterations were used for the SI-RM estimator. Initially, we attemp
 \section{Results}
 
 The methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
-
-Another observation of note is the narrowing of the intervals as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/applications.svg}
     \caption{Extinction time point estimates and confidence intervals found for each of the four megafauna species. The 10 youngest fossils are also shown as cross marks.}
     \label{fig:applications-confidence-intervals}
 \end{figure}
-\clearpage
+
+Another observation of note is the narrowing of the intervals as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
+\begin{figure}[ht]
+    \centering
+    \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-all-widths.svg}
+    \caption{Confidence interval widths for each of the dataset.}
+    \label{fig:applications-confidence-intervals}
+\end{figure}
+
+
 \section{Case Study: Cave Bear (\textit{Ursus spelaeus})}
 
 To put our results in context, we considered the cave bear as an example of extinct megafauna from the Pleistocene era and compared our results to those obtained by \citet{Baca2016}, who estimated extinction times using a dataset of over 200 fossils. Unfortunately, we were unable to get access to the dataset used in the paper, instead using the dataset from \citet{Cooper2015} containing 30 samples.
 
-Having disappeared towards the end of the last glacial period, the cave bear's causes of extinction and precise extinction time have been in debate over the years. In their 2016 study, \citet{Baca2016} used the original implementation of GRIWM estimator with threshold probability $q = 0.05$ to construct 95\% confidence intervals for the extinction time, concluding that extinction likely occurred between $25,234 - 24,291$ calendar years before present (BP). The authors also considered a more conservative approach, excluding younger dates that were missing certain chemical data. This resulted in more conservative estimates of between $27,007 - 26,117$ years BP \cite{Baca2016}. % Both of these estimates coincide with the last glacial period which, along with anatomical evidence pointing to a vegetarian diet, suggests their disappearance was largely due to the scarcity of food during the onset of the last glacial period rather than the result of climate change inflicted habitat loss or over hunting from humans \cite{Pacher2009}.
+Having disappeared towards the end of the last glacial period, the cave bear's causes of extinction and precise extinction time have been in debate over the years. In their 2016 study, \citet{Baca2016} used the original implementation of GRIWM estimator with threshold probability $q = 0.05$ to construct 95\% confidence intervals for the extinction time, concluding that extinction likely occurred between $25,234 - 24,291$ calendar years before present (BP). The authors also considered a more conservative approach, excluding younger dates that were missing certain chemical data. This resulted in more conservative estimates of between $27,007 - 26,117$ years BP \cite{Baca2016}.
 
 For our analysis, we used a different dataset of cave bear fossils, obtained from \citet{Cooper2015}. This dataset had 30 samples with the youngest sample dated to approximately $27,832$ years BP, compared to the dataset of 207 used by \citet{Baca2016} with the youngest sample dated to approximately $26,000$ years BP. Using the MINMI, SI-RM, and SI-UGM methods, we constructed confidence intervals that suggest extinction occurred between $29,166 - 26,900$ years BP.
 \begin{table}[ht]
