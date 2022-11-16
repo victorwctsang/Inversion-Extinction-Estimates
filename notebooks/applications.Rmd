@@ -324,10 +324,23 @@ p
 ggsave(file="../figures/applications.svg", plot=p, height=5, width=8)
 ```
 
+#### CI Widths
 
 ```{r}
-library(knitr)
+all_results %>%
+  mutate(Width = round(upper - lower, 1)) %>%
+  rename(Method = method) %>%
+  select(Method, dataset, Width) %>%
+  pivot_wider(id_cols = Method, names_from = dataset, values_from = Width) %>%
+  arrange(desc(`Cave Bear (n=30)`)) %>%
+  kable(booktabs=T, format="latex") %>%
+  writeLines("../figures/table-applications-widths.tex")
+```
 
+
+#### Summary Table of Estimates and CIs
+
+```{r}
 all_results %>%
   mutate(Extinction = paste0(scales::label_comma()(round(point, 1)), " (", scales::label_comma()(round(lower, 1)), " - ", scales::label_comma()(round(upper, 1)), ")"),
          Method = method) %>%
