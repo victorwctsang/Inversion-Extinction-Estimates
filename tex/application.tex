@@ -35,7 +35,7 @@ The methods produced comparable confidence intervals, with similar widths, range
 Another observation of note is the different widths of the intervals for each dataset, which tend to narrow with decreasing measurement error variation $\sigma$, as well as increasing sample size. For instance, the Eurasian Mammoth ($\sigma = 282.42$; $n = 202$) has narrower intervals than the Cave Bear ($\sigma = 668.58$; $n = 30$). \autoref{fig:application-widths-lineplot} shows these relationships. This trend is within expectations, as a smaller measurement error variation intuitively means more precise estimates, and we can interpret a larger sample size as having ``more information", which also contributes to more precise estimates.
 \begin{figure}[ht]
     \centering
-    \includesvg[inkscapelatex=false,width=0.8\linewidth]{figures/plot-application-widths-samplesize.svg}
+    \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-widths-samplesize.svg}
     \caption{Confidence interval widths plotted against sample size.}
     \label{fig:application-widths-lineplot}
 \end{figure}
@@ -59,7 +59,7 @@ The intervals estimated by \citet{Baca2016} using GRIWM are narrower than those 
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-cave-bear.svg}
-    \caption{Confidence intervals found for the cave bear, where the \citet{Cooper2015} dataset with $n=30$ was used for the MINMI, SI-RM, and GRIWM-BA methods. Intervals for the \citet{Baca2016} results were taken from the original paper.}
+    \caption{Confidence intervals found for the cave bear, where the \citet{Cooper2015} dataset with $n=30$ was used for the MINMI, SI-RM, and GRIWM-BA methods. The 30 samples from \citet{Cooper2015} are shown as crosses. The intervals for the \citet{Baca2016} results were taken from the original paper.}
     \label{fig:application-cave-bear}
 \end{figure}
 
