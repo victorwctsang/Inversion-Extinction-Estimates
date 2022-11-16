@@ -352,7 +352,7 @@ all_widths
 all_widths.plot = all_widths %>%
   ggplot(aes(y=reorder(Method, Width), x=Width, fill=Method)) +
   geom_col() +
-  facet_wrap(reorder(dataset, n) ~ ., nrow=2) +
+  facet_wrap(reorder(dataset, n) ~ ., nrow=2, dir='v') +
   labs(y=NULL, x="Width (Years)") +
   guides(fill="none")
 
