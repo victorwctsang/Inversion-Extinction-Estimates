@@ -36,7 +36,7 @@ A = 0.2 * (mean(fossil.sd)) ^ 2
 
 theta.test_vec = seq(
   from = ba_mle(pilot.dates, K) - 10*sd(pilot.dates),
-  to = min(pilot.dates) +2*sd(pilot.dates),
+  to = ba_mle(pilot.dates, K) +2*sd(pilot.dates),
   length.out = 5000
 )
 
