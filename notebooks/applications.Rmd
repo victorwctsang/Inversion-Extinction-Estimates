@@ -96,13 +96,29 @@ describe_tbl = all_data %>%
   group_by(dataset) %>%
   summarise(
     .min = min(age),
-    .sd = sd(age),
-    .range = max(age) - min(age),
-    .sigma = mean(sd)
+    .max = sort(unique(age), decreasing = TRUE)[2L],
+    .K = max(age),
+    .range = .max - .min,
+    .sigma = mean(sd),
+    .ratio = .sigma/.range
   ) %>%
   arrange(.range)
 
 describe_tbl
+```
+
+#### Table of Measurement Errors relative to Range
+
+```{r}
+sigma.range.ratio = describe_tbl %>%
+  select(dataset, .sigma, .range, .ratio) %>%
+  arrange(.ratio) %>%
+  mutate(.ratio = scales::percent(.ratio))
+sigma.range.ratio
+
+sigma.range.ratio %>%
+  kable(booktabs=T, col.names = c("Dataset", "$\\sigma$", "$K$", "$\\sigma/K$"), format="latex", escape=F) %>%
+  writeLines("../figures/table-applications-sigma-range-ratios.tex")
 ```
 
 
