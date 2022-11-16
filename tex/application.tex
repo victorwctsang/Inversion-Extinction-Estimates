@@ -35,7 +35,7 @@ The methods produced comparable confidence intervals, with similar widths, range
 The estimated extinction times found by MINMI, SI-RM, and SI-UGM overlap somewhat with the most recent samples, which seems to conflict with our intuition with regards to sampling error. One example of this is the cave bear (bottom left plot in \autoref{fig:applications-confidence-intervals}). However, this is most likely due to the measurement error variation being substantial relative to the observed range --- for the cave bear, measurement error variation represents approximately 10\% of the range. On the other hand, fossils for the Eurasian mammoth are observed over a much longer period and measurement error variation is even smaller. As a result, it does not appear to overlap very much with the data.
 \begin{table}[ht]
     \centering
-    \caption{caption}
+    \caption{Measurement error variation relative to the length of the observed fossil recovery interval $K - X_{(1)}$.}
     \include{figures/table-applications-sigma-range-ratios.tex}
     \label{tab:applications-sigma-range-ratios}
     \vspace{-4mm}
@@ -44,7 +44,7 @@ The estimated extinction times found by MINMI, SI-RM, and SI-UGM overlap somewha
 Another observation of note is the different widths of the intervals for each dataset, which tend to narrow with decreasing measurement error variation $\sigma$, as well as increasing sample size. For instance, the Eurasian Mammoth ($\sigma = 282.42$; $n = 202$) has narrower intervals than the Cave Bear ($\sigma = 668.58$; $n = 30$). \autoref{fig:application-widths-lineplot} shows these relationships. This trend is within expectations, as a smaller measurement error variation intuitively means more precise estimates, and we can interpret a larger sample size as having ``more information", which also contributes to more precise estimates.
 \begin{figure}[ht]
     \centering
-    \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-widths-samplesize.svg}
+    \includesvg[inkscapelatex=false,width=0.8\linewidth]{figures/plot-application-widths-samplesize.svg}
     \caption{Confidence interval widths plotted against measurement error variation (top) and against sample size (bottom). Notice that width is positively correlated with measurement error variation, while it is negatively correlated with sample size. These are in line with our expectations in regards to precision and the availability of information.}
     \label{fig:application-widths-lineplot}
 \end{figure}
