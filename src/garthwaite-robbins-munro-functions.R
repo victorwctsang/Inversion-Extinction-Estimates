@@ -1,4 +1,5 @@
 
+
 estimate_CI.rm = function (W,
                            K,
                            alpha,
@@ -19,11 +20,14 @@ estimate_CI.rm = function (W,
   # Get estimates of gradients at CI end points
   g = estimate_g(alpha, .model, .CI_estimates)
   
-  # initialize lower and upper vecs
-  lower.iters = upper.iters = rep(NA, max_iter)
-  
   # calculate m
   m = ceiling(min(50, 0.3 * (2 - alpha) / alpha))
+  
+  # Adjust number of iterations for m
+  max_iter = max_iter + m - 1
+  
+  # initialize lower and upper vecs
+  lower.iters = upper.iters = rep(NA, max_iter)
   
   # compute starting estimates
   if (is.null(.starting_vals)) {
@@ -44,33 +48,34 @@ estimate_CI.rm = function (W,
   if (is.null(max_var)) {
     max_var = 0.2 * (eps.sigma) ^ 2
   }
+  
   lower.iters = estimate_bound.rm(
-    lower.iters,
-    alpha / 2,
-    theta.hat,
-    n,
-    K,
-    p,
-    m,
-    g$lower,
+    theta.iters = lower.iters,
+    q = alpha / 2,
+    theta.hat = theta.hat,
+    n = n,
+    K = K,
+    p = p,
+    m = m,
+    g = g$lower,
     max_var = max_var,
-    max_iter,
-    eps.mean,
-    eps.sigma
+    max_iter = max_iter,
+    eps.mean = eps.mean,
+    eps.sigma = eps.sigma
   )
   upper.iters = estimate_bound.rm(
-    upper.iters,
-    1 - alpha / 2,
-    theta.hat,
-    n,
-    K,
-    p,
-    m,
-    g$upper,
+    theta.iters = upper.iters,
+    q = 1 - alpha / 2,
+    theta.hat = theta.hat,
+    n = n,
+    K = K,
+    p = p,
+    m = m,
+    g = g$upper,
     max_var = max_var,
-    max_iter,
-    eps.mean,
-    eps.sigma
+    max_iter = max_iter,
+    eps.mean = eps.mean,
+    eps.sigma = eps.sigma
   )
   lower.iters = na.omit(lower.iters)
   upper.iters = na.omit(upper.iters)
@@ -91,7 +96,8 @@ estimate_theta.rm = function (W) {
 
 calc_prop_constant = function (alpha) {
   # p := Step length proportionality constant
-  2/(qnorm(1-alpha)*(2*pi)^(-0.5)*exp(-(qnorm(1-alpha)^2)/2))
+  2 / (qnorm(1 - alpha) * (2 * pi) ^ (-0.5) * exp(-(qnorm(1 - alpha) ^ 2) /
+                                                    2))
 }
 
 get_starting_vals = function (alpha, theta, n, K, eps.mean, eps.sigma) {
@@ -162,7 +168,7 @@ estimate_bound.rm = function (theta.iters,
     theta.hat.resample = estimate_theta.rm(resamples)
     
     # calculate step length
-    c.eta = 2*p*abs(eta.fun(theta_q.hat)-eta.fun(theta.hat))
+    c.eta = 2 * p * abs(eta.fun(theta_q.hat) - eta.fun(theta.hat))
     
     # Update
     if (theta.hat.resample <= theta.hat) {
@@ -172,7 +178,7 @@ estimate_bound.rm = function (theta.iters,
     }
     
     # Calculate RM variance
-    mc.var = calculate_rm_var(q, c.eta, i, g*exp(-eta_q.iters[i]))
+    mc.var = calculate_rm_var(q, c.eta, i, g * exp(-eta_q.iters[i]))
     mc.var = mc.var / (K - theta.fun(eta_q.iters[i])) ^ 2
     
     # Iterate
