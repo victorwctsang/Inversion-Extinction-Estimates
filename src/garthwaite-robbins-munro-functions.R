@@ -1,5 +1,6 @@
 
 
+
 estimate_CI.rm = function (W,
                            K,
                            alpha,
