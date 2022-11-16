@@ -33,6 +33,12 @@ u.init = runif(500, 0, 1)
 
 # Estimate optimal values for B
 B.minmi = data.frame(
+  error_factor = integer(),
+  point = numeric(),
+  lower = numeric(),
+  upper = numeric()
+)
+B.minmi = data.frame(
   error_factor = error_factors[-1],
   point = sapply(error_factors[-1],
                  FUN = function(x) {
