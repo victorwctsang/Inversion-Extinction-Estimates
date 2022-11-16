@@ -350,25 +350,29 @@ all_widths = all_results %>%
 all_widths
 ```
 
-```{r}
-all_widths.lineplot = all_widths %>%
+```{r fig.height=4, fig.width=6}
+all_widths_n.lineplot = all_widths %>%
   ggplot(aes(x=n, y=Width, colour=reorder(Method, desc(Width)))) +
   geom_line(size=0.5) +
   geom_point(size=2) +
   # geom_col(position="identity") +
-  labs(y="Width (Years)", x=NULL, colour="Method")
-all_widths.lineplot
+  labs(y="Width (Years)", x="Sample size", colour="Method", title="95% CI Widths against Sample Size")
 
-ggsave(all_widths.lineplot, filename = "../figures/plot-application-widths-samplesize.svg")
+all_widths_n.lineplot
+
+ggsave(all_widths_n.lineplot,
+       filename = "../figures/plot-application-widths-samplesize.svg",
+       height=)
 ```
 
 ```{r}
-all_widths %>%
+
+all_widths_range.lineplot = all_widths %>%
   merge(describe_tbl, by.x="species", by.y="dataset") %>%
-  ggplot(aes(x=.range, y=Width, colour=Method)) +
-  geom_line() +1
-  geom_point() +
-  ggtitle("Width against range")
+  ggplot(aes(x=.range, y=Width, colour=reorder(Method, desc(.range)))) +
+  geom_line(size=0.5) +
+  geom_point(size=2) +
+  labs(y="Width (Years)", x="Range", colour="Method", title="95% CI Widths against Ranges")
 ```
 
 
