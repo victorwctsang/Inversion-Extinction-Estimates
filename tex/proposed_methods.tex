@@ -92,21 +92,21 @@ Assumption 1 in \autoref{theorem: stoch-increasing} is clearly satisfied when we
 
 \subsection{Selecting the number of Monte Carlo Samples}\label{subsec:minmi-mce-var}
 
-There is a question of how large $B$ needs to be for MINMI to achieve stable results. As the number of Monte Carlo samples increases, the variance of the MINMI estimator can be expected to decrease at the cost of greater computation: however, we would like to determine a way to obtain a ``good" value for $B$.
+As the number of Monte Carlo samples increases, the variance of the MINMI estimator can be expected to decrease at the cost of greater computation: however, we would like to determine a way to obtain a ``good" value for $B$.
 
-Using the delta method, we were able to show how the Monte Carlo error changes as $B \rightarrow \infty$ (a full derivation of is given in \autoref{apx:minmi-asymptotics-proof}):
+Using the delta method, we found the limiting distribution of $\sqrt{B}(\hat\theta_q - \theta_q)$ (a full derivation of is given in \autoref{apx:minmi-asymptotics-proof}):
 \begin{restatable}{theorem}{ChooseMinmiB}\label{theorem: delta-method-variance}
-    The limiting distribution of the MINMI estimator $\hat\theta_q$ of the q\textsuperscript{th} sample quantile $\theta_q$ as $B \rightarrow \infty$ is approximately normal, where $B$ is the number of Monte Carlo samples used.
+    Under the \hyperref[model: measurement-error]{$\varepsilon$-model}, the limiting distribution of the MINMI estimator $\hat\theta_q$ is approximately normal as $B \rightarrow \infty$
     \[
         \sqrt{B}(\hat\theta_q - \theta_q) \stackrel{D}{\rightarrow} \cN \left(0, \sigma^2_{\psi(\theta_q)} \left[ \frac{F(m-\theta_q)}{F(K-\theta_q)\hat{u}^\prime(\theta_q)} \right]^2 \right)
-    \]
+    \] where $\sigma^2_{\psi(\theta_q)} = \Var\left(\psi(\theta_q)\right)$, $\psi(\theta) =  \int^{m-\theta}_{-\infty} \frac{m - e - \theta}{K - e - \theta) } \frac{f(e)}{F(w-\theta)} de$, $F(e)$ is the CDF of $\varepsilon$, and $\hat{u}(\theta) = \frac{F(m-\theta)}{F(K-\theta)} \hat{\psi}(\theta) - 1 + q^{1/n}$.
 \end{restatable}
 
-Since this is a delta method approximation of the Monte Carlo error variance, \autoref{theorem: delta-method-variance} is only true as $B$ approaches infinity where the estimating equation (\autoref{eqn: minmi-ee-u(theta)}) becomes approximately linear in $\theta_q$. We were able to verify this results numerically, comparing the variance estimated by \autoref{theorem: delta-method-variance} to the sample variance from 250 estimates for the upper and lower endpoints of a central $95\%$ confidence interval at different values of $B$. We observed the delta method variance to be accurate to within 15\% for $B > 100$ (See \autoref{fig: minmi-delta-method-variance}).
+We were able to verify this result numerically, and observed the variance estimated by the delta method in \autoref{theorem: delta-method-variance} to be accurate to within 15\% for $B > 100$. This was done by comparing the delta method variance estimate to the sample variance of 250 MINMI estimates, repeating this process for values of B up to 3500. We verified this result for both the upper and lower endpoints of a central $95\%$ confidence interval at different values of $B$.
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false, width=0.7\linewidth]{figures/minmi-delta-method_variance.svg}
-    \caption{Percentage difference of the variance estimated by the delta method and the variance found numerically as $B$ increases. The area shaded in green represents the region where the variance is accurate within 15\%, which we observed for $B > 100$.}
+    \caption{Percentage difference of the variance estimated by the delta method and the variance found numerically as $B$ increases. Note that the x-axis is on a $\log$ scale. The area shaded in green represents the region where the variance is accurate within 15\%, which we observed for $B > 100$. The dashed line indicates $B=100$.}
     \label{fig: minmi-delta-method-variance}
 \end{figure}
 
