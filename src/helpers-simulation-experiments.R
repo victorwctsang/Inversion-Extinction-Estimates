@@ -80,7 +80,7 @@ estimate_extinction = function (W, sd, method, K, dating_error.mean) {
     method,
     MLE = mle(W),
     `BA-MLE` = ba_mle(W, K),
-    STRAUSS = strauss(W),
+    Strauss = strauss(W),
     NULL
   )
   runtime = calculate_tdiff(start_time, Sys.time())

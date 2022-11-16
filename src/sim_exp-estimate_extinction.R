@@ -15,7 +15,7 @@ set.seed(seed)
 alpha = 0.05
 
 methods.point_estimates = c(
-  "STRAUSS",
+  "Strauss",
   "MLE",
   "BA-MLE"
 )
