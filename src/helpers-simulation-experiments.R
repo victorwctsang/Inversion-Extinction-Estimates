@@ -140,7 +140,16 @@ estimate_conf_int = function (W,
       dates = W,
       sd = sd,
       K = K,
-      dating_error.mean = dating_error.mean
+      dating_error.mean = dating_error.mean,
+      max_var = NULL
+    ),
+    `SI-RM-1000` = SI_RM_process(
+      alpha = alpha,
+      dates = W,
+      sd = sd,
+      K = K,
+      dating_error.mean = dating_error.mean,
+      max_var = -1
     )
   )
   return(estimate)
@@ -289,7 +298,8 @@ SI_RM_process = function (alpha,
                           dates,
                           sd,
                           K,
-                          dating_error.mean = 0) {
+                          dating_error.mean = 0,
+                          max_var = NULL) {
   # use SI-UGM to estimate a model to get the gradient.
   SI_results = simulated_inversion(
     alpha,
@@ -310,7 +320,10 @@ SI_RM_process = function (alpha,
     eps.mean = dating_error.mean,
     eps.sigma = mean(sd),
     .model = SI_results$model,
-    .CI_estimates = SI_results
+    .CI_estimates = SI_results,
+    return_iters = T,
+    .starting_vals = NULL,
+    max_var = max_var
   )
   conf_int_runtime = calculate_tdiff(CI_start_time, Sys.time())
   
@@ -320,7 +333,9 @@ SI_RM_process = function (alpha,
       upper = CI$upper,
       point = CI$point,
       point_runtime = conf_int_runtime,
-      conf_int_runtime = conf_int_runtime
+      conf_int_runtime = conf_int_runtime,
+      num_iters.lower = length(CI$lower.iters),
+      num_iters.upper = length(CI$upper.iters)
     )
   )
 }
