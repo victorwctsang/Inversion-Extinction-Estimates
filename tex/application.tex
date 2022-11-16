@@ -20,6 +20,7 @@ One difficulty when applying the SI-UGM estimator is the choice of $\bm{\theta}$
 When choosing the number of Monte Carlo samples, $B$, to use in the MINMI method, we aimed for a $B > 100$ that would give estimates with Monte Carlo error variance less than 20\% of $\sigma^2$. However, when solving for $B$ using \autoref{eqn:minmi-optimal-b}, all values found were less than 10 for the four datasets. As such, 100 Monte Carlo samples were used in each application.
 
 Finally, 1000 iterations were used for the SI-RM estimator. Initially, we attempted to use a similar process to MINMI, setting a target variance $A$ and iterating until the estimated SI-RM variance was less than $A$. However, this resulted in early termination of the RM process, which would last only 2 steps across all four applications for $A  = 0.2*\sigma$, and only 5 steps for $A = 0.1*\sigma$. This suggests that our estimate of the variance at iteration $i$ is inexact at small $i$. Ultimately, due to time constraints we were unable to resolve this issue, and arbitrarily chose to use 1000 iterations, at which point we identified convergence.
+\clearpage
 
 \section{Results}
 
@@ -30,15 +31,14 @@ The methods produced comparable confidence intervals, with similar widths, range
     \caption{Extinction time point estimates and confidence intervals found for each of the four megafauna species. The 10 youngest fossils are also shown as cross marks.}
     \label{fig:applications-confidence-intervals}
 \end{figure}
-
-Another observation of note is the narrowing of the intervals as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-application-all-widths.svg}
     \caption{Confidence interval widths for each of the dataset.}
-    \label{fig:applications-confidence-intervals}
+    \label{fig:application-widths-barplot}
 \end{figure}
 
+Another observation of note is the different widths of the intervals for each dataset. One reason for this difference is due to the sample size: for instance, the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals. Another reason may be due to the 
 
 \section{Case Study: Cave Bear (\textit{Ursus spelaeus})}
 
