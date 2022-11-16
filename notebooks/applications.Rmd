@@ -92,7 +92,7 @@ ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
 ```
 
 ```{r}
-all_data %>%
+describe_tbl = all_data %>%
   group_by(dataset) %>%
   summarise(
     .min = min(age),
@@ -100,6 +100,8 @@ all_data %>%
     .range = max(age) - min(age)
   ) %>%
   arrange(.range)
+
+describe_tbl
 ```
 
 
@@ -341,12 +343,35 @@ ggsave(file="../figures/applications.svg", plot=p, height=5, width=8)
 all_widths = all_results %>%
   mutate(Width = round(upper - lower, 1)) %>%
   rename(Method = method) %>%
-  select(dataset, Method, Width, n) %>%
-  group_by(dataset, Method) %>%
+  select(dataset, Method, Width, n, species) %>%
+  group_by(dataset, Method, species) %>%
   arrange(n, desc(Width))
 
 all_widths
 ```
+
+```{r}
+all_widths.lineplot = all_widths %>%
+  ggplot(aes(x=n, y=Width, colour=reorder(Method, desc(Width)))) +
+  geom_line(size=0.5) +
+  geom_point(size=2) +
+  # geom_col(position="identity") +
+  labs(y="Width (Years)", x=NULL, colour="Method")
+all_widths.lineplot
+
+ggsave(all_widths.lineplot, filename = "../figures/plot-application-widths-samplesize.svg")
+```
+
+```{r}
+all_widths %>%
+  merge(describe_tbl, by.x="species", by.y="dataset") %>%
+  ggplot(aes(x=.range, y=Width, colour=Method)) +
+  geom_line() +1
+  geom_point() +
+  ggtitle("Width against range")
+```
+
+
 
 ```{r fig.width=5, fig.height=3}
 all_widths.plot = all_widths %>%
