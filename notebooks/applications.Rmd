@@ -11,11 +11,15 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Load functions
+## Notebook Setup
+
+### Load functions
 
 ```{r}
 library(tidyverse)
 library(readxl)
+library(knitr)
+library(kableExtra)
 
 source("../src/garthwaite-robbins-munro-functions.R")
 source("../src/minmi-functions.R")
@@ -23,8 +27,6 @@ source("../src/GRIWM.R")
 source("../src/simulated-inversion.R")
 
 theme_set(theme_bw())
-
-alpha = 0.05
 ```
 
 ## Import Data
@@ -72,7 +74,7 @@ cave_hyena = read_excel(path='../data/fossildata.xlsx',
                      col_names=c("age", "sd"), 
                      col_types=c('numeric', 'numeric'))
 
-tmp = rbind(data.frame(age=cave_bear$age, sd=cave_bear$sd, dataset="Cave Bear"),
+all_data = rbind(data.frame(age=cave_bear$age, sd=cave_bear$sd, dataset="Cave Bear"),
             data.frame(age=bison$age, sd=bison$sd, dataset="Steppe Bison"),
             data.frame(age=mammoth$age, sd=mammoth$sd, dataset="Eurasian Mammoth"),
             data.frame(age=cave_hyena$age, sd=cave_hyena$sd, dataset="Cave Hyena"))
@@ -89,19 +91,30 @@ p
 ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
 ```
 
+## Method Setup
+
 ```{r}
+alpha = 0.05
+
 K_df = tmp %>%
   group_by(dataset) %>%
-  summarise(max(age), mean(sd), thetas=paste0("[", round(min(age) - 2*sd(age)), ", ", round(min(age) + sd(age)), "]"))
-
-print(knitr::kable(K_df))
+  summarise(
+    # .MLE = min(age),
+    .K = max(age),
+    .sigma = mean(sd),
+    .thetas_lower = ba_mle(age, .K) - 10*sd(age),
+    .thetas_upper = min(age) + 3*sd(age)
+  )
+K_df
 ```
 
 ```{r}
-library(knitr)
-library(kableExtra)
-
 K_df %>%
+  mutate(
+    across(where(is.numeric), round, 2),
+    .theta_test_vec = paste0("[", .thetas_lower, ", ", .thetas_upper, "]")
+  ) %>%
+  select(!starts_with(".thetas")) %>%
   kable(booktabs=T, col.names = c("Dataset", "$K$", "$\\sigma$", "$\\bm{\\theta}$"), format="latex", escape=F) %>%
   writeLines("../figures/table-applications-Ks.tex")
 ```
@@ -110,19 +123,18 @@ K_df %>%
 ## Driver Function
 
 ```{r}
-
-estimate_extinction = function (data, alpha = 0.05, label) {
+estimate_extinction = function (data, alpha, test_interval, label) {
   print(label)
   K = max(data$age)
   data = data[data$age < K,]
   
   dates = data$age
   sd = data$sd
+  theta.test_vec = seq(from = test_interval[1],
+                      to = test_interval[2],
+                      length.out = 5000)
   
   # SI-UGM
-  theta.test_vec = seq(from = round(min(dates) - 2*sd(dates)),
-                       to = round(min(dates) + sd(dates)))
-  
   SIUGM.results = simulated_inversion(
     alpha = alpha,
     dates = dates,
@@ -169,7 +181,6 @@ estimate_extinction = function (data, alpha = 0.05, label) {
     upper = griwm.corrected$upper_ci,
     method = "GRIWM (q=0.5, bias adjusted)"
   )
-
 
   # MINMI
   MINMI.results = estimate_extinction.minmi(
@@ -218,49 +229,60 @@ estimate_extinction = function (data, alpha = 0.05, label) {
 } 
 ```
 
-
-
-
 ## Estimations
 
 ```{r}
 
-cave_bear.estimates = estimate_extinction(data = cave_bear, label = "Cave Bear")
+cave_bear.estimates = estimate_extinction(
+  data = cave_bear,
+  alpha = alpha,
+  test_interval = as.numeric(K_df[K_df$dataset == "Cave Bear", 4:5]),
+  label = "Cave Bear")
 
-mammoth.estimates = estimate_extinction(data = mammoth, label = "Eurasian Mammoth")
+mammoth.estimates = estimate_extinction(
+  data = mammoth,
+  alpha = alpha,
+  test_interval = as.numeric(K_df[K_df$dataset == "Eurasian Mammoth", 4:5]),
+  label = "Eurasian Mammoth")
 
-# megaloceros.estimates = estimate_extinction(data = megaloceros, label="Giant Deer")
+bison.estimates = estimate_extinction(
+  data=bison,
+  alpha = alpha,
+  test_interval = as.numeric(K_df[K_df$dataset == "Steppe Bison", 4:5]),
+  label="Steppe Bison")
 
-
-# neanderthal.estimates = estimate_extinction(data = neanderthal, label="Neanderthal")
-
-
-bison.estimates = estimate_extinction(data=bison, label="Steppe Bison")
-
-
-# jelephant.estimates = estimate_extinction(data=jelephant, label="Japanese Elephant")
-
-
-cave_hyena.estimates = estimate_extinction(data=cave_hyena, label="Cave Hyena")
+cave_hyena.estimates = estimate_extinction(
+  data=cave_hyena,
+  alpha = alpha,
+  test_interval = as.numeric(K_df[K_df$dataset == "Cave Hyena", 4:5]),
+  label="Cave Hyena")
 
 all_results = rbind(cave_bear.estimates, mammoth.estimates, bison.estimates, cave_hyena.estimates)
+all_results = all_results %>% mutate(species = str_remove(all_results$dataset, r"{\s+[^ ]+$}"))
+all_results
 ```
-
 
 ## Combined
 
+```{r fig.height=3, fig.width=15}
+tmp = all_data %>%
+  arrange(age) %>%
+  group_by(dataset) %>%
+  slice_head(n=10) %>%
+  merge(y=all_results, by.x="dataset", by.y="species") %>%
+  mutate(method_cat = ifelse(method == "MINMI", 2, ifelse(method == "SI-RM", 1, 0)))
 
-```{r fig.height=5, fig.width=8}
-p = all_results %>%
-  mutate(method_cat = ifelse(method == "MINMI", 2, ifelse(method == "SI-RM", 1, 0))) %>%
-  pivot_longer(cols = c(lower, upper),
-               names_to = "endpoints") %>%
+p = tmp %>%
+  # pivot_longer(cols = c(lower, upper), names_to = "endpoints") %>%
   ggplot(aes(colour=method)) +
-  geom_line(aes(y=reorder(method, method_cat), x=value)) +
-  # geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
+  # geom_line(aes(y=reorder(method, method_cat), x=value)) +
+  geom_point(aes(x = age, y = reorder(method, method_cat), colour=NULL),
+             alpha=0.5,
+             shape = 3) +
+  geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
   guides(colour="none") +
   labs(x="Years (BP)", y=NULL) +
-  facet_wrap(fct_reorder(dataset, n) ~ ., ncol=2, dir='v', scale="free_x")
+  facet_wrap(fct_reorder(dataset.y, n) ~ ., nrow=1, scale="free_x")
 p
 ```
 
@@ -283,7 +305,7 @@ all_results %>%
 
 
 ```{r}
-tmp %>% group_by(dataset) %>% summarise(min(age))
+all_data %>% group_by(dataset) %>% summarise(min(age))
 ```
 
 
@@ -293,7 +315,7 @@ tmp %>% group_by(dataset) %>% summarise(min(age))
 GRIWM_BA = GRIWM(
     df = data.frame(dates = cave_bear$age, sd = cave_bear$sd),
     alpha = 0.05,
-    K = K,
+    K = K_df[K_df$dataset == "Cave Bear", ]$.K,
     p_t = 0.5,
     .n_iter = 10000,
     bias_adjusted = T
@@ -345,15 +367,16 @@ case_study.long
 ```
 
 
-```{r fig.height=3, fig.width=7}
+```{r fig.height=3, fig.width=10}
 cave_bear.conf_int.plot = case_study.long %>%
   ggplot() +
   geom_line(aes(y=reorder(method, value), x=value, colour=method)) +
-  # geom_point(data = data.frame(age = rep(cave_bear$age, length(case_study$method)),
-  #                              method = rep(case_study$method, length(cave_bear$age))),
-  #            aes(x = age, y = method),
-  #            alpha=0.4,
-  #            shape = 4) +
+  # geom_line(aes(y=reorder(method, value), x=value, colour=method)) +
+  geom_point(data = data.frame(age = rep(cave_bear$age, length(case_study$method)),
+                               method = rep(case_study$method, length(cave_bear$age))),
+             aes(x = age, y = method),
+             alpha=0.4,
+             shape = 4) +
   guides(colour = "none") +
   labs(y = NULL, x = NULL, title = "Cave Bear Confidence Intervals")
 cave_bear.conf_int.plot

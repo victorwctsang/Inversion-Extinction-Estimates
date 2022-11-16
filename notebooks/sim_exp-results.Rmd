@@ -189,6 +189,7 @@ perf.point_estimates.bias_var.plot = performance.point_estimates.long %>%
   geom_line() +
   geom_point() +
   facet_grid(Metric ~ Category, scale="free_y") +
+  # facet_wrap(Metric ~., scale="free") +
   labs(colour = "Method", y=NULL) +
   theme_bw() +
   theme(text=element_text(size=15),
