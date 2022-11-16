@@ -7,7 +7,7 @@ We applied these three methods to 4 fossil records of megafauna believed to have
 
 Under the \hyperref[model: measurement-error]{$\varepsilon$-model}, some choices of values need to made. One such choice is the value of $K$ --- since the speciation and invasion dates of the species are not known, $K$ was set to the age of the oldest observation in each dataset, reducing the number of observations used for estimation to $n-1$. Another choice is the amount of measurement error variation, which was set by taking the average standard error in each dataset. These have been summarised in \autoref{tab:table-applications-Ks}.
 
-One difficulty when applying the SI-UGM estimator is the choice of $\bm{\theta}$, the vector of candidate values for $\theta$. Broadly speaking, as long as $\bm{\theta}$ has a wide enough range with enough values such that all plausible values of theta can be covered, we can be confident of getting reasonably accurate estimate (albeit at the cost of requiring more computation). However, there is currently no precise process for choosing this range and number of values. For our purposes, intervals were chosen by taking integer years from 2 standard deviations down from the youngest fossil observation up to 1 standard deviation above the youngest fossil. This was selected to account for the sampling error in fossil datasets, since extinction times are almost certainly more recent than the most recent observation in the fossil record (see \autoref{tab:table-applications-Ks}).
+One difficulty when applying the SI-UGM estimator is the choice of $\bm{\theta}$, the vector of candidate values for $\theta$. Broadly speaking, as long as $\bm{\theta}$ has a wide enough range with enough values such that all plausible values of theta can be covered, we can be confident of getting reasonably accurate estimate (albeit at the cost of requiring more computation). However, there is currently no precise process for choosing this range and number of values. For the purpose of illustrating how to apply this method, we select $\bm{\theta}$ using the same process as the simulation studies, setting it equal to a vector of length 5000 with the elements taken from the set of equally spaced numbers from 10 standard deviations below the BA-MLE to 2 standard deviations above. (see \autoref{tab:table-applications-Ks}).
 \begin{table}[ht]
     \centering
     \vspace{-6mm}
@@ -17,16 +17,19 @@ One difficulty when applying the SI-UGM estimator is the choice of $\bm{\theta}$
     \vspace{-4mm}
 \end{table}
 
-The proposed estimators (MINMI and SI-RM) also have some considerations when applying them to datasets. Similar to the simulation studies, we aimed for estimates with Monte Carlo error variance less than 20\% of $\sigma^2$. The number of Monte Carlo samples used for MINMI were found in the same way as the simulation studies; however, solving for $B$ using \autoref{eqn:minmi-optimal-b} gave values that were less than 10 in all cases. As such, we used $B=100$ to be conservative.
+When choosing the number of Monte Carlo samples, $B$, to use in the MINMI method, we aimed for a $B > 100$ that would give estimates with Monte Carlo error variance less than 20\% of $\sigma^2$. However, when solving for $B$ using \autoref{eqn:minmi-optimal-b}, all values found were less than 10 for the four datasets. As such, 100 Monte Carlo samples were used in each application.
+
+Finally, 1000 iterations were used for the SI-RM estimator. Initially, we attempted to use a similar process to MINMI, setting a target variance $A$ and iterating until the estimated SI-RM variance was less than $A$. However, this resulted in early termination of the RM process, which would last only 2 steps across all four applications for $A  = 0.2*\sigma$, and only 5 steps for $A = 0.1*\sigma$. This suggests that our estimate of the variance at iteration $i$ is inexact at small $i$. Ultimately, due to time constraints we were unable to resolve this issue, and arbitrarily chose to use 1000 iterations, at which point we identified convergence.
 
 \section{Results}
-All three methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
+
+The methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
 
 Another observation of note is the narrowing of the intervals as the sample sizes increase: the intervals for the Steppe Bison, where $n = 13$, are substantially wider than those for the Eurasian Woolly Mammoth where $n = 194$. This can be interpreted as being due to the availability of more information contributing to more precise estimates, and therefore narrower confidence intervals.
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/applications.svg}
-    \caption{Extinction time point estimates and confidence intervals found for each of the four megafauna species.}
+    \caption{Extinction time point estimates and confidence intervals found for each of the four megafauna species. The 10 youngest fossils are also shown as cross marks.}
     \label{fig:applications-confidence-intervals}
 \end{figure}
 \clearpage
