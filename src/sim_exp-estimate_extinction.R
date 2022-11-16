@@ -112,7 +112,7 @@ results = data.frame(
 )
 
 start_time = Sys.time()
-for (i in 1:8) {
+for (i in 1:nrow(datasets)) {
   iter = datasets[i, ]
   W = as.numeric(iter$W[[1]])
   sd = as.numeric(iter$error_factor * fossil.sd)
