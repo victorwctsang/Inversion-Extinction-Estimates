@@ -99,11 +99,12 @@ estimate_conf_int = function (W,
                               dating_error.mean,
                               B.point,
                               B.lower,
-                              B.upper) {
+                              B.upper,
+                              theta.test_vec) {
   estimate = switch(
     method,
     GRIWM = griwm(
-      alpha,
+      alpha = alpha,
       dates = W,
       sd = sd,
       K = K,
@@ -111,7 +112,7 @@ estimate_conf_int = function (W,
       bias_adjusted = F
     ),
     `GRIWM-corrected` = griwm(
-      alpha,
+      alpha = alpha,
       dates = W,
       sd = sd,
       K = K,
@@ -119,23 +120,29 @@ estimate_conf_int = function (W,
       bias_adjusted = T
     ),
     MINMI = minmi(
-      alpha,
-      W,
-      sd,
-      K,
-      dating_error.mean,
+      alpha = alpha,
+      W = W,
+      sd = sd,
+      K = K,
+      dating_error.mean = dating_error.mean,
       B.point = B.point,
       B.lower = B.lower,
       B.upper = B.upper
     ),
-    `SI-UGM` = SI_UGM(alpha, W, sd, K, seq(4000, 17000), dating_error.mean = 0),
-    `SI-RM-corrected` = SI_RM_process(
-      alpha,
-      W,
-      sd,
-      K,
-      dating_error.mean = 0,
-      theta.test_vec = seq(4000, 17000)
+    `SI-UGM` = SI_UGM(
+      alpha = alpha,
+      dates = W,
+      sd = sd,
+      K = K,
+      dating_error.mean = dating_error.mean,
+      theta.test_vec = theta.test_vec
+    ), 
+    `SI-RM` = SI_RM_process(
+      alpha = alpha,
+      dates = W,
+      sd = sd,
+      K = K,
+      dating_error.mean = dating_error.mean
     )
   )
   return(estimate)
@@ -284,8 +291,7 @@ SI_RM_process = function (alpha,
                           dates,
                           sd,
                           K,
-                          dating_error.mean = 0,
-                          theta.test_vec) {
+                          dating_error.mean = 0) {
   # use SI-UGM to estimate a model to get the gradient.
   SI_results = simulated_inversion(
     alpha,
