@@ -97,7 +97,8 @@ describe_tbl = all_data %>%
   summarise(
     .min = min(age),
     .sd = sd(age),
-    .range = max(age) - min(age)
+    .range = max(age) - min(age),
+    .sigma = mean(sd)
   ) %>%
   arrange(.range)
 
@@ -350,31 +351,33 @@ all_widths = all_results %>%
 all_widths
 ```
 
-```{r fig.height=4, fig.width=6}
-all_widths_n.lineplot = all_widths %>%
-  ggplot(aes(x=n, y=Width, colour=reorder(Method, desc(Width)))) +
+
+```{r fig.width=10, fig.height=4}
+
+all_widths_width.lineplot = all_widths %>%
+  merge(describe_tbl, by.x="species", by.y="dataset") %>%
+  select(Method, Width, .sigma, n) %>%
+  rename(`Measurement Error Variation` = .sigma,
+         `Sample Size`=n) %>%
+  pivot_longer(cols=c(`Measurement Error Variation`, `Sample Size`)) %>%
+  ggplot(aes(x=value, y=Width, colour=reorder(Method, desc(value)))) +
   geom_line(size=0.5) +
-  geom_point(size=2) +
-  # geom_col(position="identity") +
-  labs(y="Width (Years)", x="Sample size", colour="Method", title="95% CI Widths against Sample Size")
+  geom_point() +
+  facet_wrap(name ~ ., scales="free_x") +
+  labs(y="Width (Years)",
+       x=NULL,
+       colour="Method")
 
-all_widths_n.lineplot
+all_widths_width.lineplot
 
-ggsave(all_widths_n.lineplot,
+ggsave(all_widths_width.lineplot,
        filename = "../figures/plot-application-widths-samplesize.svg",
        height=)
 ```
 
 ```{r}
 
-all_widths_range.lineplot = all_widths %>%
-  merge(describe_tbl, by.x="species", by.y="dataset") %>%
-  ggplot(aes(x=.range, y=Width, colour=reorder(Method, desc(.range)))) +
-  geom_line(size=0.5) +
-  geom_point(size=2) +
-  labs(y="Width (Years)", x="Range", colour="Method", title="95% CI Widths against Ranges")
 ```
-
 
 
 ```{r fig.width=5, fig.height=3}
