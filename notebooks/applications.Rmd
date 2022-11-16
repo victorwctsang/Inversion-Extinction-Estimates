@@ -83,7 +83,7 @@ all_data = rbind(data.frame(age=cave_bear$age, sd=cave_bear$sd, dataset="Cave Be
 ## Histograms
 
 ```{r fig.height=3, fig.width=12}
-p = tmp %>% ggplot(aes(x=age)) +
+p = all_data %>% ggplot(aes(x=age)) +
   geom_histogram(position="identity", color="black", fill="grey", bins=7) +
   facet_wrap(dataset ~ ., scale="free", nrow=1)
 
@@ -96,14 +96,14 @@ ggsave(file="../figures/applications-hists.svg", plot=p, width=12, height=3)
 ```{r}
 alpha = 0.05
 
-K_df = tmp %>%
+K_df = all_data %>%
   group_by(dataset) %>%
   summarise(
     # .MLE = min(age),
     .K = max(age),
     .sigma = mean(sd),
     .thetas_lower = ba_mle(age, .K) - 10*sd(age),
-    .thetas_upper = min(age) + 3*sd(age)
+    .thetas_upper = ba_mle(age, .K) + 3*sd(age)
   )
 K_df
 ```
@@ -151,7 +151,7 @@ estimate_extinction = function (data, alpha, test_interval, label) {
   )
 
   # GRIWM - uncorrected
-  griwm.uncorrected = GRIWM(
+  griwm.uncorrected.results = GRIWM(
     df = data.frame(dates = dates, sd = sd),
     alpha = 0.05,
     K = K,
@@ -159,15 +159,15 @@ estimate_extinction = function (data, alpha, test_interval, label) {
     .n_iter = 10000,
     bias_adjusted = F
   )
-  griwm.uncorrected.results = list(
-    lower = griwm.uncorrected$lower_ci,
-    point = griwm.uncorrected$centroid,
-    upper = griwm.uncorrected$upper_ci,
+  griwm.uncorrected = list(
+    lower = griwm.uncorrected.results$lower_ci,
+    point = griwm.uncorrected.results$centroid,
+    upper = griwm.uncorrected.results$upper_ci,
     method = "GRIWM (q=0.05)"
   )
 
   # GRIWM - corrected
-  griwm.corrected = GRIWM(
+  griwm.corrected.results = GRIWM(
     df = data.frame(dates = dates, sd = sd),
     alpha = 0.05,
     K = K,
@@ -175,10 +175,10 @@ estimate_extinction = function (data, alpha, test_interval, label) {
     .n_iter = 10000,
     bias_adjusted = T
   )
-  griwm.corrected.results = list(
-    lower = griwm.corrected$lower_ci,
-    point = griwm.corrected$centroid,
-    upper = griwm.corrected$upper_ci,
+  griwm.corrected = list(
+    lower = griwm.corrected.results$lower_ci,
+    point = griwm.corrected.results$centroid,
+    upper = griwm.corrected.results$upper_ci,
     method = "GRIWM (q=0.5, bias adjusted)"
   )
 
@@ -196,10 +196,9 @@ estimate_extinction = function (data, alpha, test_interval, label) {
     upper = MINMI.results$upper,
     method = "MINMI"
   )
-  print(MINMI.results)
 
   # SIRM
-  SIRM = estimate_CI.rm(
+  SIRM.results = estimate_CI.rm(
     W = dates,
     K = K,
     alpha = alpha,
@@ -207,9 +206,16 @@ estimate_extinction = function (data, alpha, test_interval, label) {
     eps.mean = 0,
     eps.sigma = mean(sd),
     .model = SIUGM.results$model,
-    .CI_estimates = list(lower = SIUGM.results$lower, upper = SIUGM.results$upper)
+    .CI_estimates = list(lower = SIUGM.results$lower, upper = SIUGM.results$upper),
+    return_iters = T,
+    max_var = -1#0.1*mean(sd)^2
   )
-  SIRM$method = "SI-RM"
+  SIRM = list(
+    lower = SIRM.results$lower,
+    point = SIRM.results$point,
+    upper = SIRM.results$upper,
+    method = "SI-RM"
+  )
   
   # Collate and return results
   estimates = data.frame(
@@ -221,11 +227,19 @@ estimate_extinction = function (data, alpha, test_interval, label) {
     sigma = numeric(),
     dataset = factor()
   )
-  estimates = rbind(estimates, MINMI, SIUGM, SIRM, griwm.uncorrected.results, griwm.corrected.results)
+  estimates = rbind(estimates, MINMI, SIUGM, SIRM, griwm.uncorrected, griwm.corrected)
   estimates$n = length(dates)
   estimates$sigma = mean(sd)
   estimates$dataset = paste0(label, " (n=", length(dates), ")")
-  return(estimates)
+  
+  return(list(
+    estimates = estimates,
+    SIUGM.results = SIUGM.results,
+    MINMI.results = MINMI.results,
+    SIRM.results = SIRM.results,
+    griwm.uncorrected.results = griwm.uncorrected.results,
+    griwm.corrected.results = griwm.corrected.results
+  ))
 } 
 ```
 
@@ -233,38 +247,56 @@ estimate_extinction = function (data, alpha, test_interval, label) {
 
 ```{r}
 
-cave_bear.estimates = estimate_extinction(
+cave_bear.estimates.list = estimate_extinction(
   data = cave_bear,
   alpha = alpha,
   test_interval = as.numeric(K_df[K_df$dataset == "Cave Bear", 4:5]),
   label = "Cave Bear")
 
-mammoth.estimates = estimate_extinction(
+mammoth.estimates.list = estimate_extinction(
   data = mammoth,
   alpha = alpha,
   test_interval = as.numeric(K_df[K_df$dataset == "Eurasian Mammoth", 4:5]),
   label = "Eurasian Mammoth")
 
-bison.estimates = estimate_extinction(
+bison.estimates.list = estimate_extinction(
   data=bison,
   alpha = alpha,
   test_interval = as.numeric(K_df[K_df$dataset == "Steppe Bison", 4:5]),
   label="Steppe Bison")
 
-cave_hyena.estimates = estimate_extinction(
+cave_hyena.estimates.list = estimate_extinction(
   data=cave_hyena,
   alpha = alpha,
   test_interval = as.numeric(K_df[K_df$dataset == "Cave Hyena", 4:5]),
   label="Cave Hyena")
 
-all_results = rbind(cave_bear.estimates, mammoth.estimates, bison.estimates, cave_hyena.estimates)
+all_results = rbind(
+  cave_bear.estimates.list$estimates,
+  mammoth.estimates.list$estimates,
+  bison.estimates.list$estimates,
+  cave_hyena.estimates.list$estimates
+)
 all_results = all_results %>% mutate(species = str_remove(all_results$dataset, r"{\s+[^ ]+$}"))
 all_results
 ```
 
+```{r}
+estimate.list = list(
+  cave_bear.estimates.list,
+  mammoth.estimates.list,
+  bison.estimates.list,
+  cave_hyena.estimates.list
+)
+
+length(cave_bear.estimates.list$SIRM.results$lower.iters)
+lapply(estimate.list, \(x) c(length(x$SIRM[[4]]), length(x$SIRM[[5]])))
+```
+
+
 ## Combined
 
-```{r fig.height=3, fig.width=15}
+```{r fig.height=7, fig.width=10}
 tmp = all_data %>%
   arrange(age) %>%
   group_by(dataset) %>%
@@ -281,8 +313,10 @@ p = tmp %>%
              shape = 3) +
   geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
   guides(colour="none") +
-  labs(x="Years (BP)", y=NULL) +
-  facet_wrap(fct_reorder(dataset.y, n) ~ ., nrow=1, scale="free_x")
+  labs(x="Years (BP)",
+       y=NULL,
+       title="Extinction Time Estimates for Megafauna") +
+  facet_wrap(fct_reorder(dataset.y, n) ~ ., nrow=2, dir='v', scale="free_x")
 p
 ```
 
@@ -326,7 +360,7 @@ GRIWM_BA
 
 
 ```{r}
-case_study = cave_bear.estimates %>%
+case_study = cave_bear.estimates.list$estimates %>%
   filter(method %in% c("MINMI", "SI-RM")) %>%
   select(method, lower, upper) %>%
   add_row(method = "Baca et al",
