@@ -25,14 +25,21 @@ Finally, 1000 iterations were used for the SI-RM estimator. Initially, we attemp
 \section{Results}
 
 The methods produced comparable confidence intervals, with similar widths, ranges, and point estimates. These results are consistent with our simulation experiments: the MINMI, SI-RM, and SI-UGM estimators produced confidence intervals that are typically wider than those found by both the uncorrected and corrected versions of GRIWM.
-
-For some datasets, MINMI, SI-RM, and SI-UGM estimate extinction time to overlap somewhat with the youngest samples, which seems to conflict with our intuition with regards to sampling error. One example of this is the cave hyena (top right plot in \autoref{fig:applications-confidence-intervals}). This is most likely due to the measurement error variation being substantial relative to the sampling error variation: we estimated $\sigma = 1117.92$, which is 
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/applications.svg}
     \caption{Extinction time point estimates and confidence intervals found for each of the four megafauna species. The 10 youngest fossils are also shown as cross marks.}
     \label{fig:applications-confidence-intervals}
 \end{figure}
+
+The estimated extinction times found by MINMI, SI-RM, and SI-UGM overlap somewhat with the most recent samples, which seems to conflict with our intuition with regards to sampling error. One example of this is the cave bear (bottom left plot in \autoref{fig:applications-confidence-intervals}). However, this is most likely due to the measurement error variation being substantial relative to the observed range --- for the cave bear, measurement error variation represents approximately 10\% of the range. On the other hand, fossils for the Eurasian mammoth are observed over a much longer period and measurement error variation is even smaller. As a result, it does not appear to overlap very much with the data.
+\begin{table}[ht]
+    \centering
+    \caption{caption}
+    \include{figures/table-applications-sigma-range-ratios.tex}
+    \label{tab:applications-sigma-range-ratios}
+    \vspace{-4mm}
+\end{table}
 
 Another observation of note is the different widths of the intervals for each dataset, which tend to narrow with decreasing measurement error variation $\sigma$, as well as increasing sample size. For instance, the Eurasian Mammoth ($\sigma = 282.42$; $n = 202$) has narrower intervals than the Cave Bear ($\sigma = 668.58$; $n = 30$). \autoref{fig:application-widths-lineplot} shows these relationships. This trend is within expectations, as a smaller measurement error variation intuitively means more precise estimates, and we can interpret a larger sample size as having ``more information", which also contributes to more precise estimates.
 \begin{figure}[ht]
