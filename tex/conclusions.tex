@@ -1,6 +1,8 @@
 
 In this thesis, we proposed two novel applications of test-statistic inversion to estimate extinction times in the fossil record: the Minimum Statistic Inversion (MINMI) estimator and the Simulated Inversion - Robbins Monro Process (SI-RM). We explored these methods under assumptions of uniformly distributed fossils with both negligible measurement error and substantial measurement error, performing simulation studies to explore the performance of the obtained point estimates and confidence intervals in relation to existing methods.
 
+\section{Discussion}
+
 Most previously developed methods assumed uniformity and negligible measurement error, and our methods are a significant advance on this. We further expect that we could extend our methods to arbitrarily distributed fossils and measurement errors, using inversion to make exact inference (under monotonicity conditions).
 
 In our simulation studies, we showed that the proposed methods produce point estimates that are comparable to existing methods, and can construct confidence intervals with better coverage, more appropriate widths, and faster computation times compared to existing methods such as GRIWM and SI-UGM. We then applied the MINMI and SI-RM estimators to datasets of megafauna fossils (the steppe bison, cave bear, cave hyena, and Eurasian woolly mammoth) and observed similar results to the simulation studies. We found that the proposed methods generated comparatively wider confidence intervals, which reflect the uncertainty around the true extinction time.
@@ -10,6 +12,45 @@ We found that a significant advantage of the MINMI estimator is its minimal tuni
 A key assumption made throughout this thesis is that fossils are uniformly distributed, and an opportunity going forward is to relax this assumption. Although it is common practice to assume uniformity, there is substantial evidence to suggest this is not valid as we can expect a species to be less abundant closer to speciation and extinction \cite{Lee2010, WangMarshall2016}. As a result, it would be worthwhile to explore the robustness of the proposed methods to alternative models, or adjust their design accordingly. For instance, one approach may be to use recovery rates from other fossil datasets' to estimate the distribution via kernel density estimation. Other suggestions include modelling fossil recovery as sigmoidal or exponentially distributed as per \citet{Bradshaw2012}, or using a ``reflected beta distribution" as per \citet{Wang2016}.
 
 Unlike many existing methods, the proposed SI-RM estimator is more flexible and can be adapted to alternative models, as the simulation model simply needs to be adjusted accordingly. On the other hand, although the MINMI estimator can be adapted to a non-uniform model, the quantile function will need to be re-derived as currently this method's advantages are related to the exploitation of the conditionally uniform distribution of fossils.
+
+
+\subsubsection{Advantages}
+
+\begin{itemize}
+    \item Exact under $\varepsilon$-model and stochastically increasing assumption.
+    \item Very fast
+\end{itemize}
+
+\subsubsection{Limitations}
+
+\begin{itemize}
+    \item Choice of $B$ --- \autoref{theorem: delta-method-variance} is only true for large $B$, so \autoref{eqn:minmi-optimal-b} may sometimes give small values of $B$. We suggest being conservative; take the larger of \autoref{eqn:minmi-optimal-b} and $100$.
+    \item Relies on uniformity assumption, results may not hold up under a different fossil distribution.
+    \item Assumes measurement errors are IID; would be good to have a multivariate $f(e)$.
+\end{itemize}
+
+\subsubsection{Advantages}
+
+\begin{itemize}
+    \item Asymptotically exact under $\varepsilon$-model and stochastically increasing assumption.
+    \item Flexible, since simulation model/step-sizes/starting-values/stopping criteria can be tuned.
+    \item Faster than normal simulated inversion since it uses stochastic approximation to strategically select values of $\theta$ to sample at.
+\end{itemize}
+
+\subsubsection{Limitations}
+
+\begin{itemize}
+    \item Assumes that a good point estimate is available ($\hat\theta(\bm{x})$ is an ``attractor").
+    \item Requires quite a lot of tuning
+        \begin{itemize}
+            \item Simulation model needs to be chosen
+            \item Optimal step size needs to be estimated (dependent on the gradient of the quantile function). Can be tuned.
+            \item Starting values significantly affects convergence.
+            \item No general approach stopping criteria available; heuristics/inspection/cheating required.
+        \end{itemize}
+\end{itemize}
+
+\section{Future Work}
 
 A common assumption in the literature that has been carried over into this thesis is the independence of measurement error. Since radiocarbon ages are often calibrated using the same calibration curves, it is possible for the measurement errors to be correlated. This is known as a ``curve offset" \cite{Ramsey2010}. In his master's thesis, \citet{King2020} proposed an application of simulated inversion to account for calibration errors. We expect these to work similarly for SI-RM by adapting the simulation model accordingly. On the other hand, more work needs to be explore how the MINMI estimator can account for correlated calibration error.
 
