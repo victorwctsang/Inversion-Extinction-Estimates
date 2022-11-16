@@ -61,15 +61,15 @@
 <circle cx='568.76' cy='159.29' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
 <circle cx='318.36' cy='262.91' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
 <circle cx='193.17' cy='320.36' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
-<circle cx='568.76' cy='134.71' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
-<circle cx='318.36' cy='249.73' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
-<circle cx='193.17' cy='313.44' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
+<circle cx='568.76' cy='134.54' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
+<circle cx='318.36' cy='249.70' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
+<circle cx='193.17' cy='313.43' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
 <circle cx='67.97' cy='383.35' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
 <circle cx='67.97' cy='383.35' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
 <polyline points='67.97,137.88 193.17,128.91 318.36,109.49 568.76,40.33 ' style='stroke-width: 1.07; stroke: #F8766D; stroke-linecap: butt;' />
 <polyline points='67.97,152.89 193.17,142.31 318.36,113.73 568.76,43.14 ' style='stroke-width: 1.07; stroke: #A3A500; stroke-linecap: butt;' />
 <polyline points='67.97,163.02 193.17,144.30 318.36,115.19 568.76,44.78 ' style='stroke-width: 1.07; stroke: #00BF7D; stroke-linecap: butt;' />
-<polyline points='67.97,383.35 193.17,313.44 318.36,249.73 568.76,134.71 ' style='stroke-width: 1.07; stroke: #00B0F6; stroke-linecap: butt;' />
+<polyline points='67.97,383.35 193.17,313.43 318.36,249.70 568.76,134.54 ' style='stroke-width: 1.07; stroke: #00B0F6; stroke-linecap: butt;' />
 <polyline points='67.97,383.35 193.17,320.36 318.36,262.91 568.76,159.29 ' style='stroke-width: 1.07; stroke: #E76BF3; stroke-linecap: butt;' />
 <rect x='42.93' y='23.18' width='550.87' height='377.33' style='stroke-width: 1.07; stroke: #333333;' />
 </g>

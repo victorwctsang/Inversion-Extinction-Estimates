@@ -65,16 +65,16 @@
 <circle cx='568.53' cy='99.49' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
 <circle cx='315.92' cy='138.59' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
 <circle cx='189.61' cy='207.61' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
-<circle cx='568.53' cy='303.76' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
-<circle cx='315.92' cy='334.40' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
-<circle cx='189.61' cy='358.70' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
+<circle cx='568.53' cy='302.35' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
+<circle cx='315.92' cy='333.70' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
+<circle cx='189.61' cy='358.35' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
 <circle cx='63.30' cy='383.35' r='1.95' style='stroke-width: 0.71; stroke: #E76BF3; fill: #E76BF3;' />
 <circle cx='63.30' cy='383.35' r='1.95' style='stroke-width: 0.71; stroke: #00B0F6; fill: #00B0F6;' />
 <polyline points='63.30,40.33 189.61,41.03 315.92,54.77 568.53,49.13 ' style='stroke-width: 1.07; stroke: #F8766D; stroke-linecap: butt;' />
 <polyline points='63.30,40.33 189.61,44.20 315.92,53.01 568.53,48.43 ' style='stroke-width: 1.07; stroke: #A3A500; stroke-linecap: butt;' />
 <polyline points='63.30,50.54 189.61,46.67 315.92,54.77 568.53,49.49 ' style='stroke-width: 1.07; stroke: #00BF7D; stroke-linecap: butt;' />
 <polyline points='63.30,383.35 189.61,207.61 315.92,138.59 568.53,99.49 ' style='stroke-width: 1.07; stroke: #00B0F6; stroke-linecap: butt;' />
-<polyline points='63.30,383.35 189.61,358.70 315.92,334.40 568.53,303.76 ' style='stroke-width: 1.07; stroke: #E76BF3; stroke-linecap: butt;' />
+<polyline points='63.30,383.35 189.61,358.35 315.92,333.70 568.53,302.35 ' style='stroke-width: 1.07; stroke: #E76BF3; stroke-linecap: butt;' />
 <rect x='38.03' y='23.18' width='555.76' height='377.33' style='stroke-width: 1.07; stroke: #333333;' />
 </g>
 <g clip-path='url(#cpMC4wMHw3MjAuMDB8MC4wMHw0MzIuMDA=)'>

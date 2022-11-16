@@ -86,6 +86,27 @@ kable(performance.conf_int_estimates)
 
 ### Point Estimates
 
+```{r}
+performance.point_estimates.long = performance.point_estimates %>%
+  rename(Error = error_factor,
+         Method = method,
+         Category = method_cat,
+         MSE = MSE_000,
+         Bias = bias,
+         Variance = variance_000,
+         Runtime = avg_runtime) %>%
+  pivot_longer(cols=c(MSE, Bias, Variance, Runtime),
+               names_to = "Metric") %>%
+  mutate(Method = factor(Method),
+         Category = factor(Category),
+         Metric = factor(Metric)) %>%
+  filter(Method != "MLE")
+
+head(performance.point_estimates.long)
+```
+
+#### Tables
+
 ```{r results='asis'}
 library(kableExtra)
 for (err in error_factors) {
@@ -124,25 +145,7 @@ for (err in error_factors) {
 }
 ```
 
-
-```{r}
-performance.point_estimates.long = performance.point_estimates %>%
-  rename(Error = error_factor,
-         Method = method,
-         Category = method_cat,
-         MSE = MSE_000,
-         Bias = bias,
-         Variance = variance_000,
-         Runtime = avg_runtime) %>%
-  pivot_longer(cols=c(MSE, Bias, Variance, Runtime),
-               names_to = "Metric") %>%
-  mutate(Method = factor(Method),
-         Category = factor(Category),
-         Metric = factor(Metric)) %>%
-  filter(Method != "MLE")
-
-head(performance.point_estimates.long)
-```
+#### All charts
 
 ```{r fig.width=15}
 metrics = unique(performance.point_estimates.long$Metric)
@@ -182,14 +185,16 @@ for (i in 1:length(metrics)) {
 }
 ```
 
+#### Bias and Variance
+
 ```{r, fig.height=6, fig.width=12}
 perf.point_estimates.bias_var.plot = performance.point_estimates.long %>%
   filter(Metric %in% c("Bias", "Variance")) %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing = T))) +
-  geom_line() +
+  geom_line(size=0.4) +
   geom_point() +
-  facet_grid(Metric ~ Category, scale="free_y") +
-  # facet_wrap(Metric ~., scale="free") +
+  # facet_grid(Metric ~ Category, scale="free_y") +
+  facet_wrap(Metric ~., scale="free") +
   labs(colour = "Method", y=NULL) +
   theme_bw() +
   theme(text=element_text(size=15),
@@ -207,7 +212,16 @@ ggsave(plot = perf.point_estimates.bias_var.plot,
 
 
 ### Confidence Intervals
+```{r}
+performance.conf_int_estimates.long = performance.conf_int_estimates %>%
+  rename(Error = error_factor, Method = method, Category = method_cat, Width = `Average Width`, Runtime = `Average Runtime`) %>%
+  pivot_longer(cols=c(Coverage, Width, Runtime),
+               names_to = "Metric")
+  
+head(performance.conf_int_estimates.long)
+```
 
+#### Tables
 ```{r results='asis'}
 options(scipen = 9)
 for (metric in c("Coverage", "Average Width", "Average Runtime")) {
@@ -241,6 +255,7 @@ for (metric in c("Coverage", "Average Width", "Average Runtime")) {
 }
 ```
 
+#### Densities
 
 ```{r fig.width=25, fig.height=4}
 estimates %>%
@@ -256,6 +271,8 @@ estimates %>%
   labs(x=NULL, y=NULL)
 ```
 
+
+#### Average CI (??? bit misleading)
 
 ```{r fig.width=8, fig.height=5}
 p = estimates %>%
@@ -281,35 +298,52 @@ p
 ggsave(filename="../figures/sim-exp-intervals.svg", plot=p, height=5, width=8)
 ```
 
+#### Coverage Probabilities
+
+```{r fig.height=6, fig.width=10}
+conf_int.coverage.plot = performance.conf_int_estimates.long %>%
+  filter(Metric == "Coverage") %>%
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
+  # geom_hline(yintercept=95, linetype="dashed") +
+  geom_point() +
+  geom_line(size=0.5) +
+  theme_bw() +
+  labs(y = "Years", colour="Method", title="Coverage Probabilities") +
+  scale_y_continuous(breaks=c(0, 25, 50, 75, 95, 100))
+
+conf_int.coverage.plot
+```
 
 ```{r}
-performance.conf_int_estimates.long = performance.conf_int_estimates %>%
-  rename(Error = error_factor, Method = method, Category = method_cat, Width = `Average Width`, Runtime = `Average Runtime`) %>%
-  pivot_longer(cols=c(Coverage, Width, Runtime),
-               names_to = "Metric")
-  
-head(performance.conf_int_estimates.long)
-``` 
+ggsave(plot = conf_int.coverage.plot,
+       filename = "../figures/plot-sim-exp-conf-coverage.svg",
+       dpi=320,
+       height=6, width=10)
+```
 
-```{r fig.height=4, fig.width=10}
+
+
+#### Average Width
+
+```{r fig.height=6, fig.width=10}
 conf_int.widths.plot = performance.conf_int_estimates.long %>%
   filter(Metric == "Width") %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
   geom_point() +
-  geom_line() +
-  facet_grid(Metric ~ Category, scale="free_y") +
+  geom_line(size=0.5) +
+  # facet_grid(Metric ~ Category, scale="free_y") +
   theme_bw() +
   labs(y = "Years", colour="Method", title="Average Width of Estimated Confidence Intervals")
 
 conf_int.widths.plot
 ```
 
-```{r fig.height=5, fig.width=8}
+```{r fig.height=6, fig.width=10}
 conf_int.runtime.plot = performance.conf_int_estimates.long %>%
   filter(Metric == "Runtime") %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
   geom_point() +
-  geom_line() +
+  geom_line(size=0.5) +
   # facet_grid(Metric ~ Category, scale="free_y") +
   theme_bw() +
   scale_y_continuous(trans=scales::log10_trans()) +
@@ -322,12 +356,12 @@ conf_int.runtime.plot
 ggsave(plot = conf_int.widths.plot,
        filename = "../figures/plot-sim-exp-conf-widths.svg",
        dpi=320,
-       height=4, width=10)
+       height=6, width=10)
 
 ggsave(plot = conf_int.runtime.plot,
        filename = "../figures/plot-sim-exp-conf-runtime.svg",
        dpi=320,
-       height=5, width=8)
+       height=6, width=10)
 ```
 
 
