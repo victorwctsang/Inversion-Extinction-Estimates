@@ -11,22 +11,32 @@ set.seed(seed)
 
 alpha = 0.05
 
-methods.point_estimates = c()#"STRAUSS", "MLE", "BA-MLE")
-methods.conf_int = c("MINMI")#"GRIWM", "GRIWM-corrected", "GRIWM", "SI-RM", "SI-UGM", "SI-RM-corrected")
+methods.point_estimates = c(
+  "STRAUSS",
+  "MLE",
+  "BA-MLE"
+)
+methods.conf_int = c(
+  "MINMI",
+  "SI-RM",
+  "GRIWM",
+  "GRIWM-corrected",
+  "SI-UGM"
+)
 
 # Run trials
-results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
-results = results[results$method != "MINMI", ]
-# results = data.frame(
-#   id=integer(),
-#   error_factor=double(),
-#   method=factor(),
-#   lower=double(),
-#   point=double(),
-#   upper=double(),
-#   point_runtime=double(),
-#   conf_int_runtime=double()
-# )
+# results = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
+# results = results[results$method != "MINMI", ]
+results = data.frame(
+  id=integer(),
+  error_factor=double(),
+  method=factor(),
+  lower=double(),
+  point=double(),
+  upper=double(),
+  point_runtime=double(),
+  conf_int_runtime=double()
+)
 
 # Generate initial MC samples
 u.init = runif(500, 0, 1)
