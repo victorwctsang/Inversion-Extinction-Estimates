@@ -186,6 +186,11 @@ performance.point_estimates.plot.grid
 ```
 
 
+```{r, fig.width=8, fig.height=5}
+performance.point_estimates.plots[[4]]
+```
+
+
 ```{r}
 ggsave(plot = performance.point_estimates.plot.grid,
        file = "../figures/plot-sim-exp-point-est-grid.svg",
@@ -195,7 +200,8 @@ ggsave(plot = performance.point_estimates.plot.grid,
 for (i in 1:length(metrics)) {
   ggsave(plot = performance.point_estimates.plots[[i]],
          file = paste0("../figures/plot-sim-exp-point-est-", metrics[i], ".svg"),
-         dpi=320)
+         dpi=320,
+         width=8, height=5)
 }
 ```
 
