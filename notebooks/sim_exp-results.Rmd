@@ -28,29 +28,43 @@ attach(synthetic.data.config)
 
 ```{r}
 estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
-estimates = estimates %>% filter(!(method %in% c("SI-RM", "GB-RM")))
-estimates = estimates %>% mutate(across(method, str_replace, 'SI-RM-corrected', 'SI-RM'),
-                                 method_cat = ifelse(method %in% c("SI-RM", "MINMI"),
-                                                     "Proposed Methods",
-                                                     "Existing Methods"),
-                                 method = ifelse(method == "GRIWM",
-                                                 "GRIWM (q=0.05)",
-                                                 ifelse(method == "GRIWM-corrected",
-                                                        "GRIWM-BA (q=0.5)",
-                                                        ifelse(method == "STRAUSS",
-                                                          "Strauss",
-                                                          method
-                                                        ))))
-estimates = estimates %>% filter(error_factor != 4)
-head(estimates)
 ```
+
+```{r}
+estimates = estimates %>%
+  mutate(
+    method_cat = ifelse(
+      method %in% c("SI-RM", "MINMI"),
+      "Proposed Methods",
+      "Existing Methods"
+    ),
+    method = ifelse(
+      method == "GRIWM",
+      "GRIWM (q=0.05)",
+      ifelse(
+        method == "GRIWM-corrected",
+        "GRIWM-BA (q=0.5)",
+        ifelse(method == "STRAUSS",
+               "Strauss",
+               method)
+      )
+    )
+  )
+
+estimates %>%
+  group_by(error_factor, method) %>%
+  summarise(n(), .groups='drop') %>%
+  pivot_wider(id_cols = method, names_from = error_factor, values_from = `n()`)
+```
+
+## MSE Standard Errors
 
 ```{r}
 estimates %>%
   select(error_factor, method, point) %>%
   mutate(sq_err= (point - theta.true)^2) %>%
   group_by(error_factor, method) %>%
-  summarise(SE_SD_000 = sd(sq_err)/1000, .groups='drop') %>%
+  summarise(SE_SD_000 = sd(sq_err)/sqrt(1000) /1000, .groups='drop') %>%
   mutate(error_factor = paste0(error_factor, "*sigma")) %>%
   pivot_wider(id_cols=method,
               names_from=error_factor,
@@ -58,6 +72,7 @@ estimates %>%
   mutate(across(where(is.numeric), function(x) paste0(round(x, 1), "k")))
 ```
 
+#### Compute Metrics
 
 ```{r}
 # Point estimates
@@ -189,7 +204,7 @@ for (i in 1:length(metrics)) {
 ```{r, fig.height=6, fig.width=12}
 perf.point_estimates.bias_var.plot = performance.point_estimates.long %>%
   filter(Metric %in% c("Bias", "Variance")) %>%
-  ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing = T))) +
+  ggplot(aes(x=Error, y=value, colour=reorder(Method, value))) +
   geom_line(size=0.4) +
   geom_point() +
   # facet_grid(Metric ~ Category, scale="free_y") +
@@ -211,6 +226,7 @@ ggsave(plot = perf.point_estimates.bias_var.plot,
 
 
 ### Confidence Intervals
+
 ```{r}
 performance.conf_int_estimates.long = performance.conf_int_estimates %>%
   rename(Error = error_factor, Method = method, Category = method_cat, Width = `Average Width`, Runtime = `Average Runtime`) %>%
@@ -221,6 +237,7 @@ head(performance.conf_int_estimates.long)
 ```
 
 #### Tables
+
 ```{r results='asis'}
 options(scipen = 9)
 for (metric in c("Coverage", "Average Width", "Average Runtime")) {
