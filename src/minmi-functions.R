@@ -190,9 +190,8 @@ estimating_eqn_deriv = function (theta, K, u, m, eps.mean, eps.sigma) {
     m = m,
     theta = theta
   )
-  psi.hat.prime = mean((m - K) / (
-    m - uniform_to_tnorm(u, eps.mean, eps.sigma,-Inf, b = m - theta) - theta
-  ) ^ 2)
+  psi.hat.prime = 
+    mean((m - K) / (m - uniform_to_tnorm(u, eps.mean, eps.sigma,-Inf, b = m - theta) - theta) ^ 2)
   
   return(-F.eps.m / F.eps.K * (f.eps.K / F.eps.K * psi.hat + psi.hat.prime))
 }
