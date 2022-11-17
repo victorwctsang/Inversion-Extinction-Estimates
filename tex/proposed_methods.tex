@@ -22,7 +22,7 @@ where $\hat\theta_q$ is the MINMI estimate of $\theta_q$, such that $\PP_{\theta
 
 \subsection{Measurement Error Scenario}
 
-Let us next consider a scenario where measurement error is substantial. Under the \hyperref[model: measurement-error]{$\varepsilon$-model} proposed in \autoref{section: varepsilon-model}, where measurement error is assumed to be substantial, we have conditionally uniform fossil ages.
+Let us next consider a scenario where measurement error is substantial. Under the \hyperref[model: measurement-error]{$\varepsilon$-model} proposed in \autoref{section: varepsilon-model}, we have conditionally uniform fossil ages $\bm{X|\varepsilon}$ and measurement error $\bm{\varepsilon}$ that are i.i.d with constant variance $\sigma^2$.
 
 Consider the joint density of $(X, \varepsilon)$:
 \[
@@ -142,9 +142,9 @@ We propose an inversion-based method for constructing central $100(1-\alpha)\%$ 
 
 \citet{Garthwaite1992} designed this method to construct confidence intervals assuming that a point estimate (for instance, the maximum likelihood estimator) can be easily obtained, although in principle any statistic could be used if it is stochastically increasing in $\theta$, and as such we use $S(\bm{w})$ as previously. Next, let $\hat\theta_{q; i}$ be the estimate of $\theta_q$ at step $i$ of the RM process, for the $q$\textsuperscript{th} quantile. At each step of the process, generate a resample $\bm{w}^* = [w_1^*, \dots, w_n^*]$ by setting $\theta = \hat\theta_{q; i}$. Then, the next estimate $\hat\theta_{q; i+1}$ can be found by the recursion
 \begin{equation}\label{eqn: SIRM-recursion}
-    \hat\theta_{q; i+1} = \hat\theta_{q; i} - c/i \left( \mathbb{I}\left[S(\bm{w^*}) > S(\bm{w})\right] - q \right)
+    \hat\theta_{q; i+1} = \hat\theta_{q; i} - c/i \left( \mathbbm{1}_{\{S(\bm{w^*}) \geq S(\bm{w})\}} - q \right)
 \end{equation}
-where $c$ is a predetermined step length constant and $\mathbb{I}$ is the indicator function.
+where $c$ is a constant step length and $\mathbbm{1}$ is the indicator function.
 
 The resample step, where we simulate new data according to our simulation model by setting $\theta = \hat\theta_{q; i}$, is similar to the simulated inversion estimator proposed by \citet{Huang2019}. As such, the application of the RM process can be thought of as a variation of the simulated-inversion estimator, where stochastic approximation is used to converge to an optimal estimate of $\theta_q$.
 
@@ -153,9 +153,9 @@ The recursion in \autoref{eqn: SIRM-recursion} must be adapted for the uniformit
 \end{equation}
 Hence, the recursion in \autoref{eqn: SIRM-recursion} becomes:
 \begin{equation}
-    \hat\eta_{q; i+1} = \hat\eta_{q; i} - c/i \left( \mathbb{I}\left[S(\bm{w^*}) > S(\bm{w})\right] - q \right)
+    \eta(\hat\theta_{q; i+1}) = \eta(\hat\theta_{q; i}) - c_\eta/i \left( \mathbbm{1}_{\{S(\bm{w^*}) \geq S(\bm{w})\}} - q \right)
 \end{equation}
-where $c_\eta$ denotes predefined step lengths that are on the same scale as $\eta$.
+where $c_\eta$ denotes a constant step length on the same scale as $\eta$.
 
 Estimates based on the RM process are clearly advantageous when the function $M(\theta)$ is unknown or too complex to be directly inverted. An example of this is if the uniformity assumption is relaxed, as depending on the distribution of the fossils, $M(\theta)$ may potentially be too complex to apply a method similar to the MINMI estimator. 
 
@@ -163,13 +163,13 @@ However, there are still some disadvantages to the SI-RM estimator. The flexibil
 
 \subsection{Choice of Step Size}
 
-The choice of $c$ has a significant impact on the performance of the RM process: too large, and the algorithm may oscillate back and forth without approaching the optimum; too small (relative to the magnitude of the gradient), and the iterates may never move, preventing convergence.
+The choice of $c_\eta$ has a significant impact on the performance of the RM process: too large, and the algorithm may oscillate back and forth without approaching the optimum; too small (relative to the magnitude of the gradient), and the iterates may never move, preventing convergence.
 
-The optimal step length (let this be $c^*$) is dependent on $M^\prime(\theta)$ \cite{LlyodBotev2015}, which is typically unknown. As such, \citet{Garthwaite1992} proposed an \textit{adaptive} step length where $c_i$ is proportional to the distance between $S(\bm{w})$, which is the observed point estimate of $\theta$, and the current estimate of $\theta_q$, denoted by $\theta_{q; i}$:\begin{equation} c_i = \begin{cases}
-    k\left(\theta_{q; i} - S(\bm{w}) \right) &\text{if $q \geq 0.5$} \\
-    k\left(S(\bm{w}) - \theta_{q; i}\right) &\text{if $q < 0.5$}
-\end{cases}
+The optimal step length (let this be $c^*$) is dependent on $M^\prime(\theta)$ \cite{LlyodBotev2015}, which is typically unknown. As such, \citet{Garthwaite1992} proposed an \textit{adaptive} step length where $c_i$ is proportional to the distance between the current estimate at iteration $i$ and the observed point estimate $S(\bm{w})$:
+\begin{equation}
+    c_{\eta; i} = k\Big[\eta(S(\bm{w})) - \eta(\theta_{q; i})\Big] \left( 2\mathbbm{1}_{\{q \geq 0.5\}} - 1 \right)
 \end{equation}
+
 where $k$ is a proportionality constant dependent on the distribution of $S(\bm{w})$.
 
 In the absence of better information, \citet{Garthwaite1992} set the step length proportionality constant $k$ to twice the optimal value for the normal distribution: \[
@@ -200,10 +200,9 @@ Although the Robbins-Monro process is robust to the choice of starting values, g
 \subsection{Selecting Stopping Criteria}\label{subsec:si-rm-stopping-criteria}
 
 The standard error of estimates obtained by the SI-RM process naturally reduces as the number of steps increases at the cost of computation time. We would like to stop the process once our estimates have variance that is below a certain value. However, there is currently no universal stopping criteria, since we are unable to approximate the expected variance at the $i$\textsuperscript{th} step of the RM process. 
-% To determine a stopping rule, we can approximate the SI-RM estimator's variance at each iteration; if the approximate variance is below a predetermined threshold variance, the process is terminated. Otherwise, the process continues until some maximum number of iterations $i_\text{max}$ is reached.
 
 Consider the limiting variance of the $(i+1)$\textsuperscript{th} estimate, which can be found using the delta method \cite{Garthwaite1992}
 \[
-    \Var(\hat\theta_{q; i+1}) = \frac{\alpha/2 (1-\alpha/2) c^2}{i(2gc-1)}, \quad g = \left[ \frac{d}{d\hat\theta_q}M(\hat\theta_q) \right]_{\hat\theta_q = \theta_q}
-\]
-In practice, neither $\frac{d}{d\theta}M(\theta)$ or $\theta_q$ are known, so $\Var(\hat\theta_{q; i+1})$ cannot be calculated. Currently there is no universal stopping criteria for the RM process; \citet{Garthwaite1992} proposed a manual approach by inspection, allowing the RM process to iterate for some time, pausing and inspecting for convergence, then restarting if not converged. In our simulation studies, we will use the estimated quantile function from the SI estimator proposed by \citet{Huang2019}, estimating $\frac{d}{d\theta}M(\theta)$ by symmetric finite difference \cite{Fu2015} for the purpose of illustrating the potential of this method.
+    \Var\{\eta(\hat\theta_{q; i+1})\} = \frac{\alpha/2 (1-\alpha/2) c^2}{i(2cg-1)}, \quad g = \left[ \frac{d}{d\theta}M(\theta) \right]_{\theta = \eta(\theta_q)}
+\] 
+In practice, neither $\frac{d}{d\theta}M(\theta)$ nor $\theta_q$ are known, so $\Var(\hat\theta_{q; i+1})$ cannot be calculated. Currently there is no universal stopping criteria for the RM process; \citet{Garthwaite1992} proposed a manual approach by inspection, allowing the RM process to iterate for some time, pausing and inspecting for convergence, then restarting if not converged. In our simulation studies, we will use the estimated quantile function from the SI estimator proposed by \citet{Huang2019}, estimating $\frac{d}{d\theta}M(\theta)$ by symmetric finite difference \cite{Fu2015} for the purpose of illustration.
