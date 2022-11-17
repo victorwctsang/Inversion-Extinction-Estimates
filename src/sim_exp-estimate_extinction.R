@@ -24,7 +24,24 @@ methods.conf_int = c(
   "SI-RM",
   "GRIWM",
   "GRIWM-corrected",
-  "SI-UGM"
+  "SI-UGM",
+  "SI-RM-1000"
+)
+
+results = data.frame(
+  id=integer(),
+  error_factor=double(),
+  method=factor(),
+  lower=double(),
+  point=double(),
+  upper=double(),
+  point_runtime=double(),
+  conf_int_runtime=double(),
+  B.lower=double(),
+  B.point=double(),
+  B.upper=double(),
+  num_iters.lower=integer(),
+  num_iters.upper=integer()
 )
 
 pilot.dates = datasets[1, "W"][[1]]
@@ -97,20 +114,6 @@ B.minmi = rbind(B.minmi, c(0, 2, 2, 2))
 # Run Trials
 ############################################################
 
-results = data.frame(
-  id=integer(),
-  error_factor=double(),
-  method=factor(),
-  lower=double(),
-  point=double(),
-  upper=double(),
-  point_runtime=double(),
-  conf_int_runtime=double(),
-  B.lower=double(),
-  B.point=double(),
-  B.upper=double()
-)
-
 start_time = Sys.time()
 for (i in 1:nrow(datasets)) {
   iter = datasets[i, ]
@@ -166,12 +169,13 @@ for (i in 1:nrow(datasets)) {
       conf_int_runtime = estimation$conf_int_runtime,
       B.point = estimation$B.point,
       B.lower = estimation$B.lower,
-      B.upper = estimation$B.upper
+      B.upper = estimation$B.upper,
+      num_iters.lower=estimation$num_iters.lower,
+      num_iters.upper=estimation$num_iters.upper
     )
   }
 }
 sims.time = Sys.time() - start_time
 print(sims.time)
 
-View(results)
 saveRDS(results, "../data/sim_exp-estimate_extinction_results.RDS")
