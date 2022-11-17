@@ -1,5 +1,4 @@
 library(extraDistr)
-
 # Generic function for MINMI point estimates and confidence intervals
 estimate_extinction.minmi = function (W,
                                       sd,
@@ -204,7 +203,6 @@ estimate_psi = function (u, mean, sd, a, b, K, m, theta) {
   psi.hat = mean((m - e - theta) / (K - e - theta))
   return(psi.hat)
 }
-
 # Helper function for getting Monte Carlo samples
 # using a density transformation
 uniform_to_tnorm = function (u, mean, sd, a, b) {
