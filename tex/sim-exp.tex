@@ -9,7 +9,7 @@ In order to investigate the impact of increasing measurement error variation, se
 
 For these simulation studies, we used a heuristic to select the vector $\bm{\theta}$ of candidate values, which is used in the Simulated Inversion - Uniform Gaussian Minimum (SI-UGM) estimator to fit a regression of the quantile function $\PP_\theta (S(\bm{W}) > S(\bm{x}))$. In the absence of better information, we set $\bm{\theta}$ equal to 5000 equally-spaced values on the interval $[-12447.47 , 17242.22]$, which is equal to the interval between the between the bias-adjusted MLE minus 10 times the standard deviation of the dataset, and plus 2 times the standard deviation of the dataset. The choice to make this interval asymmetric relative to the bias-adjusted MLE is because the sampling distribution of the minimum statistic is right-skewed, and so lower quantiles can be expected to be further away from the observed minimum.
 
-Another choice we made was the number of Monte Carlo samples for the MINMI estimator, which we find by using \autoref{eqn:minmi-optimal-b}, which allows us to estimate a value for $B$ that will give Monte Carlo error variance less than $A = 0.2\sigma^2$. This target variance was used under each of the four scenarios (measurement error variation = 0, 0.5, 1, and 2). However, a number of the values estimated are very small (less than 50). Since \autoref{eqn:minmi-optimal-b} is based on a delta method approximation (\autoref{theorem: delta-method-variance}), the result only holds for $B \rightarrow \infty$. As such, to be conservative, we set $B=100$ in the cases where the estimated number of Monte Carlo samples was less than 100.
+When choosing the number of Monte Carlo samples to use for the MINMI estimator, we aimed for a number that would give Monte Carlo error variance less than 20\% of the known $\sigma^2$. We denote this as $A = 0.2\sigma^2$. Using equation we found using the delta method (\autoref{theorem: delta-method-variance}), we estimated an approximate number of Monte Carlo samples that would achieve this aim. However, in some cases, the number of the values estimated were very small (\autoref{tab:table-sim-exp-minmi-Bs}). This is because the delta method approximation only holds for $B \rightarrow \infty$, which can underestimate the Monte Carlo error variance. As such, to be conservative, we set $B=100$ in the cases where the estimated number of Monte Carlo samples was less than 100.
 \begin{table}[ht]
     \centering
     \caption{Number of Monte Carlo samples ($B$) used in each scenario for MINMI estimates. For values less than 100, $B = 100$ was used instead. Point estimates were found by setting $q = 0.5$, and the upper and lower endpoints of 95\% confidence intervals were found by setting $q=0.025$ and $q=0.975$, respectively.}
@@ -19,13 +19,13 @@ Another choice we made was the number of Monte Carlo samples for the MINMI estim
     \vspace{-4mm}
 \end{table}
 
-Similarly, the stopping criteria for SI-RM was also chosen based on $A = 0.2*\sigma^2$. We allowed SI-RM to iterate until the estimated RM variance was less than $A$, as specified in \autoref{subsec:si-rm-stopping-criteria}.
+Similarly, the stopping criteria for SI-RM was also chosen based on $A = 0.2*\sigma^2$. We allowed SI-RM to iterate until the estimated RM variance was less than $A$, which resulted in estimates that were similar to MINMI and SI-RM, as we would expect. We will demonstrate how to address situations where this stopping criteria fails in the next chapter.
 
 \section{Point Estimates}
 
 In these experiments, we compared the performance of the different methods' point estimates of extinction times across four metrics: the mean squared error (MSE), bias, variance, and average run time. We considered the existing methods discussed in \autoref{chap: existing-methods}: the MLE, the Bias-Adjusted MLE (BA-MLE), the Strauss estimator, GRIWM with threshold probability $q=0.05$, the bias-adjusted version of GRIWM (GRIWM-BA) with $q=0.5$, and SI-UGM. We compared these against our proposed estimators MINMI and SI-RM. For the SI-UGM, SI-RM, and MINMI estimators, point estimates were obtained using $\hat\theta_{q=0.5}$.
 
-We first considered the scenario under the \hyperref[model: no-measurement-error]{$\delta$-model} in order to form a baseline comparison against the MLE, BA-MLE, and Strauss estimators which do not account for measurement error. The best methods were BA-MLE and Strauss estimator, which were both designed to be optimal under uniformity and negligible measurement error assumptions. These two estimators showed little to no bias with the best MSE (\autoref{tab:table-sim-exp-point-error0}). SI-RM produced identical results to the MLE, as the method will always converge to the chosen test-statistic (the MLE here) \cite{Garthwaite1992}.
+Under the \hyperref[model: no-measurement-error]{$\delta$-model} where measurement error is negligible ($0*\sigma$), the best methods were the BA-MLE and Strauss estimator. This is expected under the measurement error scenario, as both methods were designed to be optimal under uniformity and negligible measurement error assumptions. These two estimators also showed little to no bias (\autoref{tab:table-sim-exp-point-error0}). 
 \begin{table}[ht]
     \centering
     \caption{Point estimator performance, ordered by MSE ($0*\sigma$)}
@@ -33,11 +33,13 @@ We first considered the scenario under the \hyperref[model: no-measurement-error
     \label{tab:table-sim-exp-point-error0}
 \end{table}
 
+SI-RM produced identical results to the MLE, as the method will always converge to the chosen test-statistic, which is the MLE here \cite{Garthwaite1992}. This is because we use the MLE as a point estimator in the Robbins-Monro process and the step-length constant is a proportion of the distance between the estimate at step $i$ and the observed point estimate value. As the process approaches the point estimate, the distance moved decreases, meaning the point estimate is an ``attractor" for the search. As a result, the SI-RM estimator is guaranteed to converge to the observed value of the point estimate \cite{Garthwaite1992}.
+
 Although MINMI, GRIWM-BA, and SI-UGM produced relatively low MSE estimates, they remained relatively \textbf{positively biased}. This is because these three estimates use a ``median-based estimate", in the sense that they find the value of $\theta$ such that a quantile function is equal to $q = 0.5$. The sampling distribution of $S(\bm{X}) = \min(\bm{X})$ is right-skewed, which has the effect of biasing estimates that are based on medians. We also note that the MLE, SI-RM, MINMI, GRIWM-BA, and SI-UGM estimators had relatively low variance compared to the BA-MLE and Strauss estimators (\autoref{tab:table-sim-exp-point-error0}).
 
 Looking at the average run time of the various methods, we note that GRIWM-BA is much slower than GRIWM, even though both methods use $10,000$ iterations. This can be attributed to GRIWM-BA using the Newton-Raphson root-finding algorithm, since the corrected \citet{Mcinerny2006} estimating equation (see \autoref{eqn:mcinerny-bias-corrected-estimator}) cannot be solved directly. This is compared to the uncorrected estimating equation (see \autoref{eqn:mcinerny-estimator}), which can be solved directly). Since each iteration uses $n-1$ \citet{Mcinerny2006} estimates, this adds up to a substantial difference in computational cost.
 
-We then studied the performance of these methods with some measurement error. Under the  \hyperref[model: measurement-error]{$\varepsilon$-model} with $1*\sigma$, we see some results are fairly consistent with the no measurement error scenario: for instance, BA-MLE, Strauss, and MINMI produce similar results that all outperform SI-UGM, MLE, SI-RM, and GRIWM in terms of both MSE and bias. The bias of BA-MLE, Strauss, and MINMI are again similar to the no measurement error scenario, with MINMI and SI-UGM being more positively biased while BA-MLE and Strauss are more negatively biased. (\autoref{tab:table-sim-exp-point-error1}).
+We then studied the performance of these methods with some measurement error. Under the  \hyperref[model: measurement-error]{$\varepsilon$-model} with $1*\sigma$, we see some results are fairly consistent with the no measurement error scenario: for instance, BA-MLE, Strauss, and MINMI produce similar estimates, outperforming SI-UGM, MLE, SI-RM, and GRIWM in terms of both MSE and bias. The bias of BA-MLE, Strauss, and MINMI are again similar to the no measurement error scenario, with MINMI and SI-UGM being more positively biased while BA-MLE and Strauss are more negatively biased. (\autoref{tab:table-sim-exp-point-error1}).
 \begin{table}[ht]
     \centering
     \caption{Point estimator performance, ordered by MSE (error = $1*\sigma$)}
@@ -46,12 +48,19 @@ We then studied the performance of these methods with some measurement error. Un
 \end{table}
 
 One major change from the no measurement error scenario is the superior performance of GRIWM-BA, which produced point estimates with the \textbf{lowest MSE} and the \textbf{second least amount of bias} out of the 8 methods (\autoref{tab:table-sim-exp-point-error1}). This can be attributed to the changes we proposed, where the threshold probability $q$ was set to 0.5 instead of $0.05$ (resulting in a median-based estimate, similar to SI-UGM and MINMI) and the adjustment for bias in the expression for the recovery rate $\lambda$. These corrections mean GRIWM can adequately account for the effect of measurement error.
-
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false,width=\linewidth]{figures/plot-sim-exp-point-est-Bias-Variance.svg}
-    \caption{Bias and variance of methods as the magnitude of error increases. Left to right: results for existing methods, then proposed methods (MINMI and SI-RM). Rows: top shows bias as error increases; bottom row shows the variance.}
+    \caption{Bias (left) and variance (right) of methods as the magnitude of error increases.}
     \label{fig:sim-exp-bias-variance}
+\end{figure}
+
+Interestingly, as measurement error increased in magnitude, \textbf{MLE became more accurate} (\autoref{fig:sim-exp-mse}) This is likely due to the fact that measurement error is negatively skewed since they cannot be greater than $K-\theta$ (see \autoref{fig: minmi_integral}). This means that as we increase the size of our measurement errors, the observed minimum becomes more likely to be less than $\theta$, which tends to cancel out with the positive bias of the MLE and produce fairly good estimates. Logically, this means the \textbf{MLE's estimates are much more varied}, which we can clearly see in \autoref{fig:sim-exp-bias-variance} as it has the greatest sample variance.
+\begin{figure}[ht]
+    \centering
+    % \includesvg[inkscapelatex=false,width=\linewidth]{}
+    \caption{MSE of methods as the magnitude of error increases.}
+    \label{fig:sim-exp-mse}
 \end{figure}
 
 In summary, we found that the proposed MINMI estimator produced point estimates that are comparable to existing methods despite being somewhat biased. When accounting for measurement error, GRIWM-BA outperformed the original and all other methods. Moreover, our simulation experiments reinforced that \textbf{the BA-MLE and Strauss estimators are optimal under uniformity assumptions where measurement error is negligible}, although they become less reliable and accurate as the magnitude of measurement error increases. The original implementation of GRIWM consistently performed poorly, producing negatively biased estimates in all measurement error scenarios (see additional result tables for all scenarios in \autoref{apx:extra-tables-figures}).
