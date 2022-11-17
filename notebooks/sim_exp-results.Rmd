@@ -99,8 +99,7 @@ performance.point_estimates.long = performance.point_estimates %>%
                names_to = "Metric") %>%
   mutate(Method = factor(Method),
          Category = factor(Category),
-         Metric = factor(Metric)) %>%
-  filter(Method != "MLE")
+         Metric = factor(Metric))
 
 head(performance.point_estimates.long)
 ```
