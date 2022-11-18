@@ -348,7 +348,7 @@ p
 ```
 
 ```{r}
-ggsave(file="../figures/applications.svg", plot=p, height=5, width=8)
+ggsave(file="../figures/applications.svg", plot=p, height=5, width=10)
 ```
 
 #### CI Widths
