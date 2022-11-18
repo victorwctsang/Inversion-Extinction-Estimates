@@ -41,7 +41,7 @@ p.joint_density = ggplot() +
   geom_segment(aes(x=-10, y=0, xend=K-theta+1.8, yend=0), arrow=arrow(length = unit(0.5, "cm")), size = 1) +
   geom_segment(aes(x=0, y=-0.5, xend=0, yend=6.3), arrow=arrow(length = unit(0.5, "cm")), size = 1) +
   annotate(label="X", geom="text", x=0.3, y=6.1, size=7) +
-  annotate(label=TeX("$\\epsilon$"), geom="text", x=K-theta+1.75, y=-0.3, size=9) +
+  annotate(label=(r"{$\varepsilon$}"), geom="text", x=K-theta+1.75, y=-0.3, size=9) +
   coord_cartesian(ylim = c(-0.5, 6), xlim = c(w-K-1, K-theta+1.5)) +
   # Draw limits and shade
   geom_abline(intercept=K, slope=-1) +
@@ -56,13 +56,13 @@ p.joint_density = ggplot() +
   geom_segment(aes(x=w-theta, y=0, xend=w-theta, yend=theta), linetype="dashed") +
   geom_segment(aes(x=K-theta, y=0, xend=K-theta, yend=theta), linetype="dashed") +
   annotate(size=6, label="K", geom="text", x=xaxis.offset, y=K+yaxis.offset) +
-  annotate(size=6, label=TeX("$\\theta$"), geom="text", x=-xaxis.offset, y=theta-yaxis.offset) +
+  annotate(size=6, label=(r"{$\theta$}"), geom="text", x=-xaxis.offset, y=theta-yaxis.offset) +
   annotate(size=6, label="w", geom="text", x=-xaxis.offset, y=w-0.1) +
   annotate(size=6, label=0, geom="text", x=-xaxis.offset, y=-yaxis.offset) +
-  annotate(size=6, label=TeX("$w-\\theta$"), geom="text", x=w-theta, y=-yaxis.offset) +
-  annotate(size=6, label=TeX("$K-\\theta$"), geom="text", x=K-theta, y=-yaxis.offset) +
-  annotate(size=6, label=TeX("$X + \\epsilon = K$"), geom="text", x=1.2, y=K-1.2+0.25, hjust="left") +
-  annotate(size=6, label=TeX("$X + \\epsilon = w$"), geom="text", x=-0.8, y=w+0.8-0.1, hjust="right")
+  annotate(size=6, label=("r{$w-\theta$}"), geom="text", x=w-theta, y=-yaxis.offset) +
+  annotate(size=6, label=(r"{$K-\theta$}"), geom="text", x=K-theta, y=-yaxis.offset) +
+  annotate(size=6, label=(r"{$X + \varepsilon = K$}"), geom="text", x=1.2, y=K-1.2+0.25, hjust="left") +
+  annotate(size=6, label=(r"{$X + \varepsilon = w$}"), geom="text", x=-0.8, y=w+0.8-0.1, hjust="right")
 
 p.joint_density
 ```
