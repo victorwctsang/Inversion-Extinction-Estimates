@@ -210,7 +210,6 @@ uniform_to_tnorm = function (u, mean, sd, a, b) {
     mean = mean,
     sd = sd,
     a = a,
-    b = b
-  )
+    b = b)
   return(mc.samples)
 }
