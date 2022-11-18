@@ -339,8 +339,7 @@ p = tmp %>%
              alpha=0.3,
              shape = 4) +
   geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point),
-                  fatten = 2,
-                  shape = 4) +
+                  shape = 3) +
   guides(colour="none") +
   labs(x="Years (BP)",
        y=NULL) +

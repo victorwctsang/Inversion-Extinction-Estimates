@@ -304,7 +304,7 @@ p = estimates %>%
   mutate(width=upper-lower) %>%
   mutate(method_cat_int = ifelse(method_cat == "Existing Methods", 0, 1)) %>%
   ggplot(aes(colour=method_cat)) +
-  geom_pointrange(aes(xmin=lower, xmax=upper, x=point, y=reorder(method, method_cat_int))) +
+  geom_pointrange(aes(xmin=lower, xmax=upper, x=point, y=reorder(method, method_cat_int)), shape = 3) +
   guides(colour = guide_legend(reverse=TRUE)) +
   labs(y=NULL, x="Years (BP)",
        title="Simulation Experiment Confidence Intervals",
