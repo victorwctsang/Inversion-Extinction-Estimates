@@ -1,12 +1,3 @@
-% \begin{figure}[ht]
-%     \centering
-%     \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-lower.tex}}
-%     \resizebox{0.45\linewidth}{!}{\input{figures/minmi-asymptotics-upper.tex}}
-%     \caption{Sample variance of $\hat\theta_q$ (shown in \textcolor{red}{red}) plotted against the expected variance according to the asymptotic approximation (shown in \textcolor{blue}{blue}) on log-scales for both the $x$ and $y$ axes. The approximate variance obtained from the delta method approaches the sample variance as $B$ grows large; although the approximate variance tends to underestimate the variance (as indicated by the sample variance) for small $B$. Note the differences in the $x$ and $y$ axes; $\Var(\hat\theta_q)$ tends to grow disproportionately as $q$ becomes small.}
-%     \label{fig:asymptotics-plots}
-% \end{figure}
-
-\section{Simulation Experiments}
 
 \begin{table}[ht]
     \centering
@@ -22,13 +13,6 @@
     \label{tab:table-sim-exp-point-error2}
 \end{table}
 
-\begin{table}[ht]
-    \centering
-    \caption{Confidence Interval Run Time}
-    \include{"figures/table-sim-exp-conf-int-average-runtime.tex"}
-    \label{tab:table-sim-exp-runtime}
-\end{table}
-
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false, width=\linewidth]{figures/plot-sim-exp-point-est-grid.svg}
@@ -36,11 +20,24 @@
     \label{fig:sim-exp-grid}
 \end{figure}
 
-\section{Application}
-\begin{figure}[ht]
+\begin{table}[ht]
     \centering
-    \includesvg[inkscapelatex=false, width=\linewidth]{figures/applications-hists.svg}
-    \caption{Histograms of the four megafauna species' datasets according to default \texttt{ggplot2} binning. Values of $K$ and $\bm{\theta}$ were chosen by inspection of these histograms. From left to right: the cave bear, cave hyena, Eurasian woolly mammoth, and steppe bison.}
-    \label{fig:applications-histograms}
-\end{figure}
+    \caption{Confidence Interval Widths}
+    \include{figures/table-sim-exp-conf-int-average-width.tex}
+    \label{tab:table-sim-exp-width}
+\end{table}
+
+\begin{table}[ht]
+    \centering
+    \caption{Confidence Interval Run Times against measurement error.}
+    \include{"figures/table-sim-exp-conf-int-average-runtime.tex"}
+    \label{tab:table-sim-exp-runtime}
+\end{table}
+
+% \begin{figure}[ht]
+%     \centering
+%     \includesvg[inkscapelatex=false, width=\linewidth]{figures/applications-hists.svg}
+%     \caption{Histograms of the four megafauna species' datasets. From left to right: the cave bear, cave hyena, Eurasian woolly mammoth, and steppe bison.}
+%     \label{fig:applications-histograms}
+% \end{figure}
 
