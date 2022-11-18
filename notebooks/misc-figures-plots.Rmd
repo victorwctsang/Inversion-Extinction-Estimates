@@ -59,7 +59,7 @@ p.joint_density = ggplot() +
   annotate(size=6, label=(r"{$\theta$}"), geom="text", x=-xaxis.offset, y=theta-yaxis.offset) +
   annotate(size=6, label="w", geom="text", x=-xaxis.offset, y=w-0.1) +
   annotate(size=6, label=0, geom="text", x=-xaxis.offset, y=-yaxis.offset) +
-  annotate(size=6, label=("r{$w-\theta$}"), geom="text", x=w-theta, y=-yaxis.offset) +
+  annotate(size=6, label=(r"{$w-\theta$}"), geom="text", x=w-theta, y=-yaxis.offset) +
   annotate(size=6, label=(r"{$K-\theta$}"), geom="text", x=K-theta, y=-yaxis.offset) +
   annotate(size=6, label=(r"{$X + \varepsilon = K$}"), geom="text", x=1.2, y=K-1.2+0.25, hjust="left") +
   annotate(size=6, label=(r"{$X + \varepsilon = w$}"), geom="text", x=-0.8, y=w+0.8-0.1, hjust="right")
