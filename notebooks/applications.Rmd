@@ -327,24 +327,22 @@ lapply(estimate.list, \(x) c(length(x$SIRM[[4]]), length(x$SIRM[[5]])))
 
 ```{r fig.height=7, fig.width=10}
 tmp = all_data %>%
+  filter(dataset != "Eurasian Mammoth") %>%
+  rbind(data.frame(age=mammoth$age, sd=mammoth$sd, dataset="Eurasian Mammoth")[sample(length(mammoth$age), 80), ]) %>%
   arrange(age) %>%
-  group_by(dataset) %>%
-  slice_head(n=10) %>%
   merge(y=all_results, by.x="dataset", by.y="species") %>%
   mutate(method_cat = ifelse(method == "MINMI", 2, ifelse(method == "SI-RM", 1, 0)))
 
 p = tmp %>%
-  # pivot_longer(cols = c(lower, upper), names_to = "endpoints") %>%
   ggplot(aes(colour=method)) +
-  # geom_line(aes(y=reorder(method, method_cat), x=value)) +
   geom_point(aes(x = age, y = reorder(method, method_cat), colour=NULL),
-             alpha=0.5,
+             alpha=0.3,
              shape = 4) +
-  geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point)) +
+  geom_pointrange(aes(y=reorder(method, method_cat), xmin=lower, xmax=upper, x=point),
+                  fatten = 3) +
   guides(colour="none") +
   labs(x="Years (BP)",
-       y=NULL,
-       title="Extinction Time Estimates for Megafauna") +
+       y=NULL) +
   facet_wrap(fct_reorder(dataset.y, n) ~ ., nrow=2, dir='v', scale="free_x")
 p
 ```
@@ -366,6 +364,7 @@ all_widths = all_results %>%
 all_widths
 ```
 
+#### Width against sigma and n
 
 ```{r fig.width=8, fig.height=8}
 
@@ -390,10 +389,7 @@ ggsave(all_widths_width.lineplot,
        height=)
 ```
 
-```{r}
-
-```
-
+#### Bar chart
 
 ```{r fig.width=5, fig.height=3}
 all_widths.plot = all_widths %>%
@@ -472,6 +468,7 @@ case_study = cave_bear.estimates.list$estimates %>%
           upper = GRIWM_BA$upper_ci)
 case_study
 ```
+#### Widths
 
 ```{r}
 case_study_df = case_study %>% 
@@ -498,6 +495,7 @@ case_study.long = case_study %>%
 case_study.long
 ```
 
+#### CI Intervals
 
 ```{r fig.height=3, fig.width=10}
 cave_bear.conf_int.plot = case_study.long %>%
