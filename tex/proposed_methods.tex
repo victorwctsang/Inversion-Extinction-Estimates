@@ -47,7 +47,8 @@ since $X_i | \varepsilon_i \sim \mathcal{U}(\theta, K-\varepsilon_i)$.
 From this, we can geometrically identify our region of interest for finding $\PP_\theta ( X + \varepsilon \geq w)$, indicated by the shaded region in \autoref{fig: minmi_integral}.
 \begin{figure}[ht]
     \centering
-    \includesvg[inkscapelatex=false,width=0.8\linewidth]{figures/plot_minmi_joint_density.svg}
+    \include{figures/plot_minmi_joint_density.tex}
+    \vspace{-10mm}
     \caption{Sketch of the region over which an integral should be taken to find $\PP_\theta ( X + \varepsilon \geq w)$. This region is indicated by the shaded area bounded by  $X+\varepsilon = K$ and $X + \varepsilon = w$, where $X \in [\theta, K]$ and $\varepsilon <= K-\theta$.}
     \label{fig: minmi_integral}
 \end{figure}
@@ -189,11 +190,11 @@ The number of steps to skip, $m$, is chosen as
 \[
     m = \min \left\{ 50, 0.3(4-\alpha)/\alpha \right\}
 \]
-Although the Robbins-Monro process is robust to the choice of starting values, good starting values improve the rate of convergence. Moreover, step sizes tend to be disproportionately large early on in the search. Hence, if starting estimates are not in the neighbourhood of the true value then the process may be sent far away and convergence may take significantly longer--- see \autoref{fig:SI-RM-starting-values}.
+Although the Robbins-Monro process is robust to the choice of starting values, good starting values improve the rate of convergence. The robustness is because step sizes are proportional to the distance from the observed point estimate $S(\bm{w})$. However, step sizes tend to be disproportionately large early on in the search. As a result, if starting estimates are too far away, convergence may take very long as the step lengths tend to be disproportionately large early in the process and it is possible for the RM process to be ``lost" for some time before converging to the answer (see \autoref{fig:SI-RM-starting-values}, where one of the searches for the lower bound ``runs away" to -2{\small,}000 before stepping back up. 
 \begin{figure}[ht]
     \centering
     \includesvg[inkscapelatex=false, width=\linewidth]{figures/SI-RM-starting-estimate-convergence.svg}
-    \caption{Left: SI-RM searches for the lower endpoint of a 95\% confidence interval. Right: SI-RM searches for the upper endpoint. \textcolor{red}{Red} is the search with starting values chosen by Garthwaite \& Buckland's percentile method \cite{Garthwaite1992}. Each line is a separate RM process performed on the same simulated dataset with different starting values. Note that the RM process converges to similar estimates regardless of the starting value, with the only difference being convergence speed. If starting estimates are too far away, estimates may be ``sent" too far away and substantially impact convergence.}
+    \caption{Left: SI-RM searches for the lower endpoint of a 95\% confidence interval. Right: SI-RM searches for the upper endpoint. \textcolor{red}{Red} is the search with starting values chosen by Garthwaite \& Buckland's percentile method \cite{Garthwaite1992}. Each line is a separate RM process performed on the same simulated dataset with different starting values.}
     \label{fig:SI-RM-starting-values}
 \end{figure}
 
