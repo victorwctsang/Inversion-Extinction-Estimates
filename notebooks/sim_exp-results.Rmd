@@ -34,7 +34,7 @@ estimates = readRDS("../data/sim_exp-estimate_extinction_results.RDS")
 estimates = estimates %>%
   mutate(
     method_cat = ifelse(
-      method %in% c("SI-RM", "MINMI"),
+      method %in% c("SI-RM", "MINMI", "SI-UGM"),
       "Proposed Methods",
       "Existing Methods"
     ),
@@ -46,7 +46,9 @@ estimates = estimates %>%
         "GRIWM-BA (q=0.5)",
         ifelse(method == "STRAUSS",
                "Strauss",
-               method)
+               ifelse(method == "SI-UGM",
+                      "Simulated Inversion (Huang)",
+                      method))
       )
     )
   )
@@ -164,12 +166,21 @@ for (err in error_factors) {
 ```{r fig.width=15}
 metrics = unique(performance.point_estimates.long$Metric)
 performance.point_estimates.plots = lapply(metrics, function(met) {
-  p = ggplot(data = performance.point_estimates.long %>% filter(Metric == met),
-             aes(x = Error, y = value, colour = reorder(Method, value, decreasing = T))) +
+  p = ggplot(data = filter(performance.point_estimates.long, Metric == met & Category == "Existing Methods"),
+             aes(x = Error, y = value, group = Method, colour = "Existing Methods")) +
     geom_line() +
     geom_point() +
+    geom_point(
+      data=filter(performance.point_estimates.long, Metric == met & Category == "Proposed Methods"),
+      mapping=aes(x=Error, y=value, colour = reorder(Method, value, decreasing = T)),
+      colour='darkgray') +
+    geom_line(
+      data=filter(performance.point_estimates.long, Metric == met & Category == "Proposed Methods"),
+      mapping=aes(x=Error, y=value, group=Method, colour = reorder(Method, value, decreasing = T))) +
     theme_bw() +
-    labs(title = paste(met, "by Error"), ylab=NULL, colour = "Method")
+    labs(title = paste(met, "by Error"), ylab=NULL, colour = "Method") +
+    theme(rect = element_rect(fill = "transparent")) +
+    scale_color_manual(values = c("SI-RM" = "#619CFF", "MINMI" = "#F8766D", "Existing Methods" = "darkgray"))
   if (met %in% c("MSE", "Runtime")) {
     p = p+scale_y_log10()
   }
@@ -186,22 +197,20 @@ performance.point_estimates.plot.grid
 ```
 
 
-```{r, fig.width=8, fig.height=5}
-performance.point_estimates.plots[[4]]
-```
-
 
 ```{r}
 ggsave(plot = performance.point_estimates.plot.grid,
-       file = "../figures/plot-sim-exp-point-est-grid.svg",
+       file = "../figures/plot-sim-exp-point-est-grid.png",
        dpi=320,
-       width=12)
+       width=12,
+       bg = 'transparent')
 
 for (i in 1:length(metrics)) {
   ggsave(plot = performance.point_estimates.plots[[i]],
-         file = paste0("../figures/plot-sim-exp-point-est-", metrics[i], ".svg"),
+         file = paste0("../figures/plot-sim-exp-point-est-", metrics[i], ".png"),
          dpi=320,
-         width=8, height=5)
+         width=8, height=5,
+         bg = 'transparent')
 }
 ```
 
@@ -227,7 +236,8 @@ perf.point_estimates.bias_var.plot
 ggsave(plot = perf.point_estimates.bias_var.plot,
        file = "../figures/plot-sim-exp-point-est-Bias-Variance.svg",
        width=12, height=6,
-       dpi = 320)
+       dpi = 320,
+       bg = 'transparent')
 ```
 
 
@@ -317,30 +327,41 @@ p
 
 
 ```{r}
-ggsave(filename="../figures/sim-exp-intervals.svg", plot=p, height=5, width=8)
+ggsave(filename="../figures/sim-exp-intervals.svg", plot=p, height=5, width=8,
+       bg = 'transparent')
 ```
 
 #### Coverage Probabilities
 
 ```{r fig.height=6, fig.width=10}
 conf_int.coverage.plot = performance.conf_int_estimates.long %>%
-  filter(Metric == "Coverage") %>%
+  filter(Metric == "Coverage" & Category == "Proposed Methods") %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
-  # geom_hline(yintercept=95, linetype="dashed") +
   geom_point() +
   geom_line(size=0.5) +
+  geom_point(
+    data=filter(performance.conf_int_estimates.long, Metric == "Coverage" & Category == "Existing Methods"),
+    mapping=aes(x=Error, y=value, group=Method),
+    colour='darkgray') +
+  geom_line(
+    data=filter(performance.conf_int_estimates.long, Metric == "Coverage" & Category == "Existing Methods"),
+    mapping=aes(x=Error, y=value, group=Method, colour = "Existing Methods"),
+    size = 0.5) +
   theme_bw() +
   labs(y = "Years", colour="Method", title="Coverage Probabilities") +
-  scale_y_continuous(breaks=c(0, 25, 50, 75, 95, 100))
+  scale_y_continuous(breaks=c(0, 25, 50, 75, 95, 100)) +
+  theme(rect = element_rect(fill = "transparent")) +
+  scale_color_manual(values = c("Simulated Inversion (Huang)" = "#F8766D", "SI-RM" = "#619CFF", "MINMI" = "#00BA38", "Existing Methods" = "darkgray"))
 
 conf_int.coverage.plot
 ```
 
 ```{r}
 ggsave(plot = conf_int.coverage.plot,
-       filename = "../figures/plot-sim-exp-conf-coverage.svg",
+       filename = "../figures/plot-sim-exp-conf-coverage.png",
        dpi=320,
-       height=6, width=10)
+       height=6, width=10,
+       bg = 'transparent')
 ```
 
 
@@ -349,41 +370,62 @@ ggsave(plot = conf_int.coverage.plot,
 
 ```{r fig.height=6, fig.width=10}
 conf_int.widths.plot = performance.conf_int_estimates.long %>%
-  filter(Metric == "Width") %>%
+  filter(Metric == "Width" & Category == "Proposed Methods") %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
   geom_point() +
   geom_line(size=0.5) +
+  geom_point(
+    data=filter(performance.conf_int_estimates.long, Metric == "Width" & Category == "Existing Methods"),
+    mapping=aes(x=Error, y=value, group=Method),
+    colour='darkgray') +
+  geom_line(
+    data=filter(performance.conf_int_estimates.long, Metric == "Width" & Category == "Existing Methods"),
+    mapping=aes(x=Error, y=value, group=Method, colour = "Existing Methods"),
+    size = 0.5) +
   # facet_grid(Metric ~ Category, scale="free_y") +
   theme_bw() +
-  labs(y = "Years", colour="Method", title="Average Width of Estimated Confidence Intervals")
+  labs(y = "Years", colour="Method", title="Average Width of Estimated Confidence Intervals") +
+  theme(rect = element_rect(fill = "transparent")) +
+  scale_color_manual(values = c("Simulated Inversion (Huang)" = "#F8766D", "SI-RM" = "#619CFF", "MINMI" = "#00BA38", "Existing Methods" = "darkgray"))
 
 conf_int.widths.plot
 ```
 
 ```{r fig.height=6, fig.width=10}
 conf_int.runtime.plot = performance.conf_int_estimates.long %>%
-  filter(Metric == "Runtime") %>%
+  filter(Metric == "Runtime" & Category == "Proposed Methods") %>%
   ggplot(aes(x=Error, y=value, colour=reorder(Method, value, decreasing=T))) +
   geom_point() +
   geom_line(size=0.5) +
-  # facet_grid(Metric ~ Category, scale="free_y") +
+  geom_point(
+    data=filter(performance.conf_int_estimates.long, Metric == "Runtime" & Category == "Existing Methods"),
+    mapping=aes(x=Error, y=value, group=Method),
+    colour='darkgray') +
+  geom_line(
+    data=filter(performance.conf_int_estimates.long, Metric == "Runtime" & Category == "Existing Methods"),
+    mapping=aes(x=Error, y=value, group=Method, colour = "Existing Methods"),
+    size = 0.5) +
   theme_bw() +
   scale_y_continuous(trans=scales::log10_trans()) +
-  labs(y = "Seconds", colour="Method", title="Average Runtime of Confidence Interval Estimation")
+  labs(y = "Seconds", colour="Method", title="Average Runtime of Confidence Interval Estimation") +
+  theme(rect = element_rect(fill = "transparent")) +
+  scale_color_manual(values = c("Existing Methods" = "darkgray", "Simulated Inversion (Huang)" = "#F8766D", "SI-RM" = "#619CFF", "MINMI" = "#00BA38"))
 
 conf_int.runtime.plot
 ```
 
 ```{r}
 ggsave(plot = conf_int.widths.plot,
-       filename = "../figures/plot-sim-exp-conf-widths.svg",
+       filename = "../figures/plot-sim-exp-conf-widths.png",
        dpi=320,
-       height=6, width=10)
+       height=6, width=10,
+       bg = 'transparent')
 
 ggsave(plot = conf_int.runtime.plot,
-       filename = "../figures/plot-sim-exp-conf-runtime.svg",
+       filename = "../figures/plot-sim-exp-conf-runtime.png",
        dpi=320,
-       height=6, width=10)
+       height=6, width=10,
+       bg = 'transparent')
 ```
 
 

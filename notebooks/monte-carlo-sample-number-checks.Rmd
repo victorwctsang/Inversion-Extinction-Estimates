@@ -138,7 +138,7 @@ Compute sample and expected variances for a set of values of $B$
 ```{r}
 n = 30
 
-B = unique(round(pracma::logseq(2, 1000, 20)))
+B = unique(round(pracma::logseq(2, 2000, 30)))
 num.B = length(B)
 
 num.estimates = 250
@@ -202,6 +202,7 @@ Our expected variance from the delta method is approximately:
 
 ### Plotting Sample Variances against Expected Variances
 
+
 ```{r fig.width=8, fig.height=5, dev='tikz'}
 options(scipen=9)
 
@@ -259,5 +260,40 @@ p.delta_method_variance_diff
 
 ```{r}
 ggsave(filename = "../figures/minmi-delta-method_variance.svg", plot=p.delta_method_variance_diff, width=8, height=5, dpi=320)
+```
+
+### Empirical Variance against B
+
+```{r fig.width=10, fig.height=5}
+emp_var_df = res.df %>%
+  select(c(B, starts_with("sample_var"))) %>%
+  rename(`Upper Endpoint`=sample_var.upper, `Lower Endpoint`=sample_var.lower) %>%
+  pivot_longer(cols=ends_with("Endpoint"), names_to = "Type", values_to = "Empirical Variance")
+
+emp_var_plot = emp_var_df %>%
+  ggplot(aes(x=B, y=`Empirical Variance`, colour=Type)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(Type ~ .) +
+  theme_bw() +
+  scale_y_continuous(trans="log10") +
+  scale_x_continuous(trans="log10") +
+  guides(colour='none') +
+  ggtitle("Empirical Variance of MINMI") +
+  ylab(NULL) +
+  theme(rect = element_rect(fill = "transparent"))
+
+emp_var_plot
+```
+
+```{r}
+ggsave(
+  filename = "../figures/minmi-empirical_variance.png",
+  plot=emp_var_plot,
+  width=10,
+  height=5,
+  bg = 'transparent',
+  dpi=320
+)
 ```
 

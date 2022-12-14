@@ -42,42 +42,29 @@ source("../src/minmi-functions.R")
 ```
 
 
-
-```{r}
-# Import mammoth data from fossildata.xlsx
-fossil_dataframe = read_excel(
-  path='../data/fossildata.xlsx', 
-  sheet="MammothPrimEBer", 
-  range="M3:N36", 
-  col_names=c("age", "sd"), 
-  col_types=c('numeric', 'numeric')
-)
-```
-
 ## Check $P_\theta (X + \varepsilon > m)$ is stochastically increasing in $\theta$
 
 ```{r}
 
-K = 18000
-theta.range = seq(10000, 17500, by=50)
+theta.true = 10000
+K = 20000
+n=20
+eps.mean = 0
+eps.sigma = 291.3
+
+theta.range = seq(8000, 20000, by=50)
 nThetas = length(theta.range)
 
-B=500
-n=30
 
-eps.mean = 0
-fossil_dataframe = fossil_dataframe[fossil_dataframe$age<K,]
-eps.sigma = mean(fossil_dataframe$sd)
+B=500
 
 P = A1 = A2 = phi.hat = equation1 = rep(NA, nThetas)
 
 set.seed(2022)
 
-u = matrix(runif(1*B, 0, 1), ncol=B)
+u = runif(1*B, 0, 1)
 
-theta.true = 12000
-
-m = theta.true+10 ##min(fossil_dataframe$age)
+m = theta.true + 500
 
 q = 0.025
 
@@ -106,10 +93,11 @@ p = res.df %>%
   labs(title=TeX("$P_\\theta (X + \\epsilon > m)$ for increasing \\theta"),
        x=TeX("\\theta"),
        y=TeX("P")) +
-  theme_bw()
+  theme_bw() +
+  theme(rect = element_rect(fill = "transparent"))
 
 p
-ggsave(plot=p, filename="../figures/minmi-stochastically-increasing.png", width=6, height=4)
+ggsave(plot=p, filename="../figures/minmi-stochastically-increasing.png", width=6, height=4, bg='transparent')
 ```
 
 ```{r}
@@ -117,7 +105,7 @@ res.df %>%
   mutate(Pn = P**n) %>% 
   ggplot(aes(x=theta, y=Pn)) +
   geom_line() +
-  labs(title=TeX("$P_\\theta (X + \\epsilon > m)^n$ for increasing theta"),
+  labs(title=TeX("$\\left[ P_\\theta (X + \\epsilon > m) \\right]^n$ for increasing theta"),
        x=TeX("\\theta"),
        y=TeX("P^n"))
 ```
